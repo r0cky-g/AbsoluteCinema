@@ -17,10 +17,15 @@ public class User {
     private String email;  
 
     @Column(nullable = false)
+    private boolean emailVerified = false;
+
+    @Column
+    private String verificationCode;
+
+    @Column(nullable = false)
     private String password;
 
     // Getters
-
     public Long getId() {
         return id;
     }
@@ -33,12 +38,19 @@ public class User {
         return email;
     }
 
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
     public String getPassword() {
         return password;
     }
 
     // Setters
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -53,5 +65,13 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
     }
 }
