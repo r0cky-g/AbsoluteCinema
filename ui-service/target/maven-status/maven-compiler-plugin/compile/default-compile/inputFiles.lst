@@ -1,9 +1,12 @@
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\data\DummyDataService.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\data\Movie.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\data\Review.java
+C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\security\AppInitializer.java
+C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\security\InMemoryUserRegistry.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\security\SecurityConfig.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\UiServiceApplication.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\views\AccountView.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\views\HomeView.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\views\LoginView.java
 C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\views\MainLayout.java
+C:\Users\keppo\Documents\GitHub\AbsoluteCinema\ui-service\src\main\java\ca\yorku\eecs4314group12\ui\views\RegisterView.java

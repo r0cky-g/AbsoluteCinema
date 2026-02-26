@@ -5,25 +5,23 @@ import ca.yorku.eecs4314group12.ui.data.Movie;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import jakarta.annotation.security.PermitAll;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 /**
- * Home / discovery page.
+ * Home / discovery page — publicly accessible without login.
  *
  * Shows a search bar and a grid of featured movies.
- * Movie data currently comes from DummyDataService.
  * TODO: Wire to movie-service REST API once contract is finalized.
  */
 @Route(value = "home", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
 @PageTitle("Home | Absolute Cinema")
-@PermitAll
+@AnonymousAllowed
 public class HomeView extends VerticalLayout {
 
     private final DummyDataService dataService;
@@ -37,10 +35,6 @@ public class HomeView extends VerticalLayout {
 
         add(buildHero(), buildMovieGrid());
     }
-
-    // -------------------------------------------------------------------------
-    // Hero / search section
-    // -------------------------------------------------------------------------
 
     private VerticalLayout buildHero() {
         H2 heading = new H2("What are you watching tonight?");
@@ -68,10 +62,6 @@ public class HomeView extends VerticalLayout {
         return hero;
     }
 
-    // -------------------------------------------------------------------------
-    // Featured movies grid
-    // -------------------------------------------------------------------------
-
     private VerticalLayout buildMovieGrid() {
         H3 sectionTitle = new H3("Featured Films");
         sectionTitle.getStyle().set("margin-bottom", "var(--lumo-space-m)");
@@ -91,7 +81,6 @@ public class HomeView extends VerticalLayout {
     }
 
     private Div buildMovieCard(Movie movie) {
-        // Poster placeholder
         Div poster = new Div();
         poster.getStyle()
                 .set("background", "var(--lumo-contrast-10pct)")

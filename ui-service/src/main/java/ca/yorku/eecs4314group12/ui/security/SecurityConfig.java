@@ -6,47 +6,55 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Security configuration.
  *
- * Uses in-memory users as placeholders until the user-service API is finalized.
- * Replace InMemoryUserDetailsManager with a real UserDetailsService that calls
- * user-service once the REST contract is agreed upon.
+ * Uses an in-memory user store that supports runtime registration.
+ * Accounts created during a session are lost on restart.
+ *
+ * TODO: Replace InMemoryUserRegistry with a call to user-service once the
+ *       REST contract is agreed upon.
  */
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity {
 
+    private final InMemoryUserRegistry userRegistry;
+
+    public SecurityConfig(InMemoryUserRegistry userRegistry) {
+        this.userRegistry = userRegistry;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
-        // Tell Vaadin which view is the login page
         setLoginView(http, LoginView.class);
+        http.logout(logout -> logout
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+        );
     }
-
-    /**
-     * Placeholder in-memory users.
-     * TODO: Replace with a call to user-service once the API is finalized.
-     */
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails alice = User.withDefaultPasswordEncoder()
-                .username("alice")
-                .password("password")
-                .roles("USER")
-                .build();
+        return username -> {
+            UserDetails user = userRegistry.findUser(username);
+            if (user == null) throw new UsernameNotFoundException("User not found: " + username);
+            return user;
+        };
+    }
 
-        UserDetails bob = User.withDefaultPasswordEncoder()
-                .username("bob")
-                .password("password")
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(alice, bob);
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

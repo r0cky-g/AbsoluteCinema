@@ -6,6 +6,7 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -13,14 +14,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 /**
- * Login page — the entry point for unauthenticated users.
- *
- * Vaadin's built-in LoginForm handles the POST to /login automatically
- * when wired through VaadinWebSecurity (see SecurityConfig).
- *
- * Placeholder credentials (see SecurityConfig):
- *   username: alice  password: password
- *   username: bob    password: password
+ * Login page — entry point for unauthenticated users.
  */
 @Route("login")
 @PageTitle("Login | Absolute Cinema")
@@ -50,18 +44,22 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         loginForm.setAction("login");
 
-        Paragraph hint = new Paragraph("Demo: alice / password  or  bob / password");
-        hint.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
+        Paragraph registerPrompt = new Paragraph();
+        registerPrompt.getStyle()
+                .set("font-size", "var(--lumo-font-size-s)")
                 .set("color", "var(--lumo-secondary-text-color)")
                 .set("margin-top", "var(--lumo-space-s)");
+        registerPrompt.setText("Don't have an account? ");
 
-        add(appName, tagline, loginForm, hint);
+        Anchor registerLink = new Anchor("/register", "Create one here");
+        registerLink.getStyle().set("color", "var(--lumo-primary-color)");
+        registerPrompt.add(registerLink);
+
+        add(appName, tagline, loginForm, registerPrompt);
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        // Show an error banner if Spring Security redirected here after a failed login
         if (event.getLocation().getQueryParameters().getParameters().containsKey("error")) {
             loginForm.setError(true);
         }
