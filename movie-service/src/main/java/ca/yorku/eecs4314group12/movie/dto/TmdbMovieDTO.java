@@ -16,6 +16,7 @@ public class TmdbMovieDTO {
 	private TmdbImagesDTO images;
 	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
+	
 	public int getId() {
 		return id;
 	}
