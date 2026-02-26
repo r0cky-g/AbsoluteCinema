@@ -1,6 +1,6 @@
 package ca.yorku.eecs4314group12.ui.security;
 
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import ca.yorku.eecs4314group12.ui.views.LoginView;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,22 +11,20 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security configuration.
+ * Security configuration for Vaadin 25 + Spring Boot 4.
  *
+ * Uses VaadinSecurityConfigurer (replaces the removed VaadinWebSecurity).
  * Uses an in-memory user store that supports runtime registration.
- * Accounts created during a session are lost on restart.
  *
  * TODO: Replace InMemoryUserRegistry with a call to user-service once the
  *       REST contract is agreed upon.
  */
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends VaadinWebSecurity {
+public class SecurityConfig {
 
     private final InMemoryUserRegistry userRegistry;
 
@@ -34,16 +32,13 @@ public class SecurityConfig extends VaadinWebSecurity {
         this.userRegistry = userRegistry;
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
-        setLoginView(http, LoginView.class);
-        http.logout(logout -> logout
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-        );
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        }).build();
     }
+
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {

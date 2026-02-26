@@ -15,10 +15,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.server.VaadinServletRequest;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
+/**
+ * Main application layout.
+ * Requires @AnonymousAllowed in Vaadin 25 since HomeView is public.
+ */
+@AnonymousAllowed
 public class MainLayout extends AppLayout {
 
     public MainLayout() {
