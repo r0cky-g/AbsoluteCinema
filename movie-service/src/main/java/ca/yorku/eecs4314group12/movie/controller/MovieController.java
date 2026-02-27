@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
 import ca.yorku.eecs4314group12.movie.service.MovieService;
 
-
 @RestController
 @RequestMapping("/movie")
 public class MovieController {

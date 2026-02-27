@@ -10,6 +10,8 @@ public class TmdbMovieDTO {
 	private String overview;
 	private String poster_path;
 	private String release_date;
+	private ArrayList<TmdbGenreDTO> genres;
+	private int budget;
 	private int revenue;
 	private int runtime;
 	private String status;
@@ -65,6 +67,22 @@ public class TmdbMovieDTO {
 		this.release_date = release_date;
 	}
 	
+	public ArrayList<TmdbGenreDTO> getGenres() {
+		return genres;
+	}
+
+	public void setGenres(ArrayList<TmdbGenreDTO> genres) {
+		this.genres = genres;
+	}
+
+	public int getBudget() {
+		return budget;
+	}
+
+	public void setBudget(int budget) {
+		this.budget = budget;
+	}
+
 	public int getRevenue() {
 		return revenue;
 	}
