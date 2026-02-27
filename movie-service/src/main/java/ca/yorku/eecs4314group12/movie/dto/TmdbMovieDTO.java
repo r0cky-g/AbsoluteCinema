@@ -8,6 +8,8 @@ public class TmdbMovieDTO {
 	private boolean adult;
 	private String original_language;
 	private String original_title;
+	private String title;
+	private String tagline;
 	private String overview;
 	private String poster_path;
 	private String release_date;
@@ -19,6 +21,7 @@ public class TmdbMovieDTO {
 	private TmdbImagesDTO images;
 	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
+	private ArrayList<TmdbCompanyDTO> production_companies;
 	
 	public int getId() {
 		return id;
@@ -52,6 +55,22 @@ public class TmdbMovieDTO {
 		this.original_title = original_title;
 	}
 	
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getTagline() {
+		return tagline;
+	}
+
+	public void setTagline(String tagline) {
+		this.tagline = tagline;
+	}
+
 	public String getOverview() {
 		return overview;
 	}
@@ -138,5 +157,13 @@ public class TmdbMovieDTO {
 	
 	public void setCredits(TmdbCreditsDTO credits) {
 		this.credits = credits;
+	}
+
+	public ArrayList<TmdbCompanyDTO> getProduction_companies() {
+		return production_companies;
+	}
+
+	public void setProduction_companies(ArrayList<TmdbCompanyDTO> production_companies) {
+		this.production_companies = production_companies;
 	}
 }
