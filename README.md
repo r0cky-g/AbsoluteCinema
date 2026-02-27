@@ -36,10 +36,10 @@ An EECS 4314 project.
 
 4. Run  
     ### Windows
-    mvnw.cmd spring-boot:run
+    ```./mvnw.cmd spring-boot:run```
 
     ### Mac/Linux
-    mvnw spring-boot:run
+    ```./mvnw spring-boot:run```
 
 5. Go to ```http://localhost:8080/movie/{id}``` in your browser, where {id} is a valid movie id from TMDB.
 
