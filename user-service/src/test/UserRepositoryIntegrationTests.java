@@ -20,17 +20,14 @@ public class UserRepositoryIntegrationTests {
 
     @Test
     public void testCreateAndFindUser() {
-        User user = new User("testuser", "testpass");
-        user.setEmail("testuser@example.com");
+        User user = new User("testuser", "testuser@example.com", "testpass");
         userRepository.save(user);
 
-        // Find by username
         Optional<User> byUsername = userRepository.findByUsername("testuser");
         assertTrue(byUsername.isPresent());
         assertEquals("testuser", byUsername.get().getUsername());
         assertEquals("testpass", byUsername.get().getPassword());
 
-        // Find by email
         Optional<User> byEmail = userRepository.findByEmail("testuser@example.com");
         assertTrue(byEmail.isPresent());
         assertEquals("testuser@example.com", byEmail.get().getEmail());
@@ -38,8 +35,7 @@ public class UserRepositoryIntegrationTests {
 
     @Test
     public void testDeleteUser() {
-        User user = new User("todelete", "12345");
-        user.setEmail("todelete@example.com");
+        User user = new User("todelete", "todelete@example.com", "12345");
         userRepository.save(user);
 
         assertTrue(userRepository.findByUsername("todelete").isPresent());

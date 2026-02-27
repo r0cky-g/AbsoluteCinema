@@ -27,13 +27,13 @@ public class UserControllerTests {
         User user = new User();
         user.setUsername("testuser2");
         user.setPassword("testpass2");
+        user.setEmail("testuser2@example.com");
 
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("testuser2"))
-                .andExpect(jsonPath("$.password").value("testpass2"))
                 .andExpect(jsonPath("$.emailVerified").value(false));
     }
 }

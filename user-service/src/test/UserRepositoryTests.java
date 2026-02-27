@@ -19,6 +19,7 @@ public class UserRepositoryTests {
     @Test
     void testCreateAndFindUser() {
         User user = new User("alice", "password123");
+        user.setEmail("alice@example.com");
         userRepository.save(user);
 
         Optional<User> found = userRepository.findByUsername("alice");
@@ -26,12 +27,13 @@ public class UserRepositoryTests {
         assertEquals("alice", found.get().getUsername());
 
         Optional<User> notFound = userRepository.findByEmail("alice@example.com");
-        assertFalse(notFound.isPresent(), "User with this email should not exist");
+        assertTrue(notFound.isPresent(), "User with this email should exist");
     }
 
     @Test
     void testDeleteUser() {
         User user = new User("bob", "secret");
+        user.setEmail("bob@example.com");
         userRepository.save(user);
 
         userRepository.delete(user);

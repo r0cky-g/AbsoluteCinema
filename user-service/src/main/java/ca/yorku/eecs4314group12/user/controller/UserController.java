@@ -17,32 +17,33 @@ public class UserController {
         this.service = service;
     }
 
-    // Create user
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@Valid @RequestBody User user) {
         return service.createUser(user);
     }
 
-    // Get all users
+    @PostMapping("/login")
+    public User login(@RequestParam("identifier") String identifier,
+                      @RequestParam("password") String password) {
+        return service.authenticate(identifier, password);
+    }
+
     @GetMapping
     public List<User> getUsers() {
         return service.getAllUsers();
     }
 
-    // Get user by ID
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
         return service.getUserById(id);
     }
 
-    // Update user
     @PutMapping("/{id}")
     public User updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
         return service.updateUser(id, user);
     }
 
-    // Delete user
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
