@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class TmdbMovieDTO {
 	
 	private int id;
+	private boolean adult;
 	private String original_language;
 	private String original_title;
 	private String overview;
@@ -27,6 +28,14 @@ public class TmdbMovieDTO {
 		this.id = id;
 	}
 	
+	public boolean isAdult() {
+		return adult;
+	}
+
+	public void setAdult(boolean adult) {
+		this.adult = adult;
+	}
+
 	public String getOriginal_language() {
 		return original_language;
 	}
