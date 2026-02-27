@@ -16,7 +16,7 @@ An EECS 4314 project.
 ### Clone the repo then follow the steps for either using an IDE or Terminal.
 
 ### Steps (IDE)
-1. Set your API token as an environment variable called TDMB_TOKEN either in the IDE or via the terminal.
+1. Set your API token as an environment variable called TDMB_TOKEN in the IDE, terminal, or if in Windows, the Edit Environment Variables window.
 
 2. Run the MovieServiceApplication.java found in the movie-service folder as a spring boot application.
 
@@ -25,7 +25,7 @@ An EECS 4314 project.
 4. See the results.
 
 ### Steps (Terminal)
-1. Set your API token as an environment variable called TDMB_TOKEN in the terminal.
+1. Set your API token as an environment variable called TDMB_TOKEN in the terminal, or if in Windows, the Edit Environment Variables window.
 
 2. Open the terminal in the repository directory.
 
