@@ -1,4 +1,4 @@
-package ca.yorku.eecs4314group12.api_service;
+package ca.yorku.eecs4314group12.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
