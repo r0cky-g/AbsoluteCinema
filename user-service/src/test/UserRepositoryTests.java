@@ -18,27 +18,31 @@ public class UserRepositoryTests {
 
     @Test
     void testCreateAndFindUser() {
-        User user = new User("alice", "password123");
-        user.setEmail("alice@example.com");
+        // Create user with username, password, email
+        User user = new User("alice", "password123", "alice@example.com");
         userRepository.save(user);
 
+        // Find by username
         Optional<User> found = userRepository.findByUsername("alice");
-        assertTrue(found.isPresent(), "User should be found by username");
+        assertTrue(found.isPresent());
         assertEquals("alice", found.get().getUsername());
+        assertEquals("alice@example.com", found.get().getEmail());
 
-        Optional<User> notFound = userRepository.findByEmail("alice@example.com");
-        assertTrue(notFound.isPresent(), "User with this email should exist");
+        // Find by email
+        Optional<User> byEmail = userRepository.findByEmail("alice@example.com");
+        assertTrue(byEmail.isPresent());
     }
 
     @Test
     void testDeleteUser() {
-        User user = new User("bob", "secret");
-        user.setEmail("bob@example.com");
+        User user = new User("bob", "secret", "bob@example.com");
         userRepository.save(user);
 
+        // Delete user
         userRepository.delete(user);
 
+        // Verify deletion
         Optional<User> found = userRepository.findByUsername("bob");
-        assertFalse(found.isPresent(), "User should be deleted");
+        assertFalse(found.isPresent());
     }
 }

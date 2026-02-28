@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -21,29 +22,39 @@ public class UserServiceTests {
     @Autowired
     private UserRepository userRepository;
 
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
     @Test
     public void testAuthenticateWithUsername() {
-        User user = new User("loginuser", "loginuser@example.com", "secret");
+
+        User user = new User("loginuser", "loginuser@example.com", encoder.encode("secret123"));
+        user.setEmailVerified(true);
         userRepository.save(user);
 
-        User authenticated = userService.authenticate("loginuser", "secret");
+        User authenticated = userService.authenticate("loginuser", "secret123");
+
         Assertions.assertNotNull(authenticated);
         Assertions.assertEquals("loginuser", authenticated.getUsername());
     }
 
     @Test
     public void testAuthenticateWithEmail() {
-        User user = new User("loginuser2", "loginuser2@example.com", "secret2");
+
+        User user = new User("loginuser2", "loginuser2@example.com", encoder.encode("secret234"));
+        user.setEmailVerified(true);
         userRepository.save(user);
 
-        User authenticated = userService.authenticate("loginuser2@example.com", "secret2");
+        User authenticated = userService.authenticate("loginuser2@example.com", "secret234");
+
         Assertions.assertNotNull(authenticated);
         Assertions.assertEquals("loginuser2@example.com", authenticated.getEmail());
     }
 
     @Test
     public void testAuthenticateInvalidPassword() {
-        User user = new User("loginuser3", "loginuser3@example.com", "rightpass");
+
+        User user = new User("loginuser3", "loginuser3@example.com", encoder.encode("rightpass1"));
+        user.setEmailVerified(true);
         userRepository.save(user);
 
         Assertions.assertThrows(RuntimeException.class, () ->
@@ -52,7 +63,10 @@ public class UserServiceTests {
 
     @Test
     public void testLikedGenresPersistence() {
-        User user = new User("genreuser", "genreuser@example.com", "pass");
+
+        User user = new User("genreuser", "genreuser@example.com", "password1");
+        user.setEmailVerified(true);
+
         Set<String> genres = new HashSet<>();
         genres.add("ACTION");
         genres.add("COMEDY");
@@ -68,4 +82,3 @@ public class UserServiceTests {
         Assertions.assertTrue(found.getLikedGenres().contains("COMEDY"));
     }
 }
-
