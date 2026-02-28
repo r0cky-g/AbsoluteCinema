@@ -18,6 +18,7 @@ public class TmdbMovieDTO {
 	private int revenue;
 	private int runtime;
 	private String status;
+	private TmdbReleaseDates release_dates;
 	private TmdbImagesDTO images;
 	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
@@ -135,6 +136,14 @@ public class TmdbMovieDTO {
 		this.status = status;
 	}
 	
+	public TmdbReleaseDates getRelease_dates() {
+		return release_dates;
+	}
+
+	public void setRelease_dates(TmdbReleaseDates release_dates) {
+		this.release_dates = release_dates;
+	}
+
 	public TmdbImagesDTO getImages() {
 		return images;
 	}
