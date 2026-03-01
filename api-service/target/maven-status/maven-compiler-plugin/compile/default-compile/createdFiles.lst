@@ -1,0 +1,16 @@
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbImageDTO.class
+ca\yorku\eecs4314group12\api\client\MovieClient.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbVideoDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCreditsCrewDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCompanyDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCertifcateDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbGenreDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCreditsDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbRegionDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbReleaseDates.class
+ca\yorku\eecs4314group12\api\ApiServiceApplication.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbMovieDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCreditsActorDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbVideosDTO.class
+ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbImagesDTO.class
+ca\yorku\eecs4314group12\api\dto\TestDTO.class
