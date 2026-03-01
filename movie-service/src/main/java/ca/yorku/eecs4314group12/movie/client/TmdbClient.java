@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.movie.client;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -9,10 +10,11 @@ import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
 public class TmdbClient {
 	
 	private final WebClient webClient;
-	private final String token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2OTU1ZmI0OGU3YTdlYWU0MGFlMTRlYmY2ZDYwMDQ4ZiIsIm5iZiI6MTc3MjI0NTkwNi41NzEsInN1YiI6IjY5YTI1MzkyYWIxZTk1MTAyY2UyYWVjMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FU9djysVkuM6gvoO21HunREIX7fnK9K0qh7-gjVkx6U";
+	private final String token;
 	
-	public TmdbClient(WebClient tdmbWebClient) {
+	public TmdbClient(WebClient tdmbWebClient, @Value("${tmdb.token}") String tmdbToken) {
 		webClient = tdmbWebClient;
+		token = tmdbToken;
 	}
 	
 	public TmdbMovieDTO getMovieDetails(int id) {

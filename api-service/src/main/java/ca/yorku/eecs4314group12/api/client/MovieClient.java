@@ -10,14 +10,14 @@ import reactor.core.publisher.Mono;
 @Component
 public class MovieClient {
 
-    private final WebClient movieClient;
+    private final WebClient webClient;
 
-    public MovieClient(@Qualifier("APIMovieClient") WebClient movieClient) {
-        this.movieClient = movieClient;
+    public MovieClient(@Qualifier("APIMovieClient") WebClient webClient) {
+        this.webClient = webClient;
     }
 
     public Mono<TmdbMovieDTO> getMovieById(int id) {
-        return movieClient.get()
+        return webClient.get()
                 .uri("/" + id)
                 .retrieve()
                 .bodyToMono(TmdbMovieDTO.class);
