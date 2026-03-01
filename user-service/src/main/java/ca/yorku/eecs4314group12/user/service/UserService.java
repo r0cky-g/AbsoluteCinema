@@ -2,6 +2,8 @@ package ca.yorku.eecs4314group12.user.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import ca.yorku.eecs4314group12.user.repository.UserRepository;
 import ca.yorku.eecs4314group12.user.model.User;
@@ -21,15 +23,19 @@ public class UserService {
         this.emailService = emailService;
     }
 
-    // ================= CREATE USER =================
+    // CREATE USER
     public User createUser(User user) {
 
         if (repo.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already registered");
         }
 
         if (repo.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already taken");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Username already taken");
         }
 
         // Encrypt password
@@ -39,12 +45,14 @@ public class UserService {
         String code = String.format("%04d", (int) (Math.random() * 10000));
         user.setVerificationCode(code);
         user.setEmailVerified(false);
+
+        // Send verification email
         emailService.sendVerificationEmail(user.getEmail(), code);
 
         return repo.save(user);
     }
 
-    // authenticate
+    // authenticate (LOGIN)
     public User authenticate(String identifier, String rawPassword) {
 
         Optional<User> optionalUser = repo.findByUsername(identifier);
@@ -54,38 +62,48 @@ public class UserService {
         }
 
         User user = optionalUser
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
 
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid credentials");
         }
+
         if (!user.isEmailVerified()) {
-            throw new RuntimeException("Email not verified");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Email not verified");
         }
 
         return user;
     }
 
-    //verify email
+    // verify email
     public boolean verifyEmail(Long userId, String code) {
 
-        Optional<User> optionalUser = repo.findById(userId);
-        if (optionalUser.isEmpty()) {
-            return false;
+        User user = repo.findById(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
+
+        if (user.getVerificationCode() == null ||
+                !user.getVerificationCode().equals(code)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid verification code");
         }
 
-        User user = optionalUser.get();
+        user.setEmailVerified(true);
+        user.setVerificationCode(null);
+        repo.save(user);
 
-        if (user.getVerificationCode() != null &&
-                user.getVerificationCode().equals(code)) {
-
-            user.setEmailVerified(true);
-            user.setVerificationCode(null);
-            repo.save(user);
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     //get all users
@@ -96,7 +114,10 @@ public class UserService {
     //get user by id
     public User getUserById(Long id) {
         return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id " + id));
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found with id " + id));
     }
 
     //update user
@@ -106,18 +127,23 @@ public class UserService {
 
         if (!existingUser.getEmail().equals(updatedUser.getEmail()) &&
                 repo.existsByEmail(updatedUser.getEmail())) {
-            throw new RuntimeException("Email already registered");
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already registered");
         }
 
         if (!existingUser.getUsername().equals(updatedUser.getUsername()) &&
                 repo.existsByUsername(updatedUser.getUsername())) {
-            throw new RuntimeException("Username already taken");
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Username already taken");
         }
 
         existingUser.setUsername(updatedUser.getUsername());
         existingUser.setEmail(updatedUser.getEmail());
 
-        // Only update password if provided
         if (updatedUser.getPassword() != null &&
                 !updatedUser.getPassword().isBlank()) {
 
@@ -128,8 +154,9 @@ public class UserService {
         return repo.save(existingUser);
     }
 
-    //delete user
+    // Delete user
     public void deleteUser(Long id) {
+
         User existingUser = getUserById(id);
         repo.delete(existingUser);
     }

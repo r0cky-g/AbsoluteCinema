@@ -10,6 +10,7 @@ import ca.yorku.eecs4314group12.user.model.User;
 import ca.yorku.eecs4314group12.user.service.UserService;
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
 import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
+import ca.yorku.eecs4314group12.user.dto.UserResponseDTO;
 
 import java.util.List;
 
@@ -23,16 +24,15 @@ public class UserController {
         this.service = service;
     }
 
-    //Register
+    // register
     @PostMapping("/register")
-    public ResponseEntity<User> register(
+    public ResponseEntity<UserResponseDTO> register(
             @Valid @RequestBody UserRegisterRequest request) {
 
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                request.getPassword()
-        );
+                request.getPassword());
 
         user.setOver18(request.isOver18());
 
@@ -40,55 +40,91 @@ public class UserController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(createdUser);
+                .body(toDTO(createdUser));
     }
 
-    // ================= LOGIN =================
+    // login
     @PostMapping("/login")
-    public User login(@Valid @RequestBody LoginRequest request) {
-        return service.authenticate(
+    public UserResponseDTO login(@Valid @RequestBody LoginRequest request) {
+
+        User user = service.authenticate(
                 request.getIdentifier(),
-                request.getPassword()
-        );
+                request.getPassword());
+
+        return toDTO(user);
     }
 
-    // ================= VERIFY EMAIL =================
+    // verify email
     @PostMapping("/{id}/verify")
-    public String verifyEmail(@PathVariable Long id,
-                              @RequestParam String code) {
+    public ResponseEntity<String> verifyEmail(
+            @PathVariable Long id,
+            @RequestParam String code) {
 
         boolean success = service.verifyEmail(id, code);
 
         if (success) {
-            return "Email verified successfully";
+            return ResponseEntity.ok("Email verified successfully");
         } else {
-            return "Invalid verification code";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid verification code");
         }
     }
 
-    //get all users
+    // get all users
     @GetMapping
-    public List<User> getUsers() {
-        return service.getAllUsers();
+    public List<UserResponseDTO> getUsers() {
+
+        return service.getAllUsers()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
-    //get user by id
+    // get user by id
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return service.getUserById(id);
+    public UserResponseDTO getUserById(@PathVariable Long id) {
+
+        User user = service.getUserById(id);
+
+        return toDTO(user);
     }
 
-    //update user
+    // update user
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id,
-                           @Valid @RequestBody User user) {
-        return service.updateUser(id, user);
+    public UserResponseDTO updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody User user) {
+
+        User updatedUser = service.updateUser(id, user);
+
+        return toDTO(updatedUser);
     }
 
-    //delete user
+    // delete user
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
+    }
+
+    // private mapper
+    /**
+     * Converts a User entity to a UserResponseDTO.
+     * This method ensures that sensitive information such as password and
+     * verificationCode is NOT displayed to the client.
+     *
+     * The DTO is used to control exactly what data is returned in API responses.
+     *
+     * @param user the User entity retrieved from the database
+     * @return a UserResponseDTO containing safe and displayable fields
+     */
+    private UserResponseDTO toDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.isEmailVerified(),
+                user.getRole().name());
     }
 }
