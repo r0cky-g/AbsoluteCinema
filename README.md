@@ -16,31 +16,75 @@ An EECS 4314 project.
 ### Clone the repo then follow the steps for either using an IDE or Terminal.
 
 ### Steps (IDE)
-1. Set your API token as an environment variable called TDMB_TOKEN in the IDE, terminal, or if in Windows, the Edit Environment Variables window.
+#### 1. Set your API token as an environment variable called TDMB_TOKEN in the terminal, or if in Windows, you can use the Edit Environment Variables window, and add a new entry.
 
-2. Run the MovieServiceApplication.java found in the movie-service folder as a spring boot application.
+### Terminal
 
-3. Go to ```http://localhost:8080/movie/{id}``` in your browser, where {id} is a valid movie id from TMDB.
+### Windows
+```
+setx TDMB_TOKEN "your_token_value"
+```
 
-4. See the results.
+### Mac/Linux
+```
+export TMDB_TOKEN=your_token_value
+```
+
+### Edit Environment Variables Window (Windows)
+1. Go to Start -> Edit environment variables for your account -> User variables -> New
+
+2. For variable name, enter TDMB_TOKEN; for value name enter your token.
+
+#### 2. Run the MovieServiceApplication.java found in the movie-service folder as a spring boot application.
+
+#### 3. Go to ```http://localhost:8080/movie/{id}``` in your browser, where {id} is a valid movie id from TMDB.
+
+#### Note: This only works with movies on TMDB, media that are categorized as TV will not work and will give a 404.
+
+#### 4. See the results.
+
+####
 
 ### Steps (Terminal)
-1. Set your API token as an environment variable called TDMB_TOKEN in the terminal, or if in Windows, the Edit Environment Variables window.
+#### 1. Set your API token as an environment variable called TDMB_TOKEN in the terminal, or if in Windows, you can use the Edit Environment Variables window, and add a new entry.
 
-2. Open the terminal in the repository directory.
+### Terminal
 
-3. Change directory
-    ```
-    cd movie-service
-    ```
+### Windows
+```
+setx TDMB_TOKEN "your_token_value"
+```
 
-4. Run  
-    ### Windows
-    ```./mvnw.cmd spring-boot:run```
+### Mac/Linux
+```
+export TMDB_TOKEN=your_token_value
+```
 
-    ### Mac/Linux
-    ```./mvnw spring-boot:run```
+### Edit Environment Variables Window (Windows)
+1. Go to Start -> Edit environment variables for your account -> User variables -> New
 
-5. Go to ```http://localhost:8080/movie/{id}``` in your browser, where {id} is a valid movie id from TMDB.
+2. For variable name, enter TDMB_TOKEN; for value name enter your token.
 
-6. See the results.
+#### 2. Open the terminal in the repository directory.
+
+#### 3. Change directory
+```
+cd movie-service
+```
+#### 4. Run  
+
+### Windows
+```
+./mvnw.cmd spring-boot:run
+```
+
+### Mac/Linux
+```
+./mvnw spring-boot:run
+```
+
+#### 5. Go to ```http://localhost:8080/movie/{id}``` in your browser, where {id} is a valid movie id from TMDB.
+
+#### Note: This only works with movies on TMDB, media that are categorized as TV will not work and will give a 404.
+
+#### 6. See the results.
