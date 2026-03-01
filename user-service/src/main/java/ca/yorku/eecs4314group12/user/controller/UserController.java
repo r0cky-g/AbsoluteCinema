@@ -14,7 +14,7 @@ import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
 
     private final UserService service;
