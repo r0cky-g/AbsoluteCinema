@@ -2,7 +2,7 @@ package ca.yorku.eecs4314group12.api.dto.userServiceDTO;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class LoginRequest {
+public class LoginRequestDTO {
 
     @NotBlank(message = "Identifier cannot be blank")
     private String identifier;
