@@ -7,9 +7,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Component
 public class UserClient {
 
-    private final WebClient userClient;
+    private final WebClient webClient;
 
-    public UserClient(@Qualifier("APIReviewClient") WebClient userClient) {
-        this.userClient = userClient;
+    public UserClient(@Qualifier("APIReviewClient") WebClient webClient) {
+        this.webClient = webClient;
     }
 }

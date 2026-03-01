@@ -1,4 +1,4 @@
-package ca.yorku.eecs4314group12.api.dto.reviewServiceDTO;
+package ca.yorku.eecs4314group12.api.dto;
 
 import java.time.LocalDateTime;
 
@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * Standard API Response wrapper
  * Provides consistent response structure across all endpoints
  */
-public class ApiResponseDTO<T> {
+public class ApiResponse<T> {
     
     private boolean success;
     private String message;
@@ -14,11 +14,11 @@ public class ApiResponseDTO<T> {
     private LocalDateTime timestamp;
     private String error;
     
-    public ApiResponseDTO() {
+    public ApiResponse() {
         this.timestamp = LocalDateTime.now();
     }
     
-    public ApiResponseDTO(boolean success, String message, T data) {
+    public ApiResponse(boolean success, String message, T data) {
         this.success = success;
         this.message = message;
         this.data = data;
@@ -26,15 +26,15 @@ public class ApiResponseDTO<T> {
     }
     
     // Static factory methods for success responses
-    public static <T> ApiResponseDTO<T> success(T data) {
-        ApiResponseDTO<T> response = new ApiResponseDTO<>();
+    public static <T> ApiResponse<T> success(T data) {
+        ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setData(data);
         return response;
     }
     
-    public static <T> ApiResponseDTO<T> success(String message, T data) {
-        ApiResponseDTO<T> response = new ApiResponseDTO<>();
+    public static <T> ApiResponse<T> success(String message, T data) {
+        ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(true);
         response.setMessage(message);
         response.setData(data);
@@ -42,15 +42,15 @@ public class ApiResponseDTO<T> {
     }
     
     // Static factory methods for error responses
-    public static <T> ApiResponseDTO<T> error(String error) {
-        ApiResponseDTO<T> response = new ApiResponseDTO<>();
+    public static <T> ApiResponse<T> error(String error) {
+        ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(false);
         response.setError(error);
         return response;
     }
     
-    public static <T> ApiResponseDTO<T> error(String message, String error) {
-        ApiResponseDTO<T> response = new ApiResponseDTO<>();
+    public static <T> ApiResponse<T> error(String message, String error) {
+        ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(false);
         response.setMessage(message);
         response.setError(error);

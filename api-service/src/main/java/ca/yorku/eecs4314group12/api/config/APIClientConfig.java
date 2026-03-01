@@ -8,22 +8,22 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class APIClientConfig {
 
         // configure to use resourcies/application.yaml
-    private final String movieIp = "http://localhost:8080/movie/";
-    private final String userIp = "";
-    private final String reviewIp = "";
+    private final String userIp = "http://localhost:8082";
+    private final String movieIp = "http://localhost:8083";
+    private final String reviewIp = "http://localhost:8084";
     // private final String forumIp = "";
-
-    @Bean("APIMovieClient")
-    public WebClient movieClient() {
-        return WebClient.builder()
-                .baseUrl(movieIp)
-                .build();
-    }
 
     @Bean("APIUserClient")
     public WebClient userClient() {
         return WebClient.builder()
                 .baseUrl(userIp)
+                .build();
+    }
+
+    @Bean("APIMovieClient")
+    public WebClient movieClient() {
+        return WebClient.builder()
+                .baseUrl(movieIp)
                 .build();
     }
     
