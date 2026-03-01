@@ -1,13 +1,13 @@
 package ca.yorku.eecs4314group12.api.client;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.TmdbMovieDTO;
 import reactor.core.publisher.Mono;
 
-@Service
+@Component
 public class MovieClient {
 
     private final WebClient movieClient;
