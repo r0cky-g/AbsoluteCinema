@@ -3,7 +3,6 @@ package ca.yorku.eecs4314group12.api.service;
 import org.springframework.stereotype.Service;
 
 import ca.yorku.eecs4314group12.api.client.MovieClient;
-import ca.yorku.eecs4314group12.api.dto.ApiResponse;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.TmdbMovieDTO;
 import reactor.core.publisher.Mono;
 
@@ -16,7 +15,7 @@ public class MovieService {
         this.movieClient = movieClient;
     }
 
-    public Mono<ApiResponse<TmdbMovieDTO>> getMovieById(int id) {
+    public Mono<TmdbMovieDTO> getMovieById(int id) {
         return movieClient.getMovieById(id);
     }
 }

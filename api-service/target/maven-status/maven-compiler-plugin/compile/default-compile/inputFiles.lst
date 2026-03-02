@@ -1,9 +1,10 @@
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\ApiServiceApplication.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\client\BaseWebClient.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\client\MovieClient.java
-D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\client\ReviewClient.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\client\UserClient.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\config\APIClientConfig.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\controller\APIController.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\ApiErrorResponse.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCertifcateDTO.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCompanyDTO.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbCreditsActorDTO.java
@@ -17,10 +18,11 @@ D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\ap
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbReleaseDates.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbVideoDTO.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\TmdbVideosDTO.java
-D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\TestDTO.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\reviewServiceDTO\ReviewDTO.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\LoginRequest.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\LoginResponseDTO.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\UserRegisterRequest.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\UserResponseDTO.java
+D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\exception\ApiException.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\exception\GlobalExceptionHandler.java
 D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\service\MovieService.java
-D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\service\ReviewService.java
-D:\projects\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\service\UserService.java

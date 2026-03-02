@@ -1,14 +1,15 @@
 package ca.yorku.eecs4314group12.api.client;
 
+import java.time.Instant;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.codec.DecodingException;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import ca.yorku.eecs4314group12.api.dto.ApiResponse;
+import ca.yorku.eecs4314group12.api.dto.ApiErrorResponse;
+import ca.yorku.eecs4314group12.api.exception.ApiException;
 import reactor.core.publisher.Mono;
 
-@Component
 public class BaseWebClient {
 
     private final WebClient webClient;
@@ -17,32 +18,105 @@ public class BaseWebClient {
         this.webClient = webClient;
     }
 
-    /**
-     * Send a GET request and return a response in the form of Mono<ApiResponse<?>>
-     *
-     * @param uri The endpoint URI
-     * @param typeRef ParameterizedTypeReference for the expected ApiResponse type
-     * @param <T> The type inside ApiResponse
-     * @return Mono<ApiResponse<T>> — guaranteed to return an ApiResponse even if the server returned invalid JSON
-     */
-    public <T> Mono<ApiResponse<T>> get(String uri, ParameterizedTypeReference<ApiResponse<T>> typeRef) {
+    public <T> Mono<T> get(String uri, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
         return webClient.get()
-                .uri(uri)
-                .retrieve()
-                .bodyToMono(typeRef)
-                .onErrorResume(DecodingException.class, e -> {
-                    return Mono.just(ApiResponse.error("Invalid response format"));
+                .uri(uri, uriVariables)
+                .exchangeToMono(response -> {
+                    if (response.statusCode().is2xxSuccessful()) {
+                        // 2xx: parse as T
+                        return response.bodyToMono(typeRef)
+                                .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                                );
+                    } else {
+                        // non-2xx: parse as ErrorResponse
+                        return response.bodyToMono(ApiErrorResponse.class)
+                                .flatMap(error -> Mono.<T>error(new ApiException(
+                                        response.statusCode().value(),
+                                        error.getMessage(),
+                                        error.getTimestamp()
+                                )))
+                                .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                                );
+                    }
                 });
     }
 
-    public <T, B> Mono<ApiResponse<T>> put(String uri, B body, ParameterizedTypeReference<ApiResponse<T>> typeRef) {
+    public <T> Mono<T> delete(String uri, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
+        return webClient.get()
+                .uri(uri, uriVariables)
+                .exchangeToMono(response -> {
+                    if (response.statusCode().is2xxSuccessful()) {
+                        // 2xx: parse as T
+                        return response.bodyToMono(typeRef)
+                                .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                                );
+                    } else {
+                        // non-2xx: parse as ErrorResponse
+                        return response.bodyToMono(ApiErrorResponse.class)
+                                .flatMap(error -> Mono.<T>error(new ApiException(
+                                        response.statusCode().value(),
+                                        error.getMessage(),
+                                        error.getTimestamp()
+                                )))
+                                .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                                );
+                    }
+                });
+    }
+
+    public <T, B> Mono<T> put(String uri, B requestBody, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
     return webClient.put()
-            .uri(uri)
-            .bodyValue(body)  // The object you are sending
-            .retrieve()
-            .bodyToMono(typeRef)
-            .onErrorResume(DecodingException.class, e -> {
-                return Mono.just(ApiResponse.error("Invalid response format"));
+            .uri(uri, uriVariables)
+            .bodyValue(requestBody)
+            .exchangeToMono(response -> {
+                if (response.statusCode().is2xxSuccessful()) {
+                    // 2xx: parse as T
+                    return response.bodyToMono(typeRef)
+                            .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                            );
+                } else {
+                    // non-2xx: parse as ApiErrorResponse
+                    return response.bodyToMono(ApiErrorResponse.class)
+                            .flatMap(error -> Mono.<T>error(new ApiException(
+                                    response.statusCode().value(),
+                                    error.getMessage(),
+                                    error.getTimestamp()
+                            )))
+                            .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                            );
+                }
             });
-}
+    }
+
+    public <T, B> Mono<T> post(String uri, B requestBody, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
+    return webClient.post()
+            .uri(uri, uriVariables)
+            .bodyValue(requestBody)
+            .exchangeToMono(response -> {
+                if (response.statusCode().is2xxSuccessful()) {
+                    // 2xx: parse as T
+                    return response.bodyToMono(typeRef)
+                            .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                            );
+                } else {
+                    // non-2xx: parse as ApiErrorResponse
+                    return response.bodyToMono(ApiErrorResponse.class)
+                            .flatMap(error -> Mono.<T>error(new ApiException(
+                                    response.statusCode().value(),
+                                    error.getMessage(),
+                                    error.getTimestamp()
+                            )))
+                            .onErrorResume(DecodingException.class, e ->
+                                    Mono.error(new ApiException(500, "Internal Server Error", Instant.now()))
+                            );
+                }
+            });
+    }
 }

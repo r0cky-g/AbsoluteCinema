@@ -1,35 +1,26 @@
 package ca.yorku.eecs4314group12.api.exception;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import ca.yorku.eecs4314group12.api.dto.ApiResponse;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import ca.yorku.eecs4314group12.api.dto.ApiErrorResponse;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /* inbound error handler
-     * converts client errors into standardized error response
-     */
-    @ExceptionHandler(WebClientResponseException.class)
-    public ResponseEntity<?> handleWebClientException(WebClientResponseException ex) {
-
-        String rawBody = ex.getResponseBodyAsString();
-        ObjectMapper mapper = new ObjectMapper();
-        ApiResponse<?> body;
-
-        try {
-            body = mapper.readValue(rawBody, new TypeReference<ApiResponse<?>>() {});
-        } catch (Exception e) {
-            body = ApiResponse.error(rawBody.isEmpty() ? ex.getStatusText() : rawBody);
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleApiException(ApiException ex) {
+        ApiErrorResponse error = new ApiErrorResponse(
+                ex.getMessage(),
+                ex.getTimestamp()
+        );
+        // Use HttpStatus based on code, or fallback to INTERNAL_SERVER_ERROR
+        HttpStatus status = HttpStatus.resolve(ex.getStatus());
+        if (status == null || ex.getStatus() < 100 || ex.getStatus() >= 600) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-
-        return ResponseEntity
-            .status(ex.getStatusCode())
-            .body(body);
+        return new ResponseEntity<ApiErrorResponse>(error, status);
     }
 }

@@ -9,7 +9,7 @@ public class APIClientConfig {
 
         // configure to use resourcies/application.yaml
     private final String userIp = "http://localhost:8082";
-    private final String movieIp = "http://localhost:8083";
+    private final String movieIp = "http://localhost:8080"; //should be 8083
     private final String reviewIp = "http://localhost:8084";
     // private final String forumIp = "";
 

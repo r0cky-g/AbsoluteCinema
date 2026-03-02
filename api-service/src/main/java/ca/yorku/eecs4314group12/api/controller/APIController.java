@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.yorku.eecs4314group12.api.dto.ApiResponse;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.TmdbMovieDTO;
 import ca.yorku.eecs4314group12.api.service.MovieService;
 import reactor.core.publisher.Mono;
@@ -25,7 +24,7 @@ public class APIController {
     }
 
     @GetMapping("/movie/{id}")
-    public Mono<ApiResponse<TmdbMovieDTO>> getMovieDetails(@PathVariable int id) {
+    public Mono<TmdbMovieDTO> getMovieDetails(@PathVariable int id) {
         return movieService.getMovieById(id);
     }
 }
