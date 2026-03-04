@@ -13,7 +13,7 @@
 	<groupId>ca.yorku.eecs4314group12</groupId>
 	<artifactId>review-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<n>review-service</n>
+	<name>review-service</name>
 	<description>Review service for Absolute Cinema</description>
 
 	<dependencies>

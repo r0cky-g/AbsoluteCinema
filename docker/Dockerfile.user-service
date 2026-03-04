@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /app
+
+COPY user-service/.mvn/ user-service/.mvn/
+COPY user-service/mvnw user-service/mvnw
+RUN sed -i 's/\r//' user-service/mvnw && chmod +x user-service/mvnw
+
+COPY pom.xml pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' pom.xml
+RUN user-service/mvnw install -f pom.xml -N -q
+
+COPY user-service/pom.xml user-service/pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' user-service/pom.xml
+RUN user-service/mvnw -f user-service/pom.xml dependency:go-offline -q
+
+COPY user-service/src user-service/src
+RUN user-service/mvnw -f user-service/pom.xml package -Dmaven.test.skip=true -q
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/user-service/target/*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]
