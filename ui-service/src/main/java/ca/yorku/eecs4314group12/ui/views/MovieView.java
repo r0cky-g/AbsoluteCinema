@@ -2,6 +2,7 @@ package ca.yorku.eecs4314group12.ui.views;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
@@ -25,33 +26,33 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 import ca.yorku.eecs4314group12.ui.data.DummyDataService;
-import ca.yorku.eecs4314group12.ui.data.Movie;
-import ca.yorku.eecs4314group12.ui.data.Review;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 
 /**
  * Dynamic movie detail page — route /movie/{id}
  *
- * Sections:
- *   1. Hero banner — poster, title, tagline, genres, TMDB score, user score
- *   2. Overview
- *   3. Cast & crew
- *   4. Film details
- *   5. Reviews — top recommended + 3 most recent
- *
- * TODO: Replace DummyDataService calls with:
- *   - movie data  → WebClient GET movie-service/movie/{id}
- *   - reviews     → WebClient GET review-service/api/reviews/movie/{id}
+ * Data sources (in order of preference):
+ *   Movie   → BackendClientService → api-service GET /api/movie/{id}
+ *             Falls back to DummyDataService if api-service/movie-service is down
+ *   Reviews → BackendClientService → review-service GET /api/reviews/movie/{id}
+ *             Falls back to empty list if review-service is down
+ *   User score → review-service GET /api/reviews/movie/{id}/stats
  */
 @Route(value = "movie/:movieId", layout = MainLayout.class)
 @PageTitle("Movie | Absolute Cinema")
 @AnonymousAllowed
 public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
-    private final DummyDataService dataService;
+    private final BackendClientService backendClient;
+    private final DummyDataService dummyDataService;
 
-    public MovieView(DummyDataService dataService) {
-        this.dataService = dataService;
+    public MovieView(BackendClientService backendClient, DummyDataService dummyDataService) {
+        this.backendClient = backendClient;
+        this.dummyDataService = dummyDataService;
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -59,277 +60,204 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        String movieIdParam = event.getRouteParameters().get("movieId").orElse("0");
+        String param = event.getRouteParameters().get("movieId").orElse("0");
         int movieId;
         try {
-            movieId = Integer.parseInt(movieIdParam);
+            movieId = Integer.parseInt(param);
         } catch (NumberFormatException e) {
             showNotFound();
             return;
         }
-        dataService.getMovieById(movieId).ifPresentOrElse(this::buildPage, this::showNotFound);
+
+        // Try real backend first, fall back to dummy data
+        Optional<MovieDTO> realMovie = backendClient.getMovieById(movieId);
+        if (realMovie.isPresent()) {
+            buildPageFromDTO(realMovie.get());
+        } else {
+            dummyDataService.getMovieById(movieId).ifPresentOrElse(
+                    this::buildPageFromDummy,
+                    this::showNotFound
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
-    // Page assembly
+    // Build from real MovieDTO
     // -------------------------------------------------------------------------
 
-    private void buildPage(Movie movie) {
+    private void buildPageFromDTO(MovieDTO movie) {
         getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
-        add(buildHeroBanner(movie), buildContentArea(movie));
+        List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
+        double userScore = backendClient.getReviewStats(movie.getId())
+                .map(ReviewStatsDTO::getAverageRating).orElse(0.0);
+        add(buildHeroBannerDTO(movie, userScore), buildContentAreaDTO(movie, reviews));
     }
 
     // -------------------------------------------------------------------------
-    // Hero banner
+    // Build from dummy Movie (fallback when backend is down)
     // -------------------------------------------------------------------------
 
-    private Div buildHeroBanner(Movie movie) {
-        // Poster placeholder
-        Div poster = new Div();
-        poster.setText(movie.getPosterEmoji());
-        poster.getStyle()
-                .set("font-size", "6rem")
-                .set("width", "160px")
-                .set("min-width", "160px")
-                .set("height", "240px")
-                .set("background", "var(--lumo-contrast-5pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("display", "flex")
-                .set("align-items", "center")
-                .set("justify-content", "center")
-                .set("box-shadow", "var(--lumo-box-shadow-m)");
-        // TODO: replace with <img> sourced from TMDB image base URL + poster_path
+    private void buildPageFromDummy(ca.yorku.eecs4314group12.ui.data.Movie movie) {
+        getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
+        List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
+        double userScore = backendClient.getReviewStats(movie.getId())
+                .map(ReviewStatsDTO::getAverageRating).orElse(movie.getUserScore());
+        add(buildHeroBannerDummy(movie, userScore), buildContentAreaDummy(movie, reviews));
+    }
+
+    // =========================================================================
+    // Hero banner
+    // =========================================================================
+
+    private Div buildHeroBannerDTO(MovieDTO movie, double userScore) {
+        Div poster = buildPosterDiv("🎬");
+        // TODO: replace emoji with:
+        // Image img = new Image("https://image.tmdb.org/t/p/w342" + movie.getPoster_path(), movie.getTitle());
 
         H1 title = new H1(movie.getTitle());
-        title.getStyle()
-                .set("margin", "0 0 var(--lumo-space-xs) 0")
-                .set("font-size", "2rem")
-                .set("color", "var(--lumo-header-text-color)");
+        title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0")
+                .set("font-size", "2rem").set("color", "var(--lumo-header-text-color)");
 
-        // Tagline
         Div taglineDiv = new Div();
         if (movie.getTagline() != null && !movie.getTagline().isBlank()) {
-            Span tagline = new Span("\"" + movie.getTagline() + "\"");
-            tagline.getStyle()
-                    .set("font-style", "italic")
+            Span tl = new Span("\"" + movie.getTagline() + "\"");
+            tl.getStyle().set("font-style", "italic")
                     .set("color", "var(--lumo-secondary-text-color)")
                     .set("font-size", "var(--lumo-font-size-m)");
-            taglineDiv.add(tagline);
+            taglineDiv.add(tl);
         }
 
-        // Genre chips
-        FlexLayout genreChips = new FlexLayout();
-        genreChips.getStyle().set("gap", "var(--lumo-space-xs)").set("flex-wrap", "wrap");
-        for (String genre : movie.getGenres()) {
-            Span chip = new Span(genre);
-            chip.getStyle()
-                    .set("background", "var(--lumo-primary-color-10pct)")
-                    .set("color", "var(--lumo-primary-color)")
-                    .set("border-radius", "999px")
-                    .set("padding", "2px 10px")
-                    .set("font-size", "var(--lumo-font-size-xs)")
-                    .set("font-weight", "600");
-            genreChips.add(chip);
-        }
-
-        // Meta row
-        Span meta = new Span(
-                movie.getYear() + "  ·  "
-                + movie.getRuntimeFormatted() + "  ·  "
-                + movie.getStatus());
-        meta.getStyle()
-                .set("color", "var(--lumo-secondary-text-color)")
+        Span meta = new Span(movie.getYear() + "  ·  " + movie.getRuntimeFormatted()
+                + "  ·  " + movie.getStatus());
+        meta.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
-        // Score row — TMDB score + user score side by side
         HorizontalLayout scores = new HorizontalLayout(
-                buildScoreBadge("🎬 TMDB", movie.getTmdbScore(), false),
-                buildScoreBadge("👥 Users", movie.getUserScore(), true)
-        );
+                buildScoreBadge("🎬 TMDB", movie.getVote_average(), false),
+                buildScoreBadge("👥 Users", userScore, true));
         scores.setSpacing(true);
-        scores.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
 
-        // Director
-        Span directorSpan = new Span("Directed by  " + movie.getDirector());
-        directorSpan.getStyle()
-                .set("color", "var(--lumo-secondary-text-color)")
+        Span director = new Span("Directed by  " + movie.getDirector());
+        director.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
-        VerticalLayout info = new VerticalLayout(title, taglineDiv, genreChips, meta, scores, directorSpan);
-        info.setPadding(false);
-        info.setSpacing(false);
+        VerticalLayout info = new VerticalLayout(
+                title, taglineDiv, buildGenreChips(movie.getGenreNames()), meta, scores, director);
+        info.setPadding(false); info.setSpacing(false);
         info.getStyle().set("gap", "var(--lumo-space-s)");
 
-        HorizontalLayout heroContent = new HorizontalLayout(poster, info);
-        heroContent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
-        heroContent.setSpacing(true);
-        heroContent.getStyle()
-                .set("max-width", "1100px")
-                .set("margin", "0 auto")
-                .set("padding", "var(--lumo-space-xl) var(--lumo-space-l)");
-        heroContent.setWidth("100%");
-
-        Div hero = new Div(heroContent);
-        hero.setWidth("100%");
-        hero.getStyle()
-                .set("background", "linear-gradient(180deg, #0f3460 0%, #16213e 100%)")
-                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)");
-        return hero;
+        return wrapHero(poster, info);
     }
 
-    private Div buildScoreBadge(String label, double score, boolean isPrimary) {
-        String scoreText = score > 0
-                ? buildStarString(score / 2.0) + "  " + score + " / 10"
-                : "No reviews yet";
+    private Div buildHeroBannerDummy(ca.yorku.eecs4314group12.ui.data.Movie movie, double userScore) {
+        Div poster = buildPosterDiv(movie.getPosterEmoji());
 
-        Span labelSpan = new Span(label);
-        labelSpan.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("font-weight", "600")
-                .set("color", isPrimary ? "var(--lumo-primary-color)" : "var(--lumo-secondary-text-color)")
-                .set("text-transform", "uppercase")
-                .set("letter-spacing", "0.06em");
+        H1 title = new H1(movie.getTitle());
+        title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0")
+                .set("font-size", "2rem").set("color", "var(--lumo-header-text-color)");
 
-        Span valueSpan = new Span(scoreText);
-        valueSpan.getStyle()
-                .set("font-size", "var(--lumo-font-size-m)")
-                .set("font-weight", "700")
-                .set("color", isPrimary ? "var(--lumo-primary-color)" : "var(--lumo-body-text-color)");
-
-        VerticalLayout badge = new VerticalLayout(labelSpan, valueSpan);
-        badge.setPadding(false);
-        badge.setSpacing(false);
-        badge.getStyle()
-                .set("gap", "2px")
-                .set("background", isPrimary ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
-                .set("border-radius", "var(--lumo-border-radius-m)")
-                .set("padding", "var(--lumo-space-s) var(--lumo-space-m)");
-        return new Div(badge);
-    }
-
-    // -------------------------------------------------------------------------
-    // Main content area
-    // -------------------------------------------------------------------------
-
-    private Div buildContentArea(Movie movie) {
-        VerticalLayout content = new VerticalLayout(
-                buildOverviewSection(movie),
-                buildCastSection(movie),
-                buildDetailsSection(movie),
-                buildReviewsSection(movie)
-        );
-        content.setPadding(true);
-        content.setSpacing(false);
-        content.getStyle()
-                .set("max-width", "1100px")
-                .set("margin", "0 auto")
-                .set("gap", "var(--lumo-space-xl)");
-        content.setWidth("100%");
-
-        Div wrapper = new Div(content);
-        wrapper.setWidth("100%");
-        return wrapper;
-    }
-
-    // -------------------------------------------------------------------------
-    // Overview
-    // -------------------------------------------------------------------------
-
-    private VerticalLayout buildOverviewSection(Movie movie) {
-        Paragraph overview = new Paragraph(movie.getOverview());
-        overview.getStyle()
-                .set("color", "var(--lumo-body-text-color)")
-                .set("line-height", "1.7")
-                .set("font-size", "var(--lumo-font-size-m)")
-                .set("margin", "0");
-        return sectionCard(sectionHeading("Overview"), overview);
-    }
-
-    // -------------------------------------------------------------------------
-    // Cast & crew
-    // -------------------------------------------------------------------------
-
-    private VerticalLayout buildCastSection(Movie movie) {
-        FlexLayout castRow = new FlexLayout();
-        castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
-
-        for (String actorName : movie.getCast()) {
-            Avatar avatar = new Avatar(actorName);
-            avatar.setColorIndex(Math.abs(actorName.hashCode()) % 7);
-            avatar.getStyle().set("width", "48px").set("height", "48px");
-            // TODO: replace with TMDB profile_path image
-
-            Span name = new Span(actorName);
-            name.getStyle()
-                    .set("font-size", "var(--lumo-font-size-s)")
-                    .set("color", "var(--lumo-body-text-color)")
-                    .set("text-align", "center");
-
-            VerticalLayout actorCard = new VerticalLayout(avatar, name);
-            actorCard.setPadding(false);
-            actorCard.setSpacing(false);
-            actorCard.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
-            actorCard.getStyle().set("gap", "var(--lumo-space-xs)").set("width", "80px");
-            castRow.add(actorCard);
+        Div taglineDiv = new Div();
+        if (movie.getTagline() != null && !movie.getTagline().isBlank()) {
+            Span tl = new Span("\"" + movie.getTagline() + "\"");
+            tl.getStyle().set("font-style", "italic")
+                    .set("color", "var(--lumo-secondary-text-color)")
+                    .set("font-size", "var(--lumo-font-size-m)");
+            taglineDiv.add(tl);
         }
 
-        return sectionCard(sectionHeading("Cast & Crew"), castRow);
+        Span meta = new Span(movie.getYear() + "  ·  " + movie.getRuntimeFormatted()
+                + "  ·  " + movie.getStatus());
+        meta.getStyle().set("color", "var(--lumo-secondary-text-color)")
+                .set("font-size", "var(--lumo-font-size-s)");
+
+        HorizontalLayout scores = new HorizontalLayout(
+                buildScoreBadge("🎬 TMDB", movie.getTmdbScore(), false),
+                buildScoreBadge("👥 Users", userScore, true));
+        scores.setSpacing(true);
+
+        Span director = new Span("Directed by  " + movie.getDirector());
+        director.getStyle().set("color", "var(--lumo-secondary-text-color)")
+                .set("font-size", "var(--lumo-font-size-s)");
+
+        VerticalLayout info = new VerticalLayout(
+                title, taglineDiv, buildGenreChips(movie.getGenres()), meta, scores, director);
+        info.setPadding(false); info.setSpacing(false);
+        info.getStyle().set("gap", "var(--lumo-space-s)");
+
+        return wrapHero(poster, info);
     }
 
-    // -------------------------------------------------------------------------
-    // Film details
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Content areas
+    // =========================================================================
 
-    private VerticalLayout buildDetailsSection(Movie movie) {
+    private Div buildContentAreaDTO(MovieDTO movie, List<ReviewDTO> reviews) {
+        Paragraph overview = new Paragraph(movie.getOverview());
+        overview.getStyle().set("line-height", "1.7").set("margin", "0");
+
+        FlexLayout castRow = new FlexLayout();
+        castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
+        movie.getTopCast(8).forEach(n -> castRow.add(buildActorCard(n)));
+
+        Div detailsGrid = buildDetailsGrid(
+                movie.getBudget(), movie.getRevenue(),
+                movie.getCompanyNames(), movie.getOriginal_title(),
+                movie.getOriginal_language() != null ? movie.getOriginal_language().toUpperCase() : "N/A",
+                movie.getRelease_date(), movie.getRuntimeFormatted());
+
+        return wrapContent(
+                sectionCard(sectionHeading("Overview"), overview),
+                sectionCard(sectionHeading("Cast & Crew"), castRow),
+                sectionCard(sectionHeading("Film Details"), detailsGrid),
+                buildReviewsSection(reviews, movie.getId()));
+    }
+
+    private Div buildContentAreaDummy(ca.yorku.eecs4314group12.ui.data.Movie movie,
+                                      List<ReviewDTO> reviews) {
+        Paragraph overview = new Paragraph(movie.getOverview());
+        overview.getStyle().set("line-height", "1.7").set("margin", "0");
+
+        FlexLayout castRow = new FlexLayout();
+        castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
+        movie.getCast().forEach(n -> castRow.add(buildActorCard(n)));
+
+        Div detailsGrid = buildDetailsGrid(
+                movie.getBudget(), movie.getRevenue(),
+                movie.getProductionCompanies(), movie.getOriginalTitle(),
+                movie.getOriginalLanguage().toUpperCase(),
+                movie.getReleaseDate(), movie.getRuntimeFormatted());
+
+        return wrapContent(
+                sectionCard(sectionHeading("Overview"), overview),
+                sectionCard(sectionHeading("Cast & Crew"), castRow),
+                sectionCard(sectionHeading("Film Details"), detailsGrid),
+                buildReviewsSection(reviews, movie.getId()));
+    }
+
+    private Div buildDetailsGrid(int budget, int revenue, List<String> companies,
+                                  String originalTitle, String language,
+                                  String releaseDate, String runtime) {
         Div grid = new Div();
-        grid.getStyle()
-                .set("display", "grid")
+        grid.getStyle().set("display", "grid")
                 .set("grid-template-columns", "repeat(auto-fill, minmax(200px, 1fr))")
                 .set("gap", "var(--lumo-space-m)");
-
-        if (movie.getBudget() > 0)
-            grid.add(detailItem("Budget", "$" + formatMoney(movie.getBudget())));
-        if (movie.getRevenue() > 0)
-            grid.add(detailItem("Box Office", "$" + formatMoney(movie.getRevenue())));
-        if (!movie.getProductionCompanies().isEmpty())
-            grid.add(detailItem("Production", String.join(", ", movie.getProductionCompanies())));
-        grid.add(detailItem("Original Title", movie.getOriginalTitle()));
-        grid.add(detailItem("Original Language", movie.getOriginalLanguage().toUpperCase()));
-        grid.add(detailItem("Release Date", movie.getReleaseDate()));
-        grid.add(detailItem("Runtime", movie.getRuntimeFormatted()));
-
-        return sectionCard(sectionHeading("Film Details"), grid);
+        if (budget > 0) grid.add(detailItem("Budget", "$" + formatMoney(budget)));
+        if (revenue > 0) grid.add(detailItem("Box Office", "$" + formatMoney(revenue)));
+        if (!companies.isEmpty()) grid.add(detailItem("Production", String.join(", ", companies)));
+        grid.add(detailItem("Original Title", originalTitle));
+        grid.add(detailItem("Language", language));
+        grid.add(detailItem("Release Date", releaseDate));
+        grid.add(detailItem("Runtime", runtime));
+        return grid;
     }
 
-    private Div detailItem(String label, String value) {
-        Span labelSpan = new Span(label);
-        labelSpan.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
-                .set("color", "var(--lumo-secondary-text-color)")
-                .set("text-transform", "uppercase")
-                .set("letter-spacing", "0.08em")
-                .set("font-weight", "600");
-
-        Span valueSpan = new Span(value);
-        valueSpan.getStyle()
-                .set("font-size", "var(--lumo-font-size-s)")
-                .set("color", "var(--lumo-body-text-color)");
-
-        Div item = new Div(labelSpan, valueSpan);
-        item.getStyle().set("display", "flex").set("flex-direction", "column").set("gap", "4px");
-        return item;
-    }
-
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // Reviews section
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
-    private VerticalLayout buildReviewsSection(Movie movie) {
-        List<Review> allReviews = dataService.getReviewsForMovie(movie.getId());
-
+    private VerticalLayout buildReviewsSection(List<ReviewDTO> reviews, int movieId) {
         VerticalLayout section = new VerticalLayout(sectionHeading("Reviews"));
-        section.setPadding(false);
-        section.setSpacing(false);
+        section.setPadding(false); section.setSpacing(false);
         section.getStyle()
                 .set("background", "var(--lumo-base-color)")
                 .set("border", "1px solid var(--lumo-contrast-10pct)")
@@ -338,55 +266,51 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 .set("box-shadow", "var(--lumo-box-shadow-xs)")
                 .set("gap", "var(--lumo-space-l)");
 
-        if (allReviews.isEmpty()) {
+        if (reviews.isEmpty()) {
             Paragraph empty = new Paragraph("No reviews yet. Be the first to review this film!");
             empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
             section.add(empty);
         } else {
-            // Top recommended
-            Review topReview = allReviews.stream()
-                    .max(Comparator.comparingInt(Review::getHelpfulCount))
+            ReviewDTO top = reviews.stream()
+                    .max(Comparator.comparingInt(ReviewDTO::getHelpfulCount))
                     .orElse(null);
 
-            if (topReview != null) {
-                H3 topHeading = new H3("⭐ Top Recommended");
-                topHeading.getStyle()
-                        .set("margin", "0 0 var(--lumo-space-s) 0")
+            if (top != null) {
+                H3 topLabel = new H3("⭐ Top Recommended");
+                topLabel.getStyle().set("margin", "0 0 var(--lumo-space-s) 0")
                         .set("color", "var(--lumo-primary-color)")
                         .set("font-size", "var(--lumo-font-size-m)");
-                section.add(topHeading, buildReviewCard(topReview, true));
+                section.add(topLabel, buildReviewCard(top, true));
             }
 
-            // 3 most recent (excluding top)
-            List<Review> recent = allReviews.stream()
-                    .filter(r -> r != topReview)
-                    .sorted(Comparator.comparing(Review::getDatePosted).reversed())
+            List<ReviewDTO> recent = reviews.stream()
+                    .filter(r -> r != top)
+                    .sorted(Comparator.comparing(ReviewDTO::getDatePosted).reversed())
                     .limit(3)
                     .toList();
 
             if (!recent.isEmpty()) {
-                H3 recentHeading = new H3("Most Recent");
-                recentHeading.getStyle()
-                        .set("margin", "var(--lumo-space-m) 0 var(--lumo-space-s) 0")
+                H3 recentLabel = new H3("Most Recent");
+                recentLabel.getStyle().set("margin", "var(--lumo-space-m) 0 var(--lumo-space-s) 0")
                         .set("font-size", "var(--lumo-font-size-m)");
-                section.add(recentHeading);
+                section.add(recentLabel);
                 recent.forEach(r -> section.add(buildReviewCard(r, false)));
             }
         }
 
-        Button writeReviewBtn = new Button("Write a Review");
-        writeReviewBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        writeReviewBtn.getStyle().set("margin-top", "var(--lumo-space-m)");
-        writeReviewBtn.addClickListener(e ->
+        Button writeBtn = new Button("Write a Review");
+        writeBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        writeBtn.getStyle().set("margin-top", "var(--lumo-space-m)");
+        writeBtn.addClickListener(e ->
                 Notification.show("Review submission coming soon!", 3000, Notification.Position.TOP_CENTER)
                         .addThemeVariants(NotificationVariant.LUMO_PRIMARY));
-        // TODO: navigate to review submission form / dialog once review-service is wired
-        section.add(writeReviewBtn);
+        // TODO: open review submission form, passing movieId
+        section.add(writeBtn);
         section.setWidth("100%");
         return section;
     }
 
-    private Div buildReviewCard(Review review, boolean isTop) {
+    private Div buildReviewCard(ReviewDTO review, boolean isTop) {
         Avatar avatar = new Avatar(review.getUsername());
         avatar.setColorIndex(Math.abs(review.getUsername().hashCode()) % 7);
         avatar.getStyle().set("width", "36px").set("height", "36px");
@@ -395,20 +319,15 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         username.getStyle().set("font-weight", "600").set("font-size", "var(--lumo-font-size-s)");
 
         Span date = new Span(review.getDatePosted());
-        date.getStyle()
-                .set("color", "var(--lumo-secondary-text-color)")
+        date.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-xs)");
 
         Span ratingBadge = new Span(buildStarString(review.getStars()) + "  " + review.getRating() + "/10");
-        ratingBadge.getStyle()
-                .set("margin-left", "auto")
-                .set("color", "var(--lumo-primary-color)")
-                .set("font-weight", "700")
-                .set("font-size", "var(--lumo-font-size-s)");
+        ratingBadge.getStyle().set("margin-left", "auto").set("color", "var(--lumo-primary-color)")
+                .set("font-weight", "700").set("font-size", "var(--lumo-font-size-s)");
 
         VerticalLayout userInfo = new VerticalLayout(username, date);
-        userInfo.setPadding(false);
-        userInfo.setSpacing(false);
+        userInfo.setPadding(false); userInfo.setSpacing(false);
         userInfo.getStyle().set("gap", "2px");
 
         HorizontalLayout header = new HorizontalLayout(avatar, userInfo, ratingBadge);
@@ -416,14 +335,14 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         header.setWidth("100%");
 
         H4 reviewTitle = new H4(review.getTitle());
-        reviewTitle.getStyle().set("margin", "var(--lumo-space-xs) 0").set("font-size", "var(--lumo-font-size-m)");
+        reviewTitle.getStyle().set("margin", "var(--lumo-space-xs) 0")
+                .set("font-size", "var(--lumo-font-size-m)");
 
-        Paragraph body = new Paragraph(review.getBody());
-        body.getStyle().set("color", "var(--lumo-body-text-color)").set("line-height", "1.6").set("margin", "0");
+        Paragraph body = new Paragraph(review.getContent());
+        body.getStyle().set("line-height", "1.6").set("margin", "0");
 
         Span helpful = new Span("👍 " + review.getHelpfulCount() + " found this helpful");
-        helpful.getStyle()
-                .set("font-size", "var(--lumo-font-size-xs)")
+        helpful.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-secondary-text-color)")
                 .set("margin-top", "var(--lumo-space-xs)");
 
@@ -433,55 +352,147 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 .set("border", isTop ? "1px solid var(--lumo-primary-color-50pct)" : "1px solid var(--lumo-contrast-10pct)")
                 .set("border-radius", "var(--lumo-border-radius-l)")
                 .set("padding", "var(--lumo-space-m)")
-                .set("display", "flex")
-                .set("flex-direction", "column")
+                .set("display", "flex").set("flex-direction", "column")
                 .set("gap", "var(--lumo-space-xs)");
         card.setWidth("100%");
         return card;
     }
 
-    // -------------------------------------------------------------------------
-    // 404 fallback
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Shared UI helpers
+    // =========================================================================
 
-    private void showNotFound() {
-        VerticalLayout notFound = new VerticalLayout();
-        notFound.setSizeFull();
-        notFound.setAlignItems(FlexComponent.Alignment.CENTER);
-        notFound.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
-
-        H2 msg = new H2("Movie not found");
-        msg.getStyle().set("color", "var(--lumo-secondary-text-color)");
-
-        Button backBtn = new Button("← Back to Home");
-        backBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        backBtn.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
-        notFound.add(msg, backBtn);
-        add(notFound);
+    private Div buildPosterDiv(String emoji) {
+        Div poster = new Div();
+        poster.setText(emoji);
+        poster.getStyle()
+                .set("font-size", "6rem").set("width", "160px").set("min-width", "160px")
+                .set("height", "240px").set("background", "var(--lumo-contrast-5pct)")
+                .set("border-radius", "var(--lumo-border-radius-l)")
+                .set("display", "flex").set("align-items", "center").set("justify-content", "center")
+                .set("box-shadow", "var(--lumo-box-shadow-m)");
+        return poster;
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
+    private FlexLayout buildGenreChips(List<String> genres) {
+        FlexLayout chips = new FlexLayout();
+        chips.getStyle().set("gap", "var(--lumo-space-xs)").set("flex-wrap", "wrap");
+        for (String g : genres) {
+            Span chip = new Span(g);
+            chip.getStyle()
+                    .set("background", "var(--lumo-primary-color-10pct)")
+                    .set("color", "var(--lumo-primary-color)")
+                    .set("border-radius", "999px").set("padding", "2px 10px")
+                    .set("font-size", "var(--lumo-font-size-xs)").set("font-weight", "600");
+            chips.add(chip);
+        }
+        return chips;
+    }
+
+    private Div buildScoreBadge(String label, double score, boolean isPrimary) {
+        String scoreText = score > 0
+                ? buildStarString(score / 2.0) + "  " + String.format("%.1f", score) + " / 10"
+                : "No reviews yet";
+
+        Span labelSpan = new Span(label);
+        labelSpan.getStyle().set("font-size", "var(--lumo-font-size-xs)").set("font-weight", "600")
+                .set("color", isPrimary ? "var(--lumo-primary-color)" : "var(--lumo-secondary-text-color)")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.06em");
+
+        Span valueSpan = new Span(scoreText);
+        valueSpan.getStyle().set("font-size", "var(--lumo-font-size-m)").set("font-weight", "700")
+                .set("color", isPrimary ? "var(--lumo-primary-color)" : "var(--lumo-body-text-color)");
+
+        VerticalLayout badge = new VerticalLayout(labelSpan, valueSpan);
+        badge.setPadding(false); badge.setSpacing(false);
+        badge.getStyle().set("gap", "2px")
+                .set("background", isPrimary ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
+                .set("border-radius", "var(--lumo-border-radius-m)")
+                .set("padding", "var(--lumo-space-s) var(--lumo-space-m)");
+        return new Div(badge);
+    }
+
+    private VerticalLayout buildActorCard(String name) {
+        Avatar avatar = new Avatar(name);
+        avatar.setColorIndex(Math.abs(name.hashCode()) % 7);
+        avatar.getStyle().set("width", "48px").set("height", "48px");
+        Span nameSpan = new Span(name);
+        nameSpan.getStyle().set("font-size", "var(--lumo-font-size-s)").set("text-align", "center");
+        VerticalLayout card = new VerticalLayout(avatar, nameSpan);
+        card.setPadding(false); card.setSpacing(false);
+        card.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
+        card.getStyle().set("gap", "var(--lumo-space-xs)").set("width", "80px");
+        return card;
+    }
+
+    private Div detailItem(String label, String value) {
+        Span l = new Span(label);
+        l.getStyle().set("font-size", "var(--lumo-font-size-xs)")
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("text-transform", "uppercase").set("letter-spacing", "0.08em")
+                .set("font-weight", "600");
+        Span v = new Span(value);
+        v.getStyle().set("font-size", "var(--lumo-font-size-s)");
+        Div item = new Div(l, v);
+        item.getStyle().set("display", "flex").set("flex-direction", "column").set("gap", "4px");
+        return item;
+    }
+
+    private Div wrapHero(Div poster, VerticalLayout info) {
+        HorizontalLayout heroContent = new HorizontalLayout(poster, info);
+        heroContent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
+        heroContent.setSpacing(true);
+        heroContent.getStyle().set("max-width", "1100px").set("margin", "0 auto")
+                .set("padding", "var(--lumo-space-xl) var(--lumo-space-l)");
+        heroContent.setWidth("100%");
+        Div hero = new Div(heroContent);
+        hero.setWidth("100%");
+        hero.getStyle().set("background", "linear-gradient(180deg, #0f3460 0%, #16213e 100%)")
+                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)");
+        return hero;
+    }
+
+    private Div wrapContent(com.vaadin.flow.component.Component... sections) {
+        VerticalLayout content = new VerticalLayout(sections);
+        content.setPadding(true); content.setSpacing(false);
+        content.getStyle().set("max-width", "1100px").set("margin", "0 auto")
+                .set("gap", "var(--lumo-space-xl)");
+        content.setWidth("100%");
+        Div wrapper = new Div(content);
+        wrapper.setWidth("100%");
+        return wrapper;
+    }
 
     private H2 sectionHeading(String text) {
         H2 h = new H2(text);
-        h.getStyle().set("margin", "0 0 var(--lumo-space-m) 0").set("font-size", "var(--lumo-font-size-l)");
+        h.getStyle().set("margin", "0 0 var(--lumo-space-m) 0")
+                .set("font-size", "var(--lumo-font-size-l)");
         return h;
     }
 
     private VerticalLayout sectionCard(com.vaadin.flow.component.Component... components) {
         VerticalLayout card = new VerticalLayout(components);
-        card.setPadding(false);
-        card.setSpacing(false);
-        card.getStyle()
-                .set("background", "var(--lumo-base-color)")
+        card.setPadding(false); card.setSpacing(false);
+        card.getStyle().set("background", "var(--lumo-base-color)")
                 .set("border", "1px solid var(--lumo-contrast-10pct)")
                 .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("padding", "var(--lumo-space-l)")
-                .set("box-shadow", "var(--lumo-box-shadow-xs)");
+                .set("padding", "var(--lumo-space-l)").set("box-shadow", "var(--lumo-box-shadow-xs)");
         card.setWidth("100%");
         return card;
+    }
+
+    private void showNotFound() {
+        VerticalLayout nf = new VerticalLayout();
+        nf.setSizeFull();
+        nf.setAlignItems(FlexComponent.Alignment.CENTER);
+        nf.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        H2 msg = new H2("Movie not found");
+        msg.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        Button back = new Button("← Back to Home");
+        back.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        back.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
+        nf.add(msg, back);
+        add(nf);
     }
 
     private String buildStarString(double rating) {
