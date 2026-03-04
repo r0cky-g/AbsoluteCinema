@@ -1,8 +1,10 @@
 package ca.yorku.eecs4314group12.ui.views;
 
-import ca.yorku.eecs4314group12.ui.data.DummyDataService;
-import ca.yorku.eecs4314group12.ui.data.Movie;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -12,11 +14,15 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import ca.yorku.eecs4314group12.ui.data.DummyDataService;
+import ca.yorku.eecs4314group12.ui.data.Movie;
+
 /**
  * Home / discovery page — publicly accessible without login.
  *
  * Shows a search bar and a grid of featured movies.
- * TODO: Wire to movie-service REST API once contract is finalized.
+ * Clicking a movie card navigates to /movie/{id}.
+ * TODO: Wire search and grid to movie-service REST API once contract is finalized.
  */
 @Route(value = "home", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
@@ -41,8 +47,9 @@ public class HomeView extends VerticalLayout {
         heading.getStyle().set("margin-bottom", "var(--lumo-space-xs)");
 
         Paragraph sub = new Paragraph("Browse reviews, discover new films, and share your opinions.");
-        sub.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                      .set("margin-top", "0");
+        sub.getStyle()
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("margin-top", "0");
 
         TextField search = new TextField();
         search.setPlaceholder("Search movies, genres, directors…");
@@ -93,14 +100,16 @@ public class HomeView extends VerticalLayout {
         poster.setText(movie.getPosterEmoji());
 
         Span title = new Span(movie.getTitle());
-        title.getStyle().set("font-weight", "600").set("font-size", "var(--lumo-font-size-m)");
+        title.getStyle()
+                .set("font-weight", "600")
+                .set("font-size", "var(--lumo-font-size-m)");
 
         Span meta = new Span(movie.getYear() + " · " + movie.getGenre());
         meta.getStyle()
                 .set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-secondary-text-color)");
 
-        Span stars = new Span(buildStarString(movie.getRating()) + "  " + movie.getRating());
+        Span stars = new Span(buildStarString(movie.getRating() / 2.0) + "  " + movie.getRating());
         stars.getStyle()
                 .set("font-size", "var(--lumo-font-size-s)")
                 .set("color", "var(--lumo-primary-text-color)");
@@ -119,12 +128,21 @@ public class HomeView extends VerticalLayout {
                 .set("width", "200px")
                 .set("box-shadow", "var(--lumo-box-shadow-xs)")
                 .set("cursor", "pointer")
-                .set("transition", "box-shadow 0.2s");
+                .set("transition", "box-shadow 0.2s, transform 0.15s");
+
+        // Navigate to MovieView on click
+        card.addClickListener(e ->
+                getUI().ifPresent(ui -> ui.navigate("movie/" + movie.getId()))
+        );
 
         card.getElement().addEventListener("mouseover",
-                e -> card.getStyle().set("box-shadow", "var(--lumo-box-shadow-m)"));
+                e -> card.getStyle()
+                        .set("box-shadow", "var(--lumo-box-shadow-m)")
+                        .set("transform", "translateY(-2px)"));
         card.getElement().addEventListener("mouseout",
-                e -> card.getStyle().set("box-shadow", "var(--lumo-box-shadow-xs)"));
+                e -> card.getStyle()
+                        .set("box-shadow", "var(--lumo-box-shadow-xs)")
+                        .set("transform", "translateY(0)"));
 
         return card;
     }
