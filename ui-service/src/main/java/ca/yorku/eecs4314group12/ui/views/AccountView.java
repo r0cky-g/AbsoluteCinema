@@ -48,7 +48,7 @@ public class AccountView extends VerticalLayout {
     // Profile card
     // -------------------------------------------------------------------------
 
-    private HorizontalLayout buildProfileCard(String username) {
+    private VerticalLayout buildProfileCard(String username) {
         Avatar avatar = new Avatar(username);
         avatar.setColorIndex(2);
         avatar.getStyle()
@@ -60,27 +60,34 @@ public class AccountView extends VerticalLayout {
         nameHeading.getStyle().set("margin", "0");
 
         // Placeholder fields — replace with real user data from user-service
-        Span emailSpan = new Span(VaadinIcon.ENVELOPE.create().getElement().toString()
-                + "  " + username + "@example.com");
-        emailSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                            .set("font-size", "var(--lumo-font-size-s)");
+        Span emailSpan = new Span("✉  " + username + "@example.com");
+        emailSpan.getStyle()
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("font-size", "var(--lumo-font-size-s)");
 
         Span joinedSpan = new Span("Member since January 2024  ·  3 reviews");
-        joinedSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                             .set("font-size", "var(--lumo-font-size-s)");
+        joinedSpan.getStyle()
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("font-size", "var(--lumo-font-size-s)");
 
         Button editBtn = new Button("Edit Profile", VaadinIcon.EDIT.create());
-        editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
-        // TODO: open an edit dialog once user-service PATCH endpoint is available
+        editBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+        editBtn.addClickListener(e ->
+                getUI().ifPresent(ui -> ui.navigate(EditProfileView.class)));
 
         VerticalLayout info = new VerticalLayout(nameHeading, emailSpan, joinedSpan, editBtn);
         info.setPadding(false);
         info.setSpacing(false);
         info.getStyle().set("gap", "var(--lumo-space-xs)");
 
-        HorizontalLayout card = new HorizontalLayout(avatar, info);
-        card.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        card.setSpacing(true);
+        HorizontalLayout cardContent = new HorizontalLayout(avatar, info);
+        cardContent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        cardContent.setSpacing(true);
+        cardContent.setWidth("100%");
+
+        VerticalLayout card = new VerticalLayout(cardContent);
+        card.setPadding(false);
+        card.setSpacing(false);
         card.getStyle()
                 .set("background", "var(--lumo-base-color)")
                 .set("border", "1px solid var(--lumo-contrast-10pct)")
@@ -114,12 +121,14 @@ public class AccountView extends VerticalLayout {
 
     private Div buildReviewCard(Review review) {
         Span movieTitle = new Span(review.getMovieTitle());
-        movieTitle.getStyle().set("font-weight", "600")
-                             .set("font-size", "var(--lumo-font-size-m)");
+        movieTitle.getStyle()
+                .set("font-weight", "600")
+                .set("font-size", "var(--lumo-font-size-m)");
 
         Span stars = new Span(buildStarString(review.getStars()));
-        stars.getStyle().set("color", "var(--lumo-primary-color)")
-                        .set("font-size", "var(--lumo-font-size-m)");
+        stars.getStyle()
+                .set("color", "var(--lumo-primary-color)")
+                .set("font-size", "var(--lumo-font-size-m)");
 
         HorizontalLayout titleRow = new HorizontalLayout(movieTitle, stars);
         titleRow.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
@@ -131,8 +140,9 @@ public class AccountView extends VerticalLayout {
                 .set("color", "var(--lumo-body-text-color)");
 
         Span date = new Span("Posted " + review.getDatePosted());
-        date.getStyle().set("font-size", "var(--lumo-font-size-xs)")
-                       .set("color", "var(--lumo-secondary-text-color)");
+        date.getStyle()
+                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("color", "var(--lumo-secondary-text-color)");
 
         Div card = new Div(titleRow, body, date);
         card.getStyle()

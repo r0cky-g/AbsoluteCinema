@@ -21,8 +21,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 /**
- * Main application layout.
- * Requires @AnonymousAllowed in Vaadin 25 since HomeView is public.
+ * Main application shell — AppLayout with top navbar and collapsible drawer.
+ *
+ * Compatible with Vaadin 25 + Spring Boot 4.
+ * Uses VaadinSecurityConfigurer (configured in SecurityConfig).
+ *
+ * @AnonymousAllowed is required here because HomeView is publicly accessible
+ * and AppLayout is resolved before the child view's own annotation.
  */
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
@@ -31,6 +36,10 @@ public class MainLayout extends AppLayout {
         createHeader();
         createDrawer();
     }
+
+    // -------------------------------------------------------------------------
+    // Top navbar
+    // -------------------------------------------------------------------------
 
     private void createHeader() {
         H1 logo = new H1("🎬 Absolute Cinema");
@@ -41,6 +50,7 @@ public class MainLayout extends AppLayout {
                 .set("cursor", "pointer");
         logo.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
 
+        // Flexible spacer pushes right-side controls to the edge
         Span spacer = new Span();
         spacer.getStyle().set("flex", "1");
 
@@ -60,11 +70,16 @@ public class MainLayout extends AppLayout {
             avatar.getElement().addEventListener("click",
                     e -> getUI().ifPresent(ui -> ui.navigate(AccountView.class)));
 
+            Button editProfileBtn = new Button("Edit Profile", VaadinIcon.EDIT.create());
+            editProfileBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            editProfileBtn.addClickListener(e ->
+                    getUI().ifPresent(ui -> ui.navigate(EditProfileView.class)));
+
             Button logoutBtn = new Button("Logout", VaadinIcon.SIGN_OUT.create());
             logoutBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
             logoutBtn.addClickListener(e -> logout());
 
-            header = new HorizontalLayout(new DrawerToggle(), logo, spacer, avatar, logoutBtn);
+            header = new HorizontalLayout(new DrawerToggle(), logo, spacer, avatar, editProfileBtn, logoutBtn);
         } else {
             Button loginBtn = new Button("Login", VaadinIcon.SIGN_IN.create());
             loginBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
@@ -81,6 +96,10 @@ public class MainLayout extends AppLayout {
         addToNavbar(header);
     }
 
+    // -------------------------------------------------------------------------
+    // Logout
+    // -------------------------------------------------------------------------
+
     private void logout() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {
@@ -93,6 +112,10 @@ public class MainLayout extends AppLayout {
         UI.getCurrent().navigate(HomeView.class);
         UI.getCurrent().getPage().reload();
     }
+
+    // -------------------------------------------------------------------------
+    // Side drawer
+    // -------------------------------------------------------------------------
 
     private void createDrawer() {
         SideNav nav = new SideNav();
@@ -109,7 +132,9 @@ public class MainLayout extends AppLayout {
         if (loggedIn) {
             SideNavItem accountItem = new SideNavItem("My Account", AccountView.class,
                     VaadinIcon.USER.create());
-            nav.addItem(accountItem);
+            SideNavItem editProfileItem = new SideNavItem("Edit Profile", EditProfileView.class,
+                    VaadinIcon.EDIT.create());
+            nav.addItem(accountItem, editProfileItem);
         } else {
             SideNavItem loginItem = new SideNavItem("Login", LoginView.class,
                     VaadinIcon.SIGN_IN.create());

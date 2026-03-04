@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Simple in-memory user store that supports runtime registration.
+ * Simple in-memory user store that supports runtime registration and profile
+ * updates (password changes).
+ *
  * Users are lost when the application restarts.
  *
  * TODO: Replace with calls to user-service REST API once the contract
@@ -36,11 +38,11 @@ public class InMemoryUserRegistry {
         if (users.containsKey(username.toLowerCase())) {
             return false;
         }
-        UserDetails user = new User(
-                username,
-                passwordEncoder.encode(rawPassword),
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+        UserDetails user = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(rawPassword))
+                .authorities(new SimpleGrantedAuthority("ROLE_USER"))
+                .build();
         users.put(username.toLowerCase(), user);
         return true;
     }
@@ -51,5 +53,33 @@ public class InMemoryUserRegistry {
 
     public boolean usernameExists(String username) {
         return users.containsKey(username.toLowerCase());
+    }
+
+    /**
+     * Verifies that the supplied raw password matches the stored (encoded)
+     * password for the given username. Returns false if user does not exist.
+     */
+    public boolean verifyPassword(String username, String rawPassword) {
+        UserDetails user = findUser(username);
+        if (user == null) return false;
+        return passwordEncoder.matches(rawPassword, user.getPassword());
+    }
+
+    /**
+     * Replaces the stored password for the given user with a freshly encoded
+     * version of the supplied raw password.
+     * No-op if the user does not exist.
+     */
+    public void updatePassword(String username, String rawNewPassword) {
+        String key = username.toLowerCase();
+        UserDetails existing = users.get(key);
+        if (existing == null) return;
+
+        UserDetails updated = User.builder()
+                .username(existing.getUsername())
+                .password(passwordEncoder.encode(rawNewPassword))
+                .authorities(existing.getAuthorities())
+                .build();
+        users.put(key, updated);
     }
 }

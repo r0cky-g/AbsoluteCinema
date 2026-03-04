@@ -1,5 +1,6 @@
 ca\yorku\eecs4314group12\ui\data\DummyDataService.class
 ca\yorku\eecs4314group12\ui\views\AccountView.class
+ca\yorku\eecs4314group12\ui\views\EditProfileView.class
 ca\yorku\eecs4314group12\ui\UiServiceApplication.class
 ca\yorku\eecs4314group12\ui\views\LoginView.class
 ca\yorku\eecs4314group12\ui\security\InMemoryUserRegistry.class
