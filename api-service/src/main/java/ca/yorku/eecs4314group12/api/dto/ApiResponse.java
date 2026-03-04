@@ -4,23 +4,23 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class ApiErrorResponse {
+public class ApiResponse {
 
     private String message;
    
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     private Instant timestamp;
 
-    public ApiErrorResponse() {
+    public ApiResponse() {
         this.timestamp = Instant.now();
     }
 
-    public ApiErrorResponse(String message) {
+    public ApiResponse(String message) {
         this.message = message;
         this.timestamp = Instant.now();
     }
 
-    public ApiErrorResponse(String message, Instant timestamp) {
+    public ApiResponse(String message, Instant timestamp) {
         this.message = message;
         this.timestamp = timestamp;
     }

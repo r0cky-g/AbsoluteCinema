@@ -6,7 +6,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import ca.yorku.eecs4314group12.api.dto.ApiErrorResponse;
+import ca.yorku.eecs4314group12.api.dto.ApiResponse;
 import ca.yorku.eecs4314group12.api.exception.ApiException;
 import reactor.core.publisher.Mono;
 
@@ -30,7 +30,7 @@ public class BaseWebClient {
                                 );
                     } else {
                         // non-2xx: parse as ErrorResponse
-                        return response.bodyToMono(ApiErrorResponse.class)
+                        return response.bodyToMono(ApiResponse.class)
                                 .flatMap(error -> Mono.<T>error(new ApiException(
                                         response.statusCode().value(),
                                         error.getMessage(),
@@ -55,7 +55,7 @@ public class BaseWebClient {
                                 );
                     } else {
                         // non-2xx: parse as ErrorResponse
-                        return response.bodyToMono(ApiErrorResponse.class)
+                        return response.bodyToMono(ApiResponse.class)
                                 .flatMap(error -> Mono.<T>error(new ApiException(
                                         response.statusCode().value(),
                                         error.getMessage(),
@@ -81,7 +81,7 @@ public class BaseWebClient {
                             );
                 } else {
                     // non-2xx: parse as ApiErrorResponse
-                    return response.bodyToMono(ApiErrorResponse.class)
+                    return response.bodyToMono(ApiResponse.class)
                             .flatMap(error -> Mono.<T>error(new ApiException(
                                     response.statusCode().value(),
                                     error.getMessage(),
@@ -107,7 +107,7 @@ public class BaseWebClient {
                             );
                 } else {
                     // non-2xx: parse as ApiErrorResponse
-                    return response.bodyToMono(ApiErrorResponse.class)
+                    return response.bodyToMono(ApiResponse.class)
                             .flatMap(error -> Mono.<T>error(new ApiException(
                                     response.statusCode().value(),
                                     error.getMessage(),
