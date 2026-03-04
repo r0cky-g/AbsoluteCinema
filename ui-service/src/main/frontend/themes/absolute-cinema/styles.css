@@ -1,0 +1,135 @@
+/* =============================================================================
+   Absolute Cinema — Vaadin 25 / Lumo custom theme
+   Location: src/main/frontend/themes/absolute-cinema/styles.css
+   ============================================================================= */
+
+/* --- Brand colour overrides ------------------------------------------------- */
+html {
+    /* Deep cinematic red as primary */
+    --lumo-primary-color:              #c0392b;
+    --lumo-primary-color-50pct:        rgba(192, 57, 43, 0.5);
+    --lumo-primary-color-10pct:        rgba(192, 57, 43, 0.1);
+    --lumo-primary-text-color:         #c0392b;
+    --lumo-primary-contrast-color:     #ffffff;
+
+    /* Dark background for a cinematic feel */
+    --lumo-base-color:                 #1a1a2e;
+    --lumo-tint:                       #1a1a2e;
+    --lumo-tint-5pct:                  rgba(255, 255, 255, 0.05);
+    --lumo-tint-10pct:                 rgba(255, 255, 255, 0.10);
+    --lumo-tint-20pct:                 rgba(255, 255, 255, 0.20);
+    --lumo-tint-50pct:                 rgba(255, 255, 255, 0.50);
+    --lumo-tint-80pct:                 rgba(255, 255, 255, 0.80);
+    --lumo-tint-90pct:                 rgba(255, 255, 255, 0.90);
+
+    --lumo-shade:                      #000000;
+    --lumo-shade-5pct:                 rgba(0, 0, 0, 0.05);
+    --lumo-shade-10pct:                rgba(0, 0, 0, 0.10);
+    --lumo-shade-20pct:                rgba(0, 0, 0, 0.20);
+    --lumo-shade-50pct:                rgba(0, 0, 0, 0.50);
+    --lumo-shade-80pct:                rgba(0, 0, 0, 0.80);
+    --lumo-shade-90pct:                rgba(0, 0, 0, 0.90);
+
+    /* Contrast helpers used by cards, borders, inputs */
+    --lumo-contrast:                   #ffffff;
+    --lumo-contrast-5pct:             rgba(255, 255, 255, 0.05);
+    --lumo-contrast-10pct:            rgba(255, 255, 255, 0.10);
+    --lumo-contrast-20pct:            rgba(255, 255, 255, 0.20);
+    --lumo-contrast-30pct:            rgba(255, 255, 255, 0.30);
+    --lumo-contrast-40pct:            rgba(255, 255, 255, 0.40);
+    --lumo-contrast-50pct:            rgba(255, 255, 255, 0.50);
+    --lumo-contrast-60pct:            rgba(255, 255, 255, 0.60);
+    --lumo-contrast-70pct:            rgba(255, 255, 255, 0.70);
+    --lumo-contrast-80pct:            rgba(255, 255, 255, 0.80);
+    --lumo-contrast-90pct:            rgba(255, 255, 255, 0.90);
+
+    /* Text colours */
+    --lumo-header-text-color:          #ffffff;
+    --lumo-body-text-color:            rgba(255, 255, 255, 0.87);
+    --lumo-secondary-text-color:       rgba(255, 255, 255, 0.54);
+    --lumo-tertiary-text-color:        rgba(255, 255, 255, 0.36);
+    --lumo-disabled-text-color:        rgba(255, 255, 255, 0.26);
+
+    /* Error / success */
+    --lumo-error-color:                #e74c3c;
+    --lumo-error-color-50pct:          rgba(231, 76, 60, 0.5);
+    --lumo-error-color-10pct:          rgba(231, 76, 60, 0.1);
+    --lumo-error-text-color:           #e74c3c;
+    --lumo-success-color:              #27ae60;
+    --lumo-success-color-50pct:        rgba(39, 174, 96, 0.5);
+    --lumo-success-color-10pct:        rgba(39, 174, 96, 0.1);
+    --lumo-success-text-color:         #27ae60;
+
+    /* Shadows */
+    --lumo-box-shadow-xs:  0 1px 4px rgba(0,0,0,0.5);
+    --lumo-box-shadow-s:   0 2px 8px rgba(0,0,0,0.5);
+    --lumo-box-shadow-m:   0 4px 16px rgba(0,0,0,0.6);
+    --lumo-box-shadow-l:   0 8px 32px rgba(0,0,0,0.7);
+    --lumo-box-shadow-xl:  0 16px 48px rgba(0,0,0,0.8);
+
+    /* Slightly rounded corners */
+    --lumo-border-radius-s:  4px;
+    --lumo-border-radius-m:  8px;
+    --lumo-border-radius-l:  12px;
+}
+
+/* --- Global page background ------------------------------------------------- */
+body {
+    background-color: #16213e;
+    color: var(--lumo-body-text-color);
+}
+
+/* --- App layout navbar ------------------------------------------------------ */
+vaadin-app-layout::part(navbar) {
+    background: #0f3460;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Drawer ----------------------------------------------------------------- */
+vaadin-app-layout::part(drawer) {
+    background: #1a1a2e;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+vaadin-side-nav-item::part(item) {
+    color: var(--lumo-body-text-color);
+    border-radius: var(--lumo-border-radius-m);
+    margin: 2px 8px;
+}
+
+vaadin-side-nav-item[active]::part(item) {
+    background: var(--lumo-primary-color-10pct);
+    color: var(--lumo-primary-color);
+}
+
+vaadin-side-nav-item::part(item):hover {
+    background: var(--lumo-contrast-5pct);
+}
+
+/* --- Buttons ---------------------------------------------------------------- */
+vaadin-button[theme~="primary"]::part(label) {
+    font-weight: 600;
+}
+
+/* --- Input fields ----------------------------------------------------------- */
+vaadin-text-field::part(input-field),
+vaadin-email-field::part(input-field),
+vaadin-password-field::part(input-field),
+vaadin-date-picker::part(input-field) {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--lumo-border-radius-m);
+}
+
+/* --- Login form ------------------------------------------------------------- */
+vaadin-login-form {
+    background: #1a1a2e;
+    border: 1px solid var(--lumo-contrast-10pct);
+    border-radius: var(--lumo-border-radius-l);
+    box-shadow: var(--lumo-box-shadow-m);
+}
+
+/* --- Notifications ---------------------------------------------------------- */
+vaadin-notification-card {
+    border-radius: var(--lumo-border-radius-m);
+}
