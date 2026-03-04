@@ -1,8 +1,8 @@
 package ca.yorku.eecs4314group12.ui.data;
 
-import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
-import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
-import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
+import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.List;
-import java.util.Optional;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 
 /**
  * Gateway service for all real backend calls from the ui-service.
@@ -111,6 +112,29 @@ public class BackendClientService {
         } catch (Exception e) {
             log.error("Failed to fetch review stats for movie {}: {}", movieId, e.getMessage());
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Submits a new review to review-service POST /api/reviews.
+     * Returns true on success (HTTP 201), false on conflict (duplicate review)
+     * or any server/network error.
+     */
+    public boolean createReview(ReviewDTO review) {
+        try {
+            ApiResponse<ReviewDTO> response = reviewClient.post()
+                    .uri("/api/reviews")
+                    .bodyValue(review)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewDTO>>() {})
+                    .block();
+            return response != null && response.isSuccess();
+        } catch (WebClientResponseException.Conflict e) {
+            log.warn("Duplicate review rejected by review-service: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Failed to submit review: {}", e.getMessage());
+            return false;
         }
     }
 

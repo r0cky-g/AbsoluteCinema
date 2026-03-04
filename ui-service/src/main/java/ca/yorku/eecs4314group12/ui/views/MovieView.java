@@ -4,6 +4,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -12,6 +15,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
@@ -110,9 +114,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     // =========================================================================
 
     private Div buildHeroBannerDTO(MovieDTO movie, double userScore) {
-        Div poster = buildPosterDiv("🎬");
-        // TODO: replace emoji with:
-        // Image img = new Image("https://image.tmdb.org/t/p/w342" + movie.getPoster_path(), movie.getTitle());
+        var poster = buildPosterComponent(movie.getPoster_path(), "🎬", movie.getTitle());
 
         H1 title = new H1(movie.getTitle());
         title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0")
@@ -150,7 +152,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private Div buildHeroBannerDummy(ca.yorku.eecs4314group12.ui.data.Movie movie, double userScore) {
-        Div poster = buildPosterDiv(movie.getPosterEmoji());
+        var poster = buildPosterComponent(null, movie.getPosterEmoji(), movie.getTitle());
 
         H1 title = new H1(movie.getTitle());
         title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0")
@@ -197,7 +199,10 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         FlexLayout castRow = new FlexLayout();
         castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
-        movie.getTopCast(8).forEach(n -> castRow.add(buildActorCard(n)));
+        List<MovieDTO.CastMemberDTO> cast = movie.getCredits() != null && movie.getCredits().getCast() != null
+                ? movie.getCredits().getCast().stream().limit(8).toList()
+                : List.of();
+        cast.forEach(c -> castRow.add(buildActorCard(c.getOriginal_name(), c.getProfile_path())));
 
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(),
@@ -209,7 +214,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 sectionCard(sectionHeading("Overview"), overview),
                 sectionCard(sectionHeading("Cast & Crew"), castRow),
                 sectionCard(sectionHeading("Film Details"), detailsGrid),
-                buildReviewsSection(reviews, movie.getId()));
+                buildReviewsSection(reviews, movie.getId(), movie.getTitle()));
     }
 
     private Div buildContentAreaDummy(ca.yorku.eecs4314group12.ui.data.Movie movie,
@@ -219,7 +224,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         FlexLayout castRow = new FlexLayout();
         castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
-        movie.getCast().forEach(n -> castRow.add(buildActorCard(n)));
+        movie.getCast().forEach(n -> castRow.add(buildActorCard(n, null)));
 
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(),
@@ -231,7 +236,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 sectionCard(sectionHeading("Overview"), overview),
                 sectionCard(sectionHeading("Cast & Crew"), castRow),
                 sectionCard(sectionHeading("Film Details"), detailsGrid),
-                buildReviewsSection(reviews, movie.getId()));
+                buildReviewsSection(reviews, movie.getId(), movie.getTitle()));
     }
 
     private Div buildDetailsGrid(int budget, int revenue, List<String> companies,
@@ -255,7 +260,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     // Reviews section
     // =========================================================================
 
-    private VerticalLayout buildReviewsSection(List<ReviewDTO> reviews, int movieId) {
+    private VerticalLayout buildReviewsSection(List<ReviewDTO> reviews, int movieId, String movieTitle) {
         VerticalLayout section = new VerticalLayout(sectionHeading("Reviews"));
         section.setPadding(false); section.setSpacing(false);
         section.getStyle()
@@ -301,10 +306,25 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         Button writeBtn = new Button("Write a Review");
         writeBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         writeBtn.getStyle().set("margin-top", "var(--lumo-space-m)");
-        writeBtn.addClickListener(e ->
-                Notification.show("Review submission coming soon!", 3000, Notification.Position.TOP_CENTER)
-                        .addThemeVariants(NotificationVariant.LUMO_PRIMARY));
-        // TODO: open review submission form, passing movieId
+        writeBtn.addClickListener(e -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean loggedIn = auth != null
+                    && auth.isAuthenticated()
+                    && !"anonymousUser".equals(auth.getPrincipal());
+
+            if (!loggedIn) {
+                Notification n = Notification.show(
+                        "Please log in to write a review.",
+                        3000, Notification.Position.TOP_CENTER);
+                n.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+                return;
+            }
+
+            ReviewDialog dialog = new ReviewDialog(backendClient, movieId, movieTitle);
+            dialog.setOnSuccess(() ->
+                    getUI().ifPresent(ui -> ui.navigate("movie/" + movieId)));
+            dialog.open();
+        });
         section.add(writeBtn);
         section.setWidth("100%");
         return section;
@@ -362,9 +382,27 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     // Shared UI helpers
     // =========================================================================
 
-    private Div buildPosterDiv(String emoji) {
+    private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
+
+    /**
+     * Builds a poster element.
+     * If posterPath is non-null (real TMDB data), renders an <img> at w342 size.
+     * Falls back to an emoji placeholder div (dummy data).
+     */
+    private com.vaadin.flow.component.Component buildPosterComponent(String posterPath, String fallbackEmoji, String altText) {
+        if (posterPath != null && !posterPath.isBlank()) {
+            Image img = new Image(TMDB_IMAGE_BASE + "w342" + posterPath, altText);
+            img.getStyle()
+                    .set("width", "160px").set("min-width", "160px")
+                    .set("height", "240px")
+                    .set("object-fit", "cover")
+                    .set("border-radius", "var(--lumo-border-radius-l)")
+                    .set("box-shadow", "var(--lumo-box-shadow-m)");
+            return img;
+        }
+        // Fallback emoji div
         Div poster = new Div();
-        poster.setText(emoji);
+        poster.setText(fallbackEmoji);
         poster.getStyle()
                 .set("font-size", "6rem").set("width", "160px").set("min-width", "160px")
                 .set("height", "240px").set("background", "var(--lumo-contrast-5pct)")
@@ -412,13 +450,24 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return new Div(badge);
     }
 
-    private VerticalLayout buildActorCard(String name) {
-        Avatar avatar = new Avatar(name);
-        avatar.setColorIndex(Math.abs(name.hashCode()) % 7);
-        avatar.getStyle().set("width", "48px").set("height", "48px");
+    private VerticalLayout buildActorCard(String name, String profilePath) {
+        com.vaadin.flow.component.Component avatarComponent;
+        if (profilePath != null && !profilePath.isBlank()) {
+            Image img = new Image(TMDB_IMAGE_BASE + "w92" + profilePath, name);
+            img.getStyle()
+                    .set("width", "48px").set("height", "48px")
+                    .set("border-radius", "50%")
+                    .set("object-fit", "cover");
+            avatarComponent = img;
+        } else {
+            Avatar avatar = new Avatar(name);
+            avatar.setColorIndex(Math.abs(name.hashCode()) % 7);
+            avatar.getStyle().set("width", "48px").set("height", "48px");
+            avatarComponent = avatar;
+        }
         Span nameSpan = new Span(name);
         nameSpan.getStyle().set("font-size", "var(--lumo-font-size-s)").set("text-align", "center");
-        VerticalLayout card = new VerticalLayout(avatar, nameSpan);
+        VerticalLayout card = new VerticalLayout(avatarComponent, nameSpan);
         card.setPadding(false); card.setSpacing(false);
         card.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
         card.getStyle().set("gap", "var(--lumo-space-xs)").set("width", "80px");
@@ -438,7 +487,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return item;
     }
 
-    private Div wrapHero(Div poster, VerticalLayout info) {
+    private Div wrapHero(com.vaadin.flow.component.Component poster, VerticalLayout info) {
         HorizontalLayout heroContent = new HorizontalLayout(poster, info);
         heroContent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
         heroContent.setSpacing(true);
