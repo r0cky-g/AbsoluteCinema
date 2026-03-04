@@ -2,24 +2,24 @@ package ca.yorku.eecs4314group12.ui.data;
 
 /**
  * Placeholder DTO for a review, shaped to match review-service ReviewDTO.
- * TODO: Replace with a WebClient call to review-service GET /api/reviews/movie/{id}
+ * TODO: Replace with WebClient call to review-service GET /api/reviews/movie/{id}
  */
 public class Review {
 
     private final String movieTitle;
-    private final int stars;            // 1–5 display stars (mapped from 1–10 rating)
-    private final int rating;           // raw 1–10 rating matching review-service
-    private final String title;         // review headline
-    private final String body;          // review content
+    private final int stars;          // 1–5 display stars
+    private final int rating;         // raw 1–10 matching review-service
+    private final String title;
+    private final String body;
     private final String datePosted;
     private final String username;
-    private final int helpfulCount;     // used to determine "top recommended"
+    private final int helpfulCount;
     private final boolean isSpoiler;
 
+    /** Legacy 4-arg constructor — keeps AccountView working unchanged. */
     public Review(String movieTitle, int stars, String body, String datePosted) {
-        // Legacy constructor — keeps AccountView working as-is
-        this(movieTitle, stars, stars * 2, movieTitle + " Review", body,
-                datePosted, "Anonymous", 0, false);
+        this(movieTitle, stars, stars * 2, movieTitle + " Review",
+                body, datePosted, "Anonymous", 0, false);
     }
 
     public Review(String movieTitle, int stars, int rating, String title,
