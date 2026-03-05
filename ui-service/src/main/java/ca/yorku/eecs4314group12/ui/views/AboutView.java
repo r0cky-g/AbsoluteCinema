@@ -42,7 +42,7 @@ public class AboutView extends VerticalLayout {
         Paragraph description = new Paragraph(
                 "Absolute Cinema is a movie review platform built as part of EECS 4314 (Group 12) " +
                 "at York University. It is a microservices application built with Spring Boot, " +
-                "Vaadin 25, and PostgreSQL.");
+                "Vaadin 25, PostgreSQL, and MongoDB.");
         description.getStyle().set("line-height", "1.7").set("margin", "0");
 
         return card(heading, description);
