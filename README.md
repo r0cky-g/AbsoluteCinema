@@ -39,125 +39,180 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 - **Account page** — view profile info and review history
 - **Edit profile** — update username, email, password, date of birth, genres
 
-### What is live vs dummy data
+### Live vs Dummy Data
+
 | Data | Source |
 |---|---|
-| Movie detail pages | **Live** — api-service → movie-service → TMDB (falls back to dummy if services are down) |
+| Movie detail pages | **Live** — api-service → movie-service → TMDB |
 | Movie poster & cast images | **Live** — loaded directly from TMDB image CDN |
 | Reviews on movie pages | **Live** — review-service |
 | User score on movie pages | **Live** — calculated from review-service average |
-| Home page grid | **Dummy** — pending a list/search endpoint on movie-service |
+| Home page grid | **Dummy** — labelled `[DUMMY]` — pending a list/search endpoint on movie-service |
+| Account page reviews | **Dummy** — labelled `[DUMMY]` — pending user-service integration |
 | User accounts | **In-memory** — pending user-service integration |
+
+All dummy data is clearly prefixed with `[DUMMY]` in the UI so it cannot be mistaken for real API data.
 
 ---
 
-## Prerequisites
+## Running with Docker (Recommended)
+
+Docker is the easiest way to run the full stack — no local Java or PostgreSQL installation required.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- A TMDB Read Access Token — get one free at https://www.themoviedb.org/settings/api
+
+### Setup
+
+1. Copy the example env file and fill in your values:
+
+```
+cp .env.example .env
+```
+
+Edit `.env`:
+```
+TDMB_TOKEN=your_tmdb_read_access_token_here
+DB_PASSWORD=anythingYouWant
+MAIL_PASSWORD=
+```
+
+> `.env` is gitignored and must be created manually on each machine you use.
+
+2. Build and start all services:
+
+```
+docker compose up --build
+```
+
+The first build takes 5–10 minutes (Maven downloads dependencies, Vaadin compiles the frontend bundle). Subsequent starts are fast:
+
+```
+docker compose up
+```
+
+3. Open http://localhost:8080
+
+### Rebuilding after code changes
+
+If you change source code in a service, rebuild just that service before starting:
+
+```
+docker compose build <service-name>
+docker compose up
+```
+
+For example, after changing ui-service:
+```
+docker compose build ui-service
+docker compose up
+```
+
+To force a full clean rebuild of everything (e.g. after Dockerfile changes):
+```
+docker compose build --no-cache
+docker compose up
+```
+
+### Stopping
+
+```
+Ctrl+C
+```
+
+or to also remove containers:
+```
+docker compose down
+```
+
+The PostgreSQL data volume persists between restarts. To wipe the database and start fresh:
+```
+docker compose down -v
+```
+
+---
+
+## Running Manually (Without Docker)
+
+### Prerequisites
 
 - Java 21
 - PostgreSQL (for review-service and user-service)
-- A TMDB API token (for movie-service) — get one free at https://www.themoviedb.org/settings/api
+- A TMDB API token
 
----
+### Setup
 
-## Running the Services
+Create two PostgreSQL databases:
+- `review_service`
+- `user_service`
 
-Each service has its own Maven wrapper. Open a separate terminal for each.
+### Starting Each Service
 
-### 1. movie-service
+Open a separate terminal for each service.
 
-Set your TMDB token, then run:
-
-**Windows**
-```
+**movie-service** — set your TMDB token first:
+```bash
+# Windows
 setx TDMB_TOKEN "your_token_here"
-cd movie-service
-.\mvnw.cmd spring-boot:run
-```
+cd movie-service && .\mvnw.cmd spring-boot:run
 
-**Mac/Linux**
-```
+# Mac/Linux
 export TDMB_TOKEN=your_token_here
-cd movie-service
-./mvnw spring-boot:run
+cd movie-service && ./mvnw spring-boot:run
 ```
 
-### 2. api-service
-```
+**api-service:**
+```bash
 cd api-service
-
-# Windows
-.\mvnw.cmd spring-boot:run
-
-# Mac/Linux
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run       # Mac/Linux
 ```
 
-### 3. review-service
-
-Requires PostgreSQL running with a database called `review_service`.
-
-```
+**review-service:**
+```bash
 cd review-service
-
-# Windows
-.\mvnw.cmd spring-boot:run
-
-# Mac/Linux
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run       # Mac/Linux
 ```
 
-### 4. user-service
-
-Requires PostgreSQL running with a database called `UserService` (or `user_service` depending on branch).
-
-```
+**user-service:**
+```bash
 cd user-service
-
-# Windows
-.\mvnw.cmd spring-boot:run
-
-# Mac/Linux
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run       # Mac/Linux
 ```
 
-### 5. ui-service
-```
+**ui-service:**
+```bash
 cd ui-service
-
-# Windows
-.\mvnw.cmd spring-boot:run
-
-# Mac/Linux
-./mvnw spring-boot:run
+.\mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run       # Mac/Linux
 ```
 
-Then open http://localhost:8080 in your browser.
+Then open http://localhost:8080.
 
-> **Note:** The first run after a clean checkout will take 2–5 minutes while Vaadin downloads Node.js and compiles the frontend bundle. Subsequent runs are fast. Use `spring-boot:run` (not `mvn clean spring-boot:run`) to preserve the dev bundle cache.
+> **Note:** The first run after a clean checkout takes 2–5 minutes while Vaadin downloads Node.js and compiles the frontend bundle. Use `spring-boot:run` (not `mvn clean spring-boot:run`) to preserve the dev bundle cache between runs.
 
 ---
 
 ## Logging In
 
-The UI currently uses in-memory accounts that are pre-seeded on startup:
+The UI currently uses in-memory accounts pre-seeded on startup:
 
 | Username | Password |
 |---|---|
 | alice | password |
 | bob | password |
 
-You can also register a new account — it will persist for the duration of the session.
-
----
-
-## Running Without Backend Services
-
-ui-service will start and function on its own. Movie detail pages and reviews will fall back to dummy data automatically if api-service, movie-service, or review-service are not running. The home page grid always uses dummy data until a movie list endpoint is added to movie-service.
+You can also register a new account — it persists for the duration of the session.
 
 ---
 
 ## What's Still Pending
 
-- **Home page grid** — movie-service needs a `GET /movie/popular` or `/movie/search` endpoint calling TMDB discover/search
-- **Persistent user accounts** — replace in-memory auth with real user-service calls; this also enables the correct user ID to be attached to submitted reviews
-- **Username on reviews** — review-service needs to enrich `ReviewDTO` with usernames from user-service
+- **Home page grid** — movie-service needs a `GET /movie/popular` or `/movie/search` endpoint; home page currently shows `[DUMMY]` placeholder cards
+- **Persistent user accounts** — replace in-memory auth with real user-service calls; also enables correct user ID on submitted reviews
+- **Username on reviews** — review-service needs to enrich `ReviewDTO` with usernames fetched from user-service
+- **Account page reviews** — requires real auth (above) to look up the current user's review history
