@@ -69,7 +69,7 @@ public class AboutView extends VerticalLayout {
         tmdbLogoLink.setTarget("_blank");
 
         Paragraph notice = new Paragraph(
-                "This product uses the TMDB API but is not endorsed or certified by TMDB.");
+                "This website uses the TMDB API but is not endorsed or certified by TMDB.");
         notice.getStyle()
                 .set("font-weight", "600")
                 .set("margin", "0 0 var(--lumo-space-s) 0");
