@@ -50,7 +50,6 @@ public class MainLayout extends AppLayout {
                 .set("cursor", "pointer");
         logo.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
 
-        // Flexible spacer pushes right-side controls to the edge
         Span spacer = new Span();
         spacer.getStyle().set("flex", "1");
 
@@ -120,9 +119,7 @@ public class MainLayout extends AppLayout {
     private void createDrawer() {
         SideNav nav = new SideNav();
 
-        SideNavItem homeItem = new SideNavItem("Home", HomeView.class,
-                VaadinIcon.HOME.create());
-        nav.addItem(homeItem);
+        nav.addItem(new SideNavItem("Home", HomeView.class, VaadinIcon.HOME.create()));
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean loggedIn = auth != null
@@ -130,18 +127,19 @@ public class MainLayout extends AppLayout {
                 && !auth.getPrincipal().equals("anonymousUser");
 
         if (loggedIn) {
-            SideNavItem accountItem = new SideNavItem("My Account", AccountView.class,
-                    VaadinIcon.USER.create());
-            SideNavItem editProfileItem = new SideNavItem("Edit Profile", EditProfileView.class,
-                    VaadinIcon.EDIT.create());
-            nav.addItem(accountItem, editProfileItem);
+            nav.addItem(
+                new SideNavItem("My Account", AccountView.class, VaadinIcon.USER.create()),
+                new SideNavItem("Edit Profile", EditProfileView.class, VaadinIcon.EDIT.create())
+            );
         } else {
-            SideNavItem loginItem = new SideNavItem("Login", LoginView.class,
-                    VaadinIcon.SIGN_IN.create());
-            SideNavItem registerItem = new SideNavItem("Register", RegisterView.class,
-                    VaadinIcon.PLUS_CIRCLE.create());
-            nav.addItem(loginItem, registerItem);
+            nav.addItem(
+                new SideNavItem("Login", LoginView.class, VaadinIcon.SIGN_IN.create()),
+                new SideNavItem("Register", RegisterView.class, VaadinIcon.PLUS_CIRCLE.create())
+            );
         }
+
+        // Always visible at the bottom of the nav
+        nav.addItem(new SideNavItem("About & Credits", AboutView.class, VaadinIcon.INFO_CIRCLE.create()));
 
         VerticalLayout drawerContent = new VerticalLayout(nav);
         drawerContent.setSizeFull();
