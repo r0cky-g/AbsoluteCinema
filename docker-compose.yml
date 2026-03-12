@@ -1,7 +1,7 @@
 services:
 
   # -------------------------------------------------------------------------
-  # PostgreSQL — shared database server, two separate databases
+  # PostgreSQL — shared database server, separate databases per service
   # -------------------------------------------------------------------------
   postgres:
     image: postgres:16
@@ -75,6 +75,25 @@ services:
       - postgres
 
   # -------------------------------------------------------------------------
+  # forum-service  (port 8085)
+  # -------------------------------------------------------------------------
+  forum-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.forum-service
+    container_name: forum-service
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/forum_service
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+
+  # -------------------------------------------------------------------------
   # api-service  (port 8081)
   # -------------------------------------------------------------------------
   api-service:
@@ -87,12 +106,14 @@ services:
       APP_USER_SERVICE_URL: http://user-service:8082
       APP_MOVIE_SERVICE_URL: http://movie-service:8083
       APP_REVIEW_SERVICE_URL: http://review-service:8084
+      APP_FORUM_SERVICE_URL: http://forum-service:8085
     ports:
       - "8081:8081"
     depends_on:
       - movie-service
       - user-service
       - review-service
+      - forum-service
 
   # -------------------------------------------------------------------------
   # ui-service  (port 8080)  — what you open in your browser
