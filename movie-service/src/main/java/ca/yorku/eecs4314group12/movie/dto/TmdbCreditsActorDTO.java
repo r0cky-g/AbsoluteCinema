@@ -3,6 +3,7 @@ package ca.yorku.eecs4314group12.movie.dto;
 public class TmdbCreditsActorDTO {
 	
 	private String original_name;
+	private String name;
 	private String character;
 	private String profile_path;
 
@@ -14,6 +15,14 @@ public class TmdbCreditsActorDTO {
 		this.original_name = original_name;
 	}
 	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public String getCharacter() {
 		return character;
 	}
