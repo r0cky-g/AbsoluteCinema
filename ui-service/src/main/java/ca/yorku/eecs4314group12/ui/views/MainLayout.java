@@ -120,7 +120,8 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
 
         nav.addItem(new SideNavItem("Home", HomeView.class, VaadinIcon.HOME.create()));
-
+        nav.addItem(new SideNavItem("Forum", ForumView.class, VaadinIcon.COMMENTS.create()));
+        
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean loggedIn = auth != null
                 && auth.isAuthenticated()

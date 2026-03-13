@@ -1,6 +1,7 @@
 package ca.yorku.eecs4314group12.ui.data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import ca.yorku.eecs4314group12.ui.data.dto.ForumCommentDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ForumPostDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
@@ -18,9 +21,11 @@ import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 /**
  * Gateway service for all real backend calls from the ui-service.
  *
- * Movie data   → api-service  (port 8081) GET /api/movie/{id}
+ * Movie data   → api-service    (port 8081) GET /api/movie/{id}
  * Review data  → review-service (port 8084) GET /api/reviews/movie/{id}
  *                                           GET /api/reviews/movie/{id}/stats
+ * Forum data   → forum-service  (port 8085) GET/POST /forum/posts
+ *                                           GET/POST /forum/comments
  *
  * All methods return Optional or empty List on failure so views can fall back
  * gracefully without crashing.
@@ -32,12 +37,15 @@ public class BackendClientService {
 
     private final WebClient apiClient;
     private final WebClient reviewClient;
+    private final WebClient forumClient;
 
     public BackendClientService(
             @Qualifier("uiApiClient") WebClient apiClient,
-            @Qualifier("uiReviewClient") WebClient reviewClient) {
+            @Qualifier("uiReviewClient") WebClient reviewClient,
+            @Qualifier("uiForumClient") WebClient forumClient) {
         this.apiClient = apiClient;
         this.reviewClient = reviewClient;
+        this.forumClient = forumClient;
     }
 
     // -------------------------------------------------------------------------
@@ -135,6 +143,86 @@ public class BackendClientService {
         } catch (Exception e) {
             log.error("Failed to submit review: {}", e.getMessage());
             return false;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Forum — posts
+    // -------------------------------------------------------------------------
+
+    public List<ForumPostDTO> getAllPosts() {
+        try {
+            List<ForumPostDTO> posts = forumClient.get()
+                    .uri("/forum/posts")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {})
+                    .block();
+            return posts != null ? posts : List.of();
+        } catch (Exception e) {
+            log.error("Failed to fetch forum posts: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    public Optional<ForumPostDTO> createPost(String title, String content) {
+        try {
+            Map<String, String> body = Map.of("title", title, "content", content);
+            ForumPostDTO post = forumClient.post()
+                    .uri("/forum/posts")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(ForumPostDTO.class)
+                    .block();
+            return Optional.ofNullable(post);
+        } catch (Exception e) {
+            log.error("Failed to create forum post: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public void deletePost(long postId) {
+        try {
+            forumClient.delete()
+                    .uri("/forum/posts/{id}", postId)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to delete forum post {}: {}", postId, e.getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Forum — comments
+    // -------------------------------------------------------------------------
+
+    public List<ForumCommentDTO> getCommentsForPost(long postId) {
+        try {
+            List<ForumCommentDTO> comments = forumClient.get()
+                    .uri("/forum/comments/{postId}", postId)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<ForumCommentDTO>>() {})
+                    .block();
+            return comments != null ? comments : List.of();
+        } catch (Exception e) {
+            log.error("Failed to fetch comments for post {}: {}", postId, e.getMessage());
+            return List.of();
+        }
+    }
+
+    public Optional<ForumCommentDTO> createComment(long postId, long userId, String content) {
+        try {
+            Map<String, Object> body = Map.of("postId", postId, "userId", userId, "content", content);
+            ForumCommentDTO comment = forumClient.post()
+                    .uri("/forum/comments")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(ForumCommentDTO.class)
+                    .block();
+            return Optional.ofNullable(comment);
+        } catch (Exception e) {
+            log.error("Failed to create comment on post {}: {}", postId, e.getMessage());
+            return Optional.empty();
         }
     }
 

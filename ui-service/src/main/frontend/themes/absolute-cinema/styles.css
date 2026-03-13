@@ -1,20 +1,23 @@
 /* =============================================================================
-   Absolute Cinema — Vaadin 25 / Lumo custom theme
+   Absolute Cinema — Cinematic Dark Theme
    Location: src/main/frontend/themes/absolute-cinema/styles.css
    ============================================================================= */
 
+/* --- Google Fonts ----------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+
 /* --- Brand colour overrides ------------------------------------------------- */
 html {
-    /* Deep cinematic red as primary */
-    --lumo-primary-color:              #c0392b;
-    --lumo-primary-color-50pct:        rgba(192, 57, 43, 0.5);
-    --lumo-primary-color-10pct:        rgba(192, 57, 43, 0.1);
-    --lumo-primary-text-color:         #c0392b;
-    --lumo-primary-contrast-color:     #ffffff;
+    /* Warm amber/gold as primary — cinematic, Letterboxd-adjacent */
+    --lumo-primary-color:              #e8b84b;
+    --lumo-primary-color-50pct:        rgba(232, 184, 75, 0.5);
+    --lumo-primary-color-10pct:        rgba(232, 184, 75, 0.1);
+    --lumo-primary-text-color:         #e8b84b;
+    --lumo-primary-contrast-color:     #0a0a0a;
 
-    /* Dark background for a cinematic feel */
-    --lumo-base-color:                 #1a1a2e;
-    --lumo-tint:                       #1a1a2e;
+    /* True cinema blacks */
+    --lumo-base-color:                 #141414;
+    --lumo-tint:                       #141414;
     --lumo-tint-5pct:                  rgba(255, 255, 255, 0.05);
     --lumo-tint-10pct:                 rgba(255, 255, 255, 0.10);
     --lumo-tint-20pct:                 rgba(255, 255, 255, 0.20);
@@ -30,106 +33,381 @@ html {
     --lumo-shade-80pct:                rgba(0, 0, 0, 0.80);
     --lumo-shade-90pct:                rgba(0, 0, 0, 0.90);
 
-    /* Contrast helpers used by cards, borders, inputs */
     --lumo-contrast:                   #ffffff;
-    --lumo-contrast-5pct:             rgba(255, 255, 255, 0.05);
-    --lumo-contrast-10pct:            rgba(255, 255, 255, 0.10);
-    --lumo-contrast-20pct:            rgba(255, 255, 255, 0.20);
-    --lumo-contrast-30pct:            rgba(255, 255, 255, 0.30);
-    --lumo-contrast-40pct:            rgba(255, 255, 255, 0.40);
-    --lumo-contrast-50pct:            rgba(255, 255, 255, 0.50);
-    --lumo-contrast-60pct:            rgba(255, 255, 255, 0.60);
-    --lumo-contrast-70pct:            rgba(255, 255, 255, 0.70);
-    --lumo-contrast-80pct:            rgba(255, 255, 255, 0.80);
-    --lumo-contrast-90pct:            rgba(255, 255, 255, 0.90);
+    --lumo-contrast-5pct:              rgba(255, 255, 255, 0.05);
+    --lumo-contrast-10pct:             rgba(255, 255, 255, 0.10);
+    --lumo-contrast-20pct:             rgba(255, 255, 255, 0.20);
+    --lumo-contrast-30pct:             rgba(255, 255, 255, 0.30);
+    --lumo-contrast-40pct:             rgba(255, 255, 255, 0.40);
+    --lumo-contrast-50pct:             rgba(255, 255, 255, 0.50);
+    --lumo-contrast-60pct:             rgba(255, 255, 255, 0.60);
+    --lumo-contrast-70pct:             rgba(255, 255, 255, 0.70);
+    --lumo-contrast-80pct:             rgba(255, 255, 255, 0.80);
+    --lumo-contrast-90pct:             rgba(255, 255, 255, 0.90);
 
-    /* Text colours */
+    /* Text */
     --lumo-header-text-color:          #ffffff;
     --lumo-body-text-color:            rgba(255, 255, 255, 0.87);
-    --lumo-secondary-text-color:       rgba(255, 255, 255, 0.54);
-    --lumo-tertiary-text-color:        rgba(255, 255, 255, 0.36);
-    --lumo-disabled-text-color:        rgba(255, 255, 255, 0.26);
+    --lumo-secondary-text-color:       rgba(255, 255, 255, 0.50);
+    --lumo-tertiary-text-color:        rgba(255, 255, 255, 0.32);
+    --lumo-disabled-text-color:        rgba(255, 255, 255, 0.22);
 
     /* Error / success */
-    --lumo-error-color:                #e74c3c;
-    --lumo-error-color-50pct:          rgba(231, 76, 60, 0.5);
-    --lumo-error-color-10pct:          rgba(231, 76, 60, 0.1);
-    --lumo-error-text-color:           #e74c3c;
-    --lumo-success-color:              #27ae60;
-    --lumo-success-color-50pct:        rgba(39, 174, 96, 0.5);
-    --lumo-success-color-10pct:        rgba(39, 174, 96, 0.1);
-    --lumo-success-text-color:         #27ae60;
+    --lumo-error-color:                #e05252;
+    --lumo-error-color-50pct:          rgba(224, 82, 82, 0.5);
+    --lumo-error-color-10pct:          rgba(224, 82, 82, 0.1);
+    --lumo-error-text-color:           #e05252;
+    --lumo-success-color:              #4caf7d;
+    --lumo-success-color-50pct:        rgba(76, 175, 125, 0.5);
+    --lumo-success-color-10pct:        rgba(76, 175, 125, 0.1);
+    --lumo-success-text-color:         #4caf7d;
 
-    /* Shadows */
-    --lumo-box-shadow-xs:  0 1px 4px rgba(0,0,0,0.5);
-    --lumo-box-shadow-s:   0 2px 8px rgba(0,0,0,0.5);
-    --lumo-box-shadow-m:   0 4px 16px rgba(0,0,0,0.6);
-    --lumo-box-shadow-l:   0 8px 32px rgba(0,0,0,0.7);
-    --lumo-box-shadow-xl:  0 16px 48px rgba(0,0,0,0.8);
+    /* Deeper shadows */
+    --lumo-box-shadow-xs:  0 1px 6px rgba(0,0,0,0.6);
+    --lumo-box-shadow-s:   0 2px 12px rgba(0,0,0,0.6);
+    --lumo-box-shadow-m:   0 6px 24px rgba(0,0,0,0.7);
+    --lumo-box-shadow-l:   0 12px 40px rgba(0,0,0,0.8);
+    --lumo-box-shadow-xl:  0 24px 64px rgba(0,0,0,0.9);
 
-    /* Slightly rounded corners */
+    /* Tighter radius — more editorial */
     --lumo-border-radius-s:  4px;
     --lumo-border-radius-m:  8px;
     --lumo-border-radius-l:  12px;
+
+    /* Font */
+    --lumo-font-family: 'Outfit', sans-serif;
 }
 
 /* --- Global page background ------------------------------------------------- */
 body {
-    background-color: #16213e;
+    background-color: #0a0a0a;
     color: var(--lumo-body-text-color);
+    font-family: 'Outfit', sans-serif;
 }
 
-/* --- App layout navbar ------------------------------------------------------ */
+/* --- App layout ------------------------------------------------------------- */
 vaadin-app-layout::part(navbar) {
-    background: #0f3460;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    background: rgba(10, 10, 10, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-/* --- Drawer ----------------------------------------------------------------- */
 vaadin-app-layout::part(drawer) {
-    background: #1a1a2e;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: #111111;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 vaadin-side-nav-item::part(item) {
-    color: var(--lumo-body-text-color);
+    color: var(--lumo-secondary-text-color);
     border-radius: var(--lumo-border-radius-m);
     margin: 2px 8px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    transition: color 0.15s ease, background 0.15s ease;
 }
 
 vaadin-side-nav-item[active]::part(item) {
-    background: var(--lumo-primary-color-10pct);
-    color: var(--lumo-primary-color);
+    background: rgba(232, 184, 75, 0.1);
+    color: #e8b84b;
 }
 
 vaadin-side-nav-item::part(item):hover {
-    background: var(--lumo-contrast-5pct);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--lumo-body-text-color);
 }
 
 /* --- Buttons ---------------------------------------------------------------- */
-vaadin-button[theme~="primary"]::part(label) {
-    font-weight: 600;
+vaadin-button[theme~="primary"]::part(button) {
+    background: #e8b84b;
+    color: #0a0a0a;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: var(--lumo-border-radius-m);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+vaadin-button[theme~="primary"]::part(button):hover {
+    background: #f0c85a;
+    box-shadow: 0 4px 16px rgba(232, 184, 75, 0.4);
+}
+
+vaadin-button[theme~="tertiary"]::part(button) {
+    color: var(--lumo-secondary-text-color);
+    font-family: 'Outfit', sans-serif;
+}
+
+vaadin-button[theme~="tertiary"]::part(button):hover {
+    color: var(--lumo-body-text-color);
+    background: rgba(255,255,255,0.05);
 }
 
 /* --- Input fields ----------------------------------------------------------- */
 vaadin-text-field::part(input-field),
 vaadin-email-field::part(input-field),
 vaadin-password-field::part(input-field),
-vaadin-date-picker::part(input-field) {
-    background: rgba(255, 255, 255, 0.06);
+vaadin-date-picker::part(input-field),
+vaadin-number-field::part(input-field) {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: var(--lumo-border-radius-m);
+    font-family: 'Outfit', sans-serif;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+vaadin-text-field:focus-within::part(input-field),
+vaadin-email-field:focus-within::part(input-field),
+vaadin-password-field:focus-within::part(input-field) {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(232, 184, 75, 0.5);
+    box-shadow: 0 0 0 2px rgba(232, 184, 75, 0.12);
+}
+
+/* --- Select / ComboBox ------------------------------------------------------ */
+vaadin-select::part(input-field),
+vaadin-combo-box::part(input-field) {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: var(--lumo-border-radius-m);
+    font-family: 'Outfit', sans-serif;
 }
 
 /* --- Login form ------------------------------------------------------------- */
 vaadin-login-form {
-    background: #1a1a2e;
-    border: 1px solid var(--lumo-contrast-10pct);
+    background: #141414;
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: var(--lumo-border-radius-l);
-    box-shadow: var(--lumo-box-shadow-m);
+    box-shadow: var(--lumo-box-shadow-l);
 }
 
 /* --- Notifications ---------------------------------------------------------- */
 vaadin-notification-card {
     border-radius: var(--lumo-border-radius-m);
+    font-family: 'Outfit', sans-serif;
+}
+
+/* =============================================================================
+   HOME PAGE
+   ============================================================================= */
+
+/* --- Search bar area -------------------------------------------------------- */
+.home-search-wrap {
+    width: 100%;
+}
+
+.home-search-wrap vaadin-text-field {
+    width: 100%;
+}
+
+.home-search-wrap vaadin-text-field::part(input-field) {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    font-size: 1rem;
+    height: 48px;
+    padding: 0 16px;
+}
+
+.home-search-wrap vaadin-text-field:focus-within::part(input-field) {
+    border-color: rgba(232, 184, 75, 0.6);
+    box-shadow: 0 0 0 3px rgba(232, 184, 75, 0.1);
+}
+
+/* --- Filter panel ----------------------------------------------------------- */
+.home-filter-panel {
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--lumo-border-radius-l);
+    padding: 20px;
+    margin-top: 8px;
+}
+
+/* --- Section heading -------------------------------------------------------- */
+.section-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+.result-count-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--lumo-secondary-text-color);
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+/* --- Movies grid ------------------------------------------------------------ */
+.movies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/* =============================================================================
+   MOVIE CARD
+   ============================================================================= */
+
+.movie-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #1c1c1c;
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.28s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+.movie-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.8),
+                0 0 0 1px rgba(232, 184, 75, 0.25);
+}
+
+.movie-card__poster {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4.5rem;
+    background: linear-gradient(135deg, #1c1c1c 0%, #262626 100%);
+}
+
+.movie-card__poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.movie-card__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 40px 12px 14px;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.97) 0%,
+        rgba(0, 0, 0, 0.75) 50%,
+        transparent 100%
+    );
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transform: translateY(4px);
+    opacity: 0.92;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.movie-card:hover .movie-card__overlay {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.movie-card__scores {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.movie-card__title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #ffffff;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.movie-card__meta {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+
+/* Score badges on cards */
+.score-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 999px;
+    padding: 2px 7px;
+    line-height: 1.5;
+}
+
+.score-badge--tmdb {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.score-badge--user {
+    background: rgba(232, 184, 75, 0.2);
+    color: #e8b84b;
+}
+
+/* =============================================================================
+   TYPOGRAPHY UPGRADES
+   ============================================================================= */
+
+h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+}
+
+h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* =============================================================================
+   SCROLLBAR
+   ============================================================================= */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.22);
 }

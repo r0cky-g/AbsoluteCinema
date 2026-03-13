@@ -27,4 +27,12 @@ public class WebClientConfig {
                 .baseUrl(reviewServiceUrl)
                 .build();
     }
+
+    @Bean("uiForumClient")
+    public WebClient forumServiceClient(
+            @Value("${app.forum-service.url}") String forumServiceUrl) {
+        return WebClient.builder()
+                .baseUrl(forumServiceUrl)
+                .build();
+}
 }
