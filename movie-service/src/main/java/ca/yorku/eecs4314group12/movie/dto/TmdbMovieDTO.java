@@ -19,8 +19,6 @@ public class TmdbMovieDTO {
 	private int runtime;
 	private String status;
 	private TmdbReleaseDates release_dates;
-	private TmdbImagesDTO images;
-	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
 	private ArrayList<TmdbCompanyDTO> production_companies;
 	
@@ -142,22 +140,6 @@ public class TmdbMovieDTO {
 
 	public void setRelease_dates(TmdbReleaseDates release_dates) {
 		this.release_dates = release_dates;
-	}
-
-	public TmdbImagesDTO getImages() {
-		return images;
-	}
-	
-	public void setImages(TmdbImagesDTO images) {
-		this.images = images;
-	}
-	
-	public TmdbVideosDTO getVideos() {
-		return videos;
-	}
-	
-	public void setVideos(TmdbVideosDTO videos) {
-		this.videos = videos;
 	}
 	
 	public TmdbCreditsDTO getCredits() {
