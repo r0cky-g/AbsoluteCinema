@@ -84,14 +84,15 @@ services:
     container_name: forum-service
     environment:
       SERVER_PORT: 8085
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/forum_service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://absolute-cinema-db:5432/forum_service
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8085:8085"
     depends_on:
       - postgres
+    
 
   # -------------------------------------------------------------------------
   # api-service  (port 8081)

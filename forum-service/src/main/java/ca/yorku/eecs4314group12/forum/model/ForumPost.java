@@ -1,9 +1,9 @@
 package ca.yorku.eecs4314group12.forum.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "forum_posts")
 public class ForumPost {
 
     @Id
@@ -14,28 +14,21 @@ public class ForumPost {
 
     private String content;
 
-    private Long userId;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
     public ForumPost() {
     }
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    public ForumPost(String title, String content) {
+        this.title = title;
+        this.content = content;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
+    // Getters and Setters
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -52,21 +45,5 @@ public class ForumPost {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 }

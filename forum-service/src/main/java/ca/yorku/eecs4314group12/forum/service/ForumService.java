@@ -1,11 +1,11 @@
 package ca.yorku.eecs4314group12.forum.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
+import ca.yorku.eecs4314group12.forum.repository.ForumPostRepository;
 
 import ca.yorku.eecs4314group12.forum.model.ForumPost;
-import ca.yorku.eecs4314group12.forum.repository.ForumPostRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ForumService {
@@ -28,4 +28,7 @@ public class ForumService {
         repository.deleteById(id);
     }
 
+    public ForumPost getPostById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 }

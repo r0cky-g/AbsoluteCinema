@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.forum.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class CommentService {
         comment.setPostId(request.getPostId());
         comment.setUserId(request.getUserId());
         comment.setContent(request.getContent());
+        comment.setCreatedAt(LocalDateTime.now());
 
         return repository.save(comment);
     }
