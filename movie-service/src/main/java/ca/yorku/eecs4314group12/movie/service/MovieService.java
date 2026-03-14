@@ -1,17 +1,13 @@
 package ca.yorku.eecs4314group12.movie.service;
 
-import ca.yorku.eecs4314group12.movie.client.TmdbClient;
-import ca.yorku.eecs4314group12.movie.document.Movie;
-import ca.yorku.eecs4314group12.movie.dto.MovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.MoviesTrendingDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMoviesTrendingDTO;
-import ca.yorku.eecs4314group12.movie.exception.MovieNotFoundException;
-import ca.yorku.eecs4314group12.movie.mapper.MovieMapper;
-import ca.yorku.eecs4314group12.movie.repository.MovieRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
+import ca.yorku.eecs4314group12.movie.client.*;
+import ca.yorku.eecs4314group12.movie.dto.*;
+import ca.yorku.eecs4314group12.movie.exception.*;
+import ca.yorku.eecs4314group12.movie.mapper.MovieMapper;
+import ca.yorku.eecs4314group12.movie.repository.MovieRepository;
+import ca.yorku.eecs4314group12.movie.document.Movie;
 
 @Service
 public class MovieService {
@@ -38,6 +34,10 @@ public class MovieService {
 		return callTmdbForTrending();
 	}
 	
+	public MoviesNowPlayingDTO getNowPlaying() {
+		return callTmdbForNowPlaying();
+	}
+	
 	private Movie callTmdbForDetailsAndSave(int id) {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
@@ -52,5 +52,10 @@ public class MovieService {
 	private MoviesTrendingDTO callTmdbForTrending() {
 		TmdbMoviesTrendingDTO trending = tmdbClient.getMoviesTrending();
 		return movMap.toMoviesTrendingDTO(trending);
+	}
+	
+	private MoviesNowPlayingDTO callTmdbForNowPlaying() {
+		TmdbMoviesNowPlayingDTO nowPlaying = tmdbClient.getMoviesNowPlaying();
+		return movMap.toMoviesNowPlayingDTO(nowPlaying);
 	}
 }

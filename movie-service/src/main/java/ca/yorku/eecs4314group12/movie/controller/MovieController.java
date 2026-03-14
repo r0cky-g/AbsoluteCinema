@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ca.yorku.eecs4314group12.movie.dto.MovieDTO;
+import ca.yorku.eecs4314group12.movie.dto.MoviesNowPlayingDTO;
 import ca.yorku.eecs4314group12.movie.dto.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.movie.service.MovieService;
 
@@ -26,5 +27,10 @@ public class MovieController {
 	@GetMapping("/trending")
 	public MoviesTrendingDTO getTrending() {
 		return movieService.getTrending();
+	}
+	
+	@GetMapping("/nowplaying")
+	public MoviesNowPlayingDTO getNowPlaying() {
+		return movieService.getNowPlaying();
 	}
 }

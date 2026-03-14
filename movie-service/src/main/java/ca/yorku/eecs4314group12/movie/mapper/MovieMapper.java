@@ -7,18 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import ca.yorku.eecs4314group12.movie.document.Movie;
-import ca.yorku.eecs4314group12.movie.dto.ActorDTO;
-import ca.yorku.eecs4314group12.movie.dto.CrewMemberDTO;
-import ca.yorku.eecs4314group12.movie.dto.MovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.MoviesTrendingDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbCertificateDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbCompanyDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbCreditsActorDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbCreditsCrewDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbGenreDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMoviesTrendingDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbReleaseDatesDTO;
+import ca.yorku.eecs4314group12.movie.dto.*;
 
 @Mapper(componentModel = "spring")
 public interface MovieMapper {
@@ -46,6 +35,7 @@ public interface MovieMapper {
 	CrewMemberDTO toCrewMemberDTO(TmdbCreditsCrewDTO tmdbCrewDTO);
 	
 	MoviesTrendingDTO toMoviesTrendingDTO(TmdbMoviesTrendingDTO tmdbMoviesTrendingDTO);
+	MoviesNowPlayingDTO toMoviesNowPlayingDTO(TmdbMoviesNowPlayingDTO tmdbMoviesNowPlayingDTO);
 	
 	@Named("mapGenres")
     default List<String> mapGenres(List<TmdbGenreDTO> genres) {
