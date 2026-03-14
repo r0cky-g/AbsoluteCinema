@@ -1,6 +1,6 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
-public class TmdbCertifcateDTO {
+public class TmdbCertificateDTO {
 	
 	private String certification;
 
