@@ -4,9 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ca.yorku.eecs4314group12.movie.dto.MovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.MoviesNowPlayingDTO;
-import ca.yorku.eecs4314group12.movie.dto.MoviesTrendingDTO;
+import ca.yorku.eecs4314group12.movie.dto.*;
 import ca.yorku.eecs4314group12.movie.service.MovieService;
 
 @RestController
