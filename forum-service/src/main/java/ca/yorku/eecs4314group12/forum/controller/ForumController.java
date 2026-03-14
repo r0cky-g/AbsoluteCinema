@@ -45,7 +45,7 @@ public class ForumController {
                         .body("Post not found");
             } else if ("USER".equals(userRole) && post.getUserId() == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Cannot delete legacy posts without owner information. Contact admin.");
+                        .body("Cannot delete posts without owner information. Contact admin.");
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("You can only delete your own posts (or you must be an admin)");

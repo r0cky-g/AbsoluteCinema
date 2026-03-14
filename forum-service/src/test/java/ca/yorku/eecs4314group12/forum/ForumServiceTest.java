@@ -117,7 +117,7 @@ class ForumServiceTest {
     }
 
     @Test
-    void testDeletePost_UserCannotDeleteLegacyPost() {
+    void testDeletePost_UserCannotDeletePostWithNullUserId() {
         Long id4 = 1L;
         Long user1 = 5L;
         ForumPost post = new ForumPost();
