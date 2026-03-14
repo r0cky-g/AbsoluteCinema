@@ -1,4 +1,4 @@
-package ca.yorku.eecs4314group12.movie.dto;
+package ca.yorku.eecs4314group12.movie.dto.tmdb;
 
 public class TmdbCompanyDTO {
 	

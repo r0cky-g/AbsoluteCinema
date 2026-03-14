@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ca.yorku.eecs4314group12.movie.client.TmdbClient;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
+import ca.yorku.eecs4314group12.movie.dto.tmdb.TmdbMovieDTO;
 
 @ExtendWith(MockitoExtension.class)
 class MovieServiceTests {

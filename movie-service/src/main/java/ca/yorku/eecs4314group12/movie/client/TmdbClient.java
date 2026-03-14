@@ -3,9 +3,7 @@ package ca.yorku.eecs4314group12.movie.client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMoviesNowPlayingDTO;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMoviesTrendingDTO;
+import ca.yorku.eecs4314group12.movie.dto.tmdb.*;
 
 @Component
 public class TmdbClient {
