@@ -24,8 +24,25 @@ public class ForumService {
         return repository.save(post);
     }
 
-    public void deletePost(Long id) {
-        repository.deleteById(id);
+    public boolean deletePost(Long id, Long userId, String userRole) {
+        ForumPost post = repository.findById(id).orElse(null);
+        if (post == null) {
+            return false;
+        }
+        
+        if ("ADMIN".equals(userRole)) {
+            repository.deleteById(id);
+            return true;
+        }
+        
+        if ("USER".equals(userRole)) {
+            if (post.getUserId() != null && post.getUserId().equals(userId)) {
+                repository.deleteById(id);
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public ForumPost getPostById(Long id) {

@@ -13,6 +13,9 @@ public class ForumPost {
     private String title;
 
     private String content;
+    
+    @Column(name = "user_id")
+    private Long userId;
 
     public ForumPost() {
     }
@@ -20,6 +23,12 @@ public class ForumPost {
     public ForumPost(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public ForumPost(String title, String content, Long userId) {
+        this.title = title;
+        this.content = content;
+        this.userId = userId;
     }
 
     // Getters and Setters
@@ -45,5 +54,13 @@ public class ForumPost {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
