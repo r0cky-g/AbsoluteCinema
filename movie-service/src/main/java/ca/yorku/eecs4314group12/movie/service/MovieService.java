@@ -25,8 +25,8 @@ public class MovieService {
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
 				.filter(m -> !m.getOverview().isEmpty())
-				.orElseGet(() -> callTmdbForDetailsAndSave(id));
-		
+				.orElseGet(() -> callTmdbForDetails(id));
+		saveMovieInCache(movie);
 		return movMap.toMovieDTO(movie);
 	}
 	
@@ -38,11 +38,14 @@ public class MovieService {
 		return callTmdbForNowPlaying();
 	}
 	
-	private Movie callTmdbForDetailsAndSave(int id) {
+	private void saveMovieInCache(Movie movie) {
+		movRepo.save(movie);
+	}
+	
+	private Movie callTmdbForDetails(int id) {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
 			Movie movie = movMap.toMovie(movieData);
-			movRepo.save(movie);
 			return movie;
 		} catch(WebClientResponseException.NotFound e) {
 			throw new MovieNotFoundException(id);
