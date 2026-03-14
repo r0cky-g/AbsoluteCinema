@@ -3,7 +3,9 @@ package ca.yorku.eecs4314group12.movie.service;
 import ca.yorku.eecs4314group12.movie.client.TmdbClient;
 import ca.yorku.eecs4314group12.movie.document.Movie;
 import ca.yorku.eecs4314group12.movie.dto.MovieDTO;
+import ca.yorku.eecs4314group12.movie.dto.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
+import ca.yorku.eecs4314group12.movie.dto.TmdbMoviesTrendingDTO;
 import ca.yorku.eecs4314group12.movie.exception.MovieNotFoundException;
 import ca.yorku.eecs4314group12.movie.mapper.MovieMapper;
 import ca.yorku.eecs4314group12.movie.repository.MovieRepository;
@@ -26,9 +28,14 @@ public class MovieService {
 	
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
+				.filter(m -> !m.getOverview().isEmpty())
 				.orElseGet(() -> callTmdbForMovieDetailsAndSave(id));
 		
 		return movMap.toMovieDTO(movie);
+	}
+	
+	public MoviesTrendingDTO getTrending() {
+		return callTmdbForTrending();
 	}
 	
 	private Movie callTmdbForMovieDetailsAndSave(int id) {
@@ -40,5 +47,10 @@ public class MovieService {
 		} catch(WebClientResponseException.NotFound e) {
 			throw new MovieNotFoundException(id);
 		}
+	}
+	
+	private MoviesTrendingDTO callTmdbForTrending() {
+		TmdbMoviesTrendingDTO trending = tmdbClient.getMoviesTrending();
+		return movMap.toMoviesTrendingDTO(trending);
 	}
 }
