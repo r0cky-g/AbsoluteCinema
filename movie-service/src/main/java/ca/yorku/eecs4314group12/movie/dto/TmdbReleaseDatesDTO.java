@@ -2,7 +2,7 @@ package ca.yorku.eecs4314group12.movie.dto;
 
 import java.util.List;
 
-public class TmdbReleaseDates {
+public class TmdbReleaseDatesDTO {
 	
 	private List<TmdbRegionDTO> results;
 
