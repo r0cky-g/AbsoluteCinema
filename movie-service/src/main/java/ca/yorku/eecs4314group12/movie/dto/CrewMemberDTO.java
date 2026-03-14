@@ -1,6 +1,7 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
 public class CrewMemberDTO {
+	
 	private String original_name;
 	private String name;
 	private String department;

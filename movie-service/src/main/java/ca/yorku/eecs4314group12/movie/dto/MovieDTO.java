@@ -3,6 +3,7 @@ package ca.yorku.eecs4314group12.movie.dto;
 import java.util.List;
 
 public class MovieDTO {
+	
 	private int id;
 	private boolean adult;
 	private String original_language;
