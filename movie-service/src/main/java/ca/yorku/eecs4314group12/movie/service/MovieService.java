@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.movie.service;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import ca.yorku.eecs4314group12.movie.client.*;
@@ -31,7 +32,13 @@ public class MovieService {
 	}
 	
 	public MovieSearchDTO getSearch(String name) {
-		return callTmdbForSearchAndSaveResults(name);
+		List<Movie> results = movRepo.findByTitle(name);
+		
+		if(results.size() < 20) {
+			return callTmdbForSearchAndSaveResults(name);
+		}
+		
+		return movMap.toMovieSearchDTO(results);
 	}
 	
 	public MoviesTrendingDTO getTrending() {

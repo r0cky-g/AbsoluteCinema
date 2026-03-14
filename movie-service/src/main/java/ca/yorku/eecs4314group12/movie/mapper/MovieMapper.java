@@ -13,6 +13,8 @@ import ca.yorku.eecs4314group12.movie.dto.tmdb.*;
 @Mapper(componentModel = "spring")
 public interface MovieMapper {
 	
+	
+	// Mappings for Objects
 	@Mapping(source = "genres", target = "genres", qualifiedByName = "mapGenres")
 	@Mapping(source = "release_dates", target = "age_rating", qualifiedByName = "extractUSRating")
 	@Mapping(source = "credits.cast", target = "cast")
@@ -29,17 +31,23 @@ public interface MovieMapper {
 	@Mapping(target = "title")
 	@Mapping(target = "release_date")
 	MovieDTO toMovieDTO(TmdbMovieDTO tmdbMovieDTO);
-	
+
 	MovieDTO toMovieDTO(Movie movie);
 	
-	ActorDTO toActorDTO(TmdbCreditsActorDTO tmdbActorDTO);
-	CrewMemberDTO toCrewMemberDTO(TmdbCreditsCrewDTO tmdbCrewDTO);
-	
 	MovieSearchDTO toMovieSearchDTO(TmdbMovieSearchDTO tmdbMovieSearchDTO);
+	
 	MoviesTrendingDTO toMoviesTrendingDTO(TmdbMoviesTrendingDTO tmdbMoviesTrendingDTO);
+	
 	MoviesNowPlayingDTO toMoviesNowPlayingDTO(TmdbMoviesNowPlayingDTO tmdbMoviesNowPlayingDTO);
 	
-	// Explicitly defined custom behaviour when mapping certain fields
+	// Mappings for Nested Objects 
+	ActorDTO toActorDTO(TmdbCreditsActorDTO tmdbActorDTO);
+	
+	CrewMemberDTO toCrewMemberDTO(TmdbCreditsCrewDTO tmdbCrewDTO);
+	
+	List<MovieDTO> toMovieDTOList(List<Movie> movies);
+	
+	// Explicitly defined custom behaviour when mapping certain fields or objects
 	@Named("mapGenres")
     default List<String> mapGenres(List<TmdbGenreDTO> genres) {
         return genres.stream()
@@ -56,7 +64,7 @@ public interface MovieMapper {
                         .filter(d -> !d.getCertification().isEmpty())  
                         .findFirst())
                 .map(TmdbCertificateDTO::getCertification)  
-                .orElse(null);
+                .orElse("Unrated");
     }
 	
 	@Named("mapProductionCompanies")
@@ -65,4 +73,10 @@ public interface MovieMapper {
                 .map(TmdbCompanyDTO::getName)  
                 .collect(Collectors.toList());
     }
+	
+	default MovieSearchDTO toMovieSearchDTO(List<Movie> movies) {
+		MovieSearchDTO movieSearchDTO = new MovieSearchDTO();
+		movieSearchDTO.setResults(toMovieDTOList(movies));
+		return movieSearchDTO;
+	}
 }
