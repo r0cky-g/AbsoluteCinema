@@ -19,7 +19,7 @@ public class MovieController {
 	}
 	
 	@GetMapping("/{id}")
-	public MovieDTO getMovieDetails(@PathVariable int id) {
+	public MovieDTO getDetails(@PathVariable int id) {
 		return movieService.getDetails(id);
 	}
 	

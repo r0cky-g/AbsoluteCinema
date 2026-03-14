@@ -29,7 +29,7 @@ public class MovieService {
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
 				.filter(m -> !m.getOverview().isEmpty())
-				.orElseGet(() -> callTmdbForMovieDetailsAndSave(id));
+				.orElseGet(() -> callTmdbForDetailsAndSave(id));
 		
 		return movMap.toMovieDTO(movie);
 	}
@@ -38,7 +38,7 @@ public class MovieService {
 		return callTmdbForTrending();
 	}
 	
-	private Movie callTmdbForMovieDetailsAndSave(int id) {
+	private Movie callTmdbForDetailsAndSave(int id) {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
 			Movie movie = movMap.toMovie(movieData);
