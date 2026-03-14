@@ -1,6 +1,6 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MovieDTO {
 	private int id;
@@ -8,7 +8,7 @@ public class MovieDTO {
 	private String original_language;
 	private String original_title;
 	private String title;
-	private ArrayList<String> genres;
+	private List<String> genres;
 	private String age_rating;
 	private String release_date;
 	private String tagline;
@@ -17,9 +17,9 @@ public class MovieDTO {
 	private int revenue;
 	private int runtime;
 	private String status;
-	private ArrayList<ActorDTO> cast;
-	private ArrayList<CrewMemberDTO> crew;
-	private ArrayList<String> production_companies;
+	private List<ActorDTO> cast;
+	private List<CrewMemberDTO> crew;
+	private List<String> production_companies;
 	
 	public int getId() {
 		return id;
@@ -61,11 +61,11 @@ public class MovieDTO {
 		this.title = title;
 	}
 	
-	public ArrayList<String> getGenres() {
+	public List<String> getGenres() {
 		return genres;
 	}
 	
-	public void setGenres(ArrayList<String> genres) {
+	public void setGenres(List<String> genres) {
 		this.genres = genres;
 	}
 	
@@ -133,27 +133,27 @@ public class MovieDTO {
 		this.status = status;
 	}
 	
-	public ArrayList<ActorDTO> getCast() {
+	public List<ActorDTO> getCast() {
 		return cast;
 	}
 	
-	public void setCast(ArrayList<ActorDTO> cast) {
+	public void setCast(List<ActorDTO> cast) {
 		this.cast = cast;
 	}
 	
-	public ArrayList<CrewMemberDTO> getCrew() {
+	public List<CrewMemberDTO> getCrew() {
 		return crew;
 	}
 	
-	public void setCrew(ArrayList<CrewMemberDTO> crew) {
+	public void setCrew(List<CrewMemberDTO> crew) {
 		this.crew = crew;
 	}
 	
-	public ArrayList<String> getProduction_companies() {
+	public List<String> getProduction_companies() {
 		return production_companies;
 	}
 	
-	public void setProduction_companies(ArrayList<String> production_companies) {
+	public void setProduction_companies(List<String> production_companies) {
 		this.production_companies = production_companies;
 	}	
 }

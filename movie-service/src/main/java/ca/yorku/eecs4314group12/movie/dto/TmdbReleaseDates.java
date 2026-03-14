@@ -1,16 +1,16 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TmdbReleaseDates {
 	
-	private ArrayList<TmdbRegionDTO> results;
+	private List<TmdbRegionDTO> results;
 
-	public ArrayList<TmdbRegionDTO> getResults() {
+	public List<TmdbRegionDTO> getResults() {
 		return results;
 	}
 
-	public void setResults(ArrayList<TmdbRegionDTO> results) {
+	public void setResults(List<TmdbRegionDTO> results) {
 		this.results = results;
 	}
 }

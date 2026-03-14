@@ -1,6 +1,6 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TmdbMovieDTO {
 	
@@ -12,14 +12,14 @@ public class TmdbMovieDTO {
 	private String tagline;
 	private String overview;
 	private String release_date;
-	private ArrayList<TmdbGenreDTO> genres;
+	private List<TmdbGenreDTO> genres;
 	private int budget;
 	private int revenue;
 	private int runtime;
 	private String status;
 	private TmdbReleaseDates release_dates;
 	private TmdbCreditsDTO credits;
-	private ArrayList<TmdbCompanyDTO> production_companies;
+	private List<TmdbCompanyDTO> production_companies;
 	
 	public int getId() {
 		return id;
@@ -85,11 +85,11 @@ public class TmdbMovieDTO {
 		this.release_date = release_date;
 	}
 	
-	public ArrayList<TmdbGenreDTO> getGenres() {
+	public List<TmdbGenreDTO> getGenres() {
 		return genres;
 	}
 
-	public void setGenres(ArrayList<TmdbGenreDTO> genres) {
+	public void setGenres(List<TmdbGenreDTO> genres) {
 		this.genres = genres;
 	}
 
@@ -141,11 +141,11 @@ public class TmdbMovieDTO {
 		this.credits = credits;
 	}
 
-	public ArrayList<TmdbCompanyDTO> getProduction_companies() {
+	public List<TmdbCompanyDTO> getProduction_companies() {
 		return production_companies;
 	}
 
-	public void setProduction_companies(ArrayList<TmdbCompanyDTO> production_companies) {
+	public void setProduction_companies(List<TmdbCompanyDTO> production_companies) {
 		this.production_companies = production_companies;
 	}
 }

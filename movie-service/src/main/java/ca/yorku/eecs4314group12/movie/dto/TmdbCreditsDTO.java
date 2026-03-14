@@ -1,25 +1,25 @@
 package ca.yorku.eecs4314group12.movie.dto;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TmdbCreditsDTO {
 	
-	ArrayList<TmdbCreditsActorDTO> cast;
-	ArrayList<TmdbCreditsCrewDTO> crew;
+	List<TmdbCreditsActorDTO> cast;
+	List<TmdbCreditsCrewDTO> crew;
 	
-	public ArrayList<TmdbCreditsActorDTO> getCast() {
+	public List<TmdbCreditsActorDTO> getCast() {
 		return cast;
 	}
 	
-	public void setCast(ArrayList<TmdbCreditsActorDTO> cast) {
+	public void setCast(List<TmdbCreditsActorDTO> cast) {
 		this.cast = cast;
 	}
 	
-	public ArrayList<TmdbCreditsCrewDTO> getCrew() {
+	public List<TmdbCreditsCrewDTO> getCrew() {
 		return crew;
 	}
 	
-	public void setCrew(ArrayList<TmdbCreditsCrewDTO> crew) {
+	public void setCrew(List<TmdbCreditsCrewDTO> crew) {
 		this.crew = crew;
 	}
 }
