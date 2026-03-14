@@ -26,12 +26,12 @@ public class MovieService {
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
 				.filter(m -> m.getOverview() != null && !m.getOverview().isEmpty())
-				.orElseGet(() -> callTmdbForDetails(id));
+				.orElseGet(() -> callTmdbForDetailsAndSaveMovie(id));
 		return movMap.toMovieDTO(movie);
 	}
 	
 	public MovieSearchDTO getSearch(String name) {
-		return callTmdbForSearch(name);
+		return callTmdbForSearchAndSaveResults(name);
 	}
 	
 	public MoviesTrendingDTO getTrending() {
@@ -42,33 +42,40 @@ public class MovieService {
 		return callTmdbForNowPlaying();
 	}
 	
-	private void saveMovieInCache(Movie movie) {
-		movRepo.save(movie);
-	}
-	
-	private Movie callTmdbForDetails(int id) {
+	private Movie callTmdbForDetailsAndSaveMovie(int id) {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
 			Movie movie = movMap.toMovie(movieData);
-			saveMovieInCache(movie);
+			movRepo.save(movie);
 			return movie;
 		} catch(WebClientResponseException.NotFound e) {
 			throw new MovieNotFoundException(id);
 		}
 	}
 	
-	private MovieSearchDTO callTmdbForSearch(String name) {
-		TmdbMovieSearchDTO search = tmdbClient.getSearch(name);
-		return movMap.toMovieSearchDTO(search);
+	private MovieSearchDTO callTmdbForSearchAndSaveResults(String name) {
+		TmdbMovieSearchDTO tmdbSearchDTO = tmdbClient.getSearch(name);
+		MovieSearchDTO searchDTO = movMap.toMovieSearchDTO(tmdbSearchDTO);
+		saveMovieFromSearchResults(searchDTO);
+		return searchDTO;
 	}
 	
 	private MoviesTrendingDTO callTmdbForTrending() {
-		TmdbMoviesTrendingDTO trending = tmdbClient.getMoviesTrending();
-		return movMap.toMoviesTrendingDTO(trending);
+		TmdbMoviesTrendingDTO trendingData = tmdbClient.getMoviesTrending();
+		return movMap.toMoviesTrendingDTO(trendingData);
 	}
 	
 	private MoviesNowPlayingDTO callTmdbForNowPlaying() {
-		TmdbMoviesNowPlayingDTO nowPlaying = tmdbClient.getMoviesNowPlaying();
-		return movMap.toMoviesNowPlayingDTO(nowPlaying);
+		TmdbMoviesNowPlayingDTO nowPlayingData = tmdbClient.getMoviesNowPlaying();
+		return movMap.toMoviesNowPlayingDTO(nowPlayingData);
+	}
+	
+	private void saveMovieFromSearchResults(MovieSearchDTO searchDTO) {
+		for(MovieDTO movieDTO : searchDTO.getResults()) {
+			if(!movRepo.existsById(movieDTO.getId())) {
+				Movie movie = movMap.toMovie(movieDTO);
+				movRepo.save(movie);
+			}
+		}
 	}
 }
