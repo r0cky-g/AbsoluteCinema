@@ -26,12 +26,12 @@ public class MovieService {
 	
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
-				.orElseGet(() -> callTmdbAndSave(id));
+				.orElseGet(() -> callTmdbForMovieDetailsAndSave(id));
 		
 		return movMap.toMovieDTO(movie);
 	}
 	
-	private Movie callTmdbAndSave(int id) {
+	private Movie callTmdbForMovieDetailsAndSave(int id) {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
 			Movie movie = movMap.toMovie(movieData);
