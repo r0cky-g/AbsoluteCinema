@@ -45,4 +45,14 @@ public class TmdbClient {
 				.bodyToMono(TmdbMoviesNowPlayingDTO.class)
 				.block();
 	}
+	
+	public TmdbMovieSearchDTO getSearch(String movieName) {
+		return webClient.get()
+				.uri("/search/movie?query="+movieName+"&include_adult=false&language=en-US&page=1")
+				.header("accept", "application/json")
+				.header("Authorization", "Bearer "+token)
+				.retrieve()
+				.bodyToMono(TmdbMovieSearchDTO.class)
+				.block();
+	}
 }

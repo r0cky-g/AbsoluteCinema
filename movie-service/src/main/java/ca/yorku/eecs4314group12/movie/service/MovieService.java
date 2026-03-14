@@ -4,9 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import ca.yorku.eecs4314group12.movie.client.*;
 import ca.yorku.eecs4314group12.movie.dto.*;
-import ca.yorku.eecs4314group12.movie.dto.tmdb.TmdbMovieDTO;
-import ca.yorku.eecs4314group12.movie.dto.tmdb.TmdbMoviesNowPlayingDTO;
-import ca.yorku.eecs4314group12.movie.dto.tmdb.TmdbMoviesTrendingDTO;
+import ca.yorku.eecs4314group12.movie.dto.tmdb.*;
 import ca.yorku.eecs4314group12.movie.exception.*;
 import ca.yorku.eecs4314group12.movie.mapper.MovieMapper;
 import ca.yorku.eecs4314group12.movie.repository.MovieRepository;
@@ -27,10 +25,13 @@ public class MovieService {
 	
 	public MovieDTO getDetails(int id) {
 		Movie movie = movRepo.findById(id)
-				.filter(m -> !m.getOverview().isEmpty())
+				.filter(m -> m.getOverview() != null && !m.getOverview().isEmpty())
 				.orElseGet(() -> callTmdbForDetails(id));
-		saveMovieInCache(movie);
 		return movMap.toMovieDTO(movie);
+	}
+	
+	public MovieSearchDTO getSearch(String name) {
+		return callTmdbForSearch(name);
 	}
 	
 	public MoviesTrendingDTO getTrending() {
@@ -49,10 +50,16 @@ public class MovieService {
 		try {
 			TmdbMovieDTO movieData = tmdbClient.getMovieDetails(id);
 			Movie movie = movMap.toMovie(movieData);
+			saveMovieInCache(movie);
 			return movie;
 		} catch(WebClientResponseException.NotFound e) {
 			throw new MovieNotFoundException(id);
 		}
+	}
+	
+	private MovieSearchDTO callTmdbForSearch(String name) {
+		TmdbMovieSearchDTO search = tmdbClient.getSearch(name);
+		return movMap.toMovieSearchDTO(search);
 	}
 	
 	private MoviesTrendingDTO callTmdbForTrending() {

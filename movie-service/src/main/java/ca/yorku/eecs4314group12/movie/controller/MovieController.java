@@ -22,6 +22,11 @@ public class MovieController {
 		return movieService.getDetails(id);
 	}
 	
+	@GetMapping("/search/{name}")
+	public MovieSearchDTO getDetails(@PathVariable String name) {
+		return movieService.getSearch(name);
+	}
+	
 	@GetMapping("/trending")
 	public MoviesTrendingDTO getTrending() {
 		return movieService.getTrending();
