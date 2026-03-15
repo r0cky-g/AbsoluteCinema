@@ -2,6 +2,8 @@ package ca.yorku.eecs4314group12.forum.controller;
 
 import ca.yorku.eecs4314group12.forum.model.ForumPost;
 import ca.yorku.eecs4314group12.forum.service.ForumService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +32,25 @@ public class ForumController {
 
     // delete post
     @DeleteMapping("/{id}")
-    public void deletePost(@PathVariable Long id) {
-        forumService.deletePost(id);
+    public ResponseEntity<String> deletePost(@PathVariable Long id, 
+                                           @RequestParam Long userId, 
+                                           @RequestParam String userRole) {
+        boolean deleted = forumService.deletePost(id, userId, userRole);
+        if (deleted) {
+            return ResponseEntity.ok("Post deleted successfully");
+        } else {
+            ForumPost post = forumService.getPostById(id);
+            if (post == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Post not found");
+            } else if ("USER".equals(userRole) && post.getUserId() == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Cannot delete posts without owner information. Contact admin.");
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("You can only delete your own posts (or you must be an admin)");
+            }
+        }
     }
 
     // Get post by id
