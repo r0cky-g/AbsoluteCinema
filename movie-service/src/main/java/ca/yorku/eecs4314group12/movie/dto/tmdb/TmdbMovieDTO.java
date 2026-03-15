@@ -1,6 +1,6 @@
-package ca.yorku.eecs4314group12.movie.dto;
+package ca.yorku.eecs4314group12.movie.dto.tmdb;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TmdbMovieDTO {
 	
@@ -11,18 +11,15 @@ public class TmdbMovieDTO {
 	private String title;
 	private String tagline;
 	private String overview;
-	private String poster_path;
 	private String release_date;
-	private ArrayList<TmdbGenreDTO> genres;
+	private List<TmdbGenreDTO> genres;
 	private int budget;
 	private int revenue;
 	private int runtime;
 	private String status;
-	private TmdbReleaseDates release_dates;
-	private TmdbImagesDTO images;
-	private TmdbVideosDTO videos;
+	private TmdbReleaseDatesDTO release_dates;
 	private TmdbCreditsDTO credits;
-	private ArrayList<TmdbCompanyDTO> production_companies;
+	private List<TmdbCompanyDTO> production_companies;
 	
 	public int getId() {
 		return id;
@@ -80,14 +77,6 @@ public class TmdbMovieDTO {
 		this.overview = overview;
 	}
 	
-	public String getPoster_path() {
-		return poster_path;
-	}
-	
-	public void setPoster_path(String poster_path) {
-		this.poster_path = poster_path;
-	}
-	
 	public String getRelease_date() {
 		return release_date;
 	}
@@ -96,11 +85,11 @@ public class TmdbMovieDTO {
 		this.release_date = release_date;
 	}
 	
-	public ArrayList<TmdbGenreDTO> getGenres() {
+	public List<TmdbGenreDTO> getGenres() {
 		return genres;
 	}
 
-	public void setGenres(ArrayList<TmdbGenreDTO> genres) {
+	public void setGenres(List<TmdbGenreDTO> genres) {
 		this.genres = genres;
 	}
 
@@ -136,28 +125,12 @@ public class TmdbMovieDTO {
 		this.status = status;
 	}
 	
-	public TmdbReleaseDates getRelease_dates() {
+	public TmdbReleaseDatesDTO getRelease_dates() {
 		return release_dates;
 	}
 
-	public void setRelease_dates(TmdbReleaseDates release_dates) {
+	public void setRelease_dates(TmdbReleaseDatesDTO release_dates) {
 		this.release_dates = release_dates;
-	}
-
-	public TmdbImagesDTO getImages() {
-		return images;
-	}
-	
-	public void setImages(TmdbImagesDTO images) {
-		this.images = images;
-	}
-	
-	public TmdbVideosDTO getVideos() {
-		return videos;
-	}
-	
-	public void setVideos(TmdbVideosDTO videos) {
-		this.videos = videos;
 	}
 	
 	public TmdbCreditsDTO getCredits() {
@@ -168,11 +141,11 @@ public class TmdbMovieDTO {
 		this.credits = credits;
 	}
 
-	public ArrayList<TmdbCompanyDTO> getProduction_companies() {
+	public List<TmdbCompanyDTO> getProduction_companies() {
 		return production_companies;
 	}
 
-	public void setProduction_companies(ArrayList<TmdbCompanyDTO> production_companies) {
+	public void setProduction_companies(List<TmdbCompanyDTO> production_companies) {
 		this.production_companies = production_companies;
 	}
 }

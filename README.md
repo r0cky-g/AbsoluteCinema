@@ -16,7 +16,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 | user-service | 8082 | User accounts and authentication (PostgreSQL) |
 | movie-service | 8083 | Fetches movie data from TMDB API |
 | review-service | 8084 | Stores and serves movie reviews (PostgreSQL) |
-| forum-service | 8085 | Forum/discussion (not yet implemented) |
+| forum-service | 8085 | Forum/discussion with role-based permissions (PostgreSQL) |
 
 ---
 
@@ -38,6 +38,15 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 - **Login / Register** — session-based auth (currently in-memory; user-service integration pending)
 - **Account page** — view profile info and review history
 - **Edit profile** — update username, email, password, date of birth, genres
+
+### Forum (forum-service)
+- **Create posts** — users can create forum posts with title and content
+- **View posts** — browse all forum posts with GET /forum/posts
+- **Role-based deletion** — 
+  - **ADMIN users** can delete any post
+  - **Regular users** can only delete their own posts
+  - Legacy posts without owner information can only be deleted by admins
+- **Permission validation** — DELETE requests require userId and userRole parameters
 
 ### Live vs Dummy Data
 
@@ -75,10 +84,11 @@ cp .env.example .env
 Edit `.env`:
 ```
 TDMB_TOKEN=your_tmdb_read_access_token_here
-DB_PASSWORD=anythingYouWant
+DB_PASSWORD=postgres
 MAIL_PASSWORD=
 ```
 
+> **Important:** `DB_PASSWORD` is required for PostgreSQL authentication. Use `postgres` as the default password.
 > `.env` is gitignored and must be created manually on each machine you use.
 
 2. Build and start all services:
@@ -144,9 +154,10 @@ docker compose down -v
 
 ### Setup
 
-Create two PostgreSQL databases:
+Create three PostgreSQL databases:
 - `review_service`
 - `user_service`
+- `forum_service`
 
 ### Starting Each Service
 
@@ -184,6 +195,13 @@ cd user-service
 ./mvnw spring-boot:run       # Mac/Linux
 ```
 
+**forum-service:**
+```bash
+cd forum-service
+.\mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run       # Mac/Linux
+```
+
 **ui-service:**
 ```bash
 cd ui-service
@@ -207,6 +225,38 @@ The UI currently uses in-memory accounts pre-seeded on startup:
 | bob | password |
 
 You can also register a new account — it persists for the duration of the session.
+
+---
+
+## Forum API Usage
+
+The forum-service provides REST endpoints for managing forum posts:
+
+### Basic Operations
+```bash
+# Get all posts
+curl http://localhost:8085/forum/posts
+
+# Create a post
+curl -X POST http://localhost:8085/forum/posts \
+  -H "Content-Type: application/json" \
+  -d '{"title":"My Post","content":"Post content","userId":1}'
+
+# Get specific post
+curl http://localhost:8085/forum/posts/1
+```
+
+### Role-based Deletion
+```bash
+# User deletes own post (succeeds)
+curl -X DELETE "http://localhost:8085/forum/posts/1?userId=1&userRole=USER"
+
+# User tries to delete others' post (fails with 403)
+curl -X DELETE "http://localhost:8085/forum/posts/2?userId=1&userRole=USER"
+
+# Admin deletes any post (succeeds)
+curl -X DELETE "http://localhost:8085/forum/posts/1?userId=2&userRole=ADMIN"
+```
 
 ---
 

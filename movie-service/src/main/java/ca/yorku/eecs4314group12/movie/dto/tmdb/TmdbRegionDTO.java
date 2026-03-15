@@ -1,11 +1,11 @@
-package ca.yorku.eecs4314group12.movie.dto;
+package ca.yorku.eecs4314group12.movie.dto.tmdb;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TmdbRegionDTO {
 	
 	private String iso_3166_1;
-	private ArrayList<TmdbCertifcateDTO> release_dates;
+	private List<TmdbCertificateDTO> release_dates;
 	
 	public String getIso_3166_1() {
 		return iso_3166_1;
@@ -15,11 +15,11 @@ public class TmdbRegionDTO {
 		this.iso_3166_1 = iso_3166_1;
 	}
 	
-	public ArrayList<TmdbCertifcateDTO> getRelease_dates() {
+	public List<TmdbCertificateDTO> getRelease_dates() {
 		return release_dates;
 	}
 	
-	public void setRelease_dates(ArrayList<TmdbCertifcateDTO> release_dates) {
+	public void setRelease_dates(List<TmdbCertificateDTO> release_dates) {
 		this.release_dates = release_dates;
 	}
 }
