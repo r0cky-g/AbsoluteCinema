@@ -17,6 +17,7 @@ public class MovieDTO {
 	private int budget;
 	private int revenue;
 	private int runtime;
+	private String poster_path;
 	private String status;
 	private List<ActorDTO> cast;
 	private List<CrewMemberDTO> crew;
@@ -126,6 +127,14 @@ public class MovieDTO {
 		this.runtime = runtime;
 	}
 	
+	public String getPoster_path() {
+		return poster_path;
+	}
+
+	public void setPoster_path(String poster_path) {
+		this.poster_path = poster_path;
+	}
+
 	public String getStatus() {
 		return status;
 	}

@@ -5,7 +5,8 @@ public class ActorDTO {
 	private String original_name;
 	private String name;
 	private String character;
-
+	private String profile_path;
+	
 	public String getOriginal_name() {
 		return original_name;
 	}
@@ -28,5 +29,13 @@ public class ActorDTO {
 	
 	public void setCharacter(String character) {
 		this.character = character;
+	}
+
+	public String getProfile_path() {
+		return profile_path;
+	}
+
+	public void setProfile_path(String profile_path) {
+		this.profile_path = profile_path;
 	}
 }
