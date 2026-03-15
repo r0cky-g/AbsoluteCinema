@@ -21,6 +21,7 @@ public class TmdbMovieDTO {
     private int budget;
     private int revenue;
     private int runtime;
+    private String poster_path;
     private String status;
     private List<ActorDTO> cast;
     private List<CrewMemberDTO> crew;
@@ -30,6 +31,7 @@ public class TmdbMovieDTO {
         private String original_name;
         private String name;
         private String character;
+        private String profile_path;
 
         public String getOriginal_name() { return original_name; }
         public void setOriginal_name(String v) { this.original_name = v; }
@@ -37,6 +39,8 @@ public class TmdbMovieDTO {
         public void setName(String v) { this.name = v; }
         public String getCharacter() { return character; }
         public void setCharacter(String v) { this.character = v; }
+        public String getProfile_path() { return profile_path; }  
+        public void setProfile_path(String v) { this.profile_path = v; }  
     }
 
     public static class CrewMemberDTO {
@@ -81,6 +85,8 @@ public class TmdbMovieDTO {
     public void setRevenue(int v) { this.revenue = v; }
     public int getRuntime() { return runtime; }
     public void setRuntime(int v) { this.runtime = v; }
+    public String getPoster_path() { return poster_path; }
+    public void setPoster_path(String v) { this.poster_path = v; }
     public String getStatus() { return status; }
     public void setStatus(String v) { this.status = v; }
     public List<ActorDTO> getCast() { return cast; }

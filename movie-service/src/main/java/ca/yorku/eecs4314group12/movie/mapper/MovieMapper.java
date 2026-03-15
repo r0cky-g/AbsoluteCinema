@@ -30,6 +30,7 @@ public interface MovieMapper {
 	@Mapping(target = "original_title")
 	@Mapping(target = "title")
 	@Mapping(target = "release_date")
+	@Mapping(target = "poster_path")
 	MovieDTO toMovieDTO(TmdbMovieDTO tmdbMovieDTO);
 
 	MovieDTO toMovieDTO(Movie movie);
