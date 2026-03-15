@@ -32,4 +32,29 @@ public class CommentService {
     public List<Comment> getCommentsByPost(Long postId) {
         return repository.findByPostId(postId);
     }
+
+    public boolean deleteComment(Long id, Long userId, String userRole) {
+        Comment comment = repository.findById(id).orElse(null);
+        if (comment == null) {
+            return false;
+        }
+        
+        if ("ADMIN".equals(userRole)) {
+            repository.deleteById(id);
+            return true;
+        }
+        
+        if ("USER".equals(userRole)) {
+            if (comment.getUserId() != null && comment.getUserId().equals(userId)) {
+                repository.deleteById(id);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public Comment getCommentById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 }
