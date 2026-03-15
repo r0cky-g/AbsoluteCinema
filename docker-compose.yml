@@ -87,7 +87,7 @@ services:
       SERVER_PORT: 8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://absolute-cinema-db:5432/forum_service
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8085:8085"
@@ -117,7 +117,7 @@ services:
       - forum-service
 
   # -------------------------------------------------------------------------
-  # ui-service  (port 8080)  — what you open in your browser
+  # ui-service  (port 8080)
   # -------------------------------------------------------------------------
   ui-service:
     build:
@@ -130,12 +130,14 @@ services:
       APP_MOVIE_SERVICE_URL: http://movie-service:8083
       APP_REVIEW_SERVICE_URL: http://review-service:8084
       APP_FORUM_SERVICE_URL: http://forum-service:8085
+      APP_USER_SERVICE_URL: http://user-service:8082
       VAADIN_PRODUCTIONMODE: true
     ports:
       - "8080:8080"
     depends_on:
       - api-service
       - movie-service
+      - user-service
 
 volumes:
   postgres_data:
