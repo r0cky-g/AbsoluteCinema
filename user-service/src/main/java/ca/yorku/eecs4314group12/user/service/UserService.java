@@ -41,6 +41,11 @@ public class UserService {
         // Encrypt password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+        // Set default role if not already set
+        if (user.getRole() == null) {
+            user.setRole(ca.yorku.eecs4314group12.user.model.Role.USER);
+        }
+
         // Generate 4-digit verification code
         String code = String.format("%04d", (int) (Math.random() * 10000));
         user.setVerificationCode(code);

@@ -149,8 +149,9 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable Long id,
-            @RequestParam Long userId) {  // TODO: Remove this, get from token instead
-        logger.info("DELETE /api/reviews/{} - Deleting review by user {}", id, userId);
+            @RequestParam Long userId,
+            @RequestParam(required = false) String userRole) {  // TODO: Remove this, get from token instead
+        logger.info("DELETE /api/reviews/{} - Deleting review by user {} with role {}", id, userId, userRole);
         
         // TODO: After Check-in 1 - Extract userId from JWT token
         // Long userId = jwtTokenProvider.getUserIdFromToken(token);
@@ -158,7 +159,7 @@ public class ReviewController {
         // Allow if: user is owner OR user is moderator/admin
         
         try {
-            reviewService.deleteReview(id, userId);
+            reviewService.deleteReview(id, userId, userRole);
             return ResponseEntity.ok(ApiResponse.success("Review deleted successfully", null));
         } catch (IllegalArgumentException e) {
             logger.error("Review not found: {}", e.getMessage());

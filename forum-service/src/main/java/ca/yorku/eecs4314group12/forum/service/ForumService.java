@@ -30,7 +30,8 @@ public class ForumService {
             return false;
         }
         
-        if ("ADMIN".equals(userRole)) {
+        // Allow MODERATOR and ADMIN to delete any post
+        if ("MODERATOR".equals(userRole) || "ADMIN".equals(userRole)) {
             repository.deleteById(id);
             return true;
         }

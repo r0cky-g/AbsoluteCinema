@@ -7,10 +7,14 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import ca.yorku.eecs4314group12.user.model.User;
+import ca.yorku.eecs4314group12.user.model.Watchlist;
 import ca.yorku.eecs4314group12.user.service.UserService;
+import ca.yorku.eecs4314group12.user.service.WatchlistService;
+import ca.yorku.eecs4314group12.user.service.RecommendationService;
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
 import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
 import ca.yorku.eecs4314group12.user.dto.UserResponseDTO;
+import ca.yorku.eecs4314group12.user.dto.MovieDTO;
 
 import java.util.List;
 
@@ -19,9 +23,14 @@ import java.util.List;
 public class UserController {
 
     private final UserService service;
+    private final WatchlistService watchlistService;
+    private final RecommendationService recommendationService;
 
-    public UserController(UserService service) {
+    public UserController(UserService service, WatchlistService watchlistService, 
+                         RecommendationService recommendationService) {
         this.service = service;
+        this.watchlistService = watchlistService;
+        this.recommendationService = recommendationService;
     }
 
     // register
@@ -108,6 +117,42 @@ public class UserController {
         service.deleteUser(id);
     }
 
+    // Watchlist endpoints
+    @PostMapping("/{userId}/watchlist/{movieId}")
+    public ResponseEntity<Watchlist> addToWatchlist(
+            @PathVariable Long userId,
+            @PathVariable Integer movieId) {
+        Watchlist watchlist = watchlistService.addToWatchlist(userId, movieId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(watchlist);
+    }
+
+    @DeleteMapping("/{userId}/watchlist/{movieId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeFromWatchlist(
+            @PathVariable Long userId,
+            @PathVariable Integer movieId) {
+        watchlistService.removeFromWatchlist(userId, movieId);
+    }
+
+    @GetMapping("/{userId}/watchlist")
+    public List<Watchlist> getUserWatchlist(@PathVariable Long userId) {
+        return watchlistService.getUserWatchlist(userId);
+    }
+
+    @GetMapping("/{userId}/watchlist/{movieId}")
+    public ResponseEntity<Boolean> isInWatchlist(
+            @PathVariable Long userId,
+            @PathVariable Integer movieId) {
+        boolean inWatchlist = watchlistService.isInWatchlist(userId, movieId);
+        return ResponseEntity.ok(inWatchlist);
+    }
+
+    // Recommendations endpoint
+    @GetMapping("/{userId}/recommendations")
+    public List<MovieDTO> getRecommendations(@PathVariable Long userId) {
+        return recommendationService.getRecommendedMovies(userId);
+    }
+
     // private mapper
     /**
      * Converts a User entity to a UserResponseDTO.
@@ -125,6 +170,6 @@ public class UserController {
                 user.getUsername(),
                 user.getEmail(),
                 user.isEmailVerified(),
-                user.getRole().name());
+                user.getRole() != null ? user.getRole().name() : "USER");
     }
 }

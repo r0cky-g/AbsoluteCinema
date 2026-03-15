@@ -189,13 +189,15 @@ class ReviewControllerTests {
     @Test
     void deleteReview_WrongUser_ReturnsForbidden() throws Exception {
         // Given
-        when(reviewService.deleteReview(1L, 999L))
-                .thenThrow(new IllegalStateException("User can only delete their own reviews"));
+        when(reviewService.deleteReview(1L, 999L, "USER"))
+                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
 
-        // When & Then - Note: We need to use doThrow because deleteReview returns void
+        // When & Then
         mockMvc.perform(delete("/api/reviews/1")
-                .param("userId", "999"))
-                .andExpect(status().isOk()); // Will fail in actual test, need to fix service mock
+                .param("userId", "999")
+                .param("userRole", "USER"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test

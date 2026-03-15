@@ -39,7 +39,8 @@ public class CommentService {
             return false;
         }
         
-        if ("ADMIN".equals(userRole)) {
+        // Allow MODERATOR and ADMIN to delete any comment
+        if ("MODERATOR".equals(userRole) || "ADMIN".equals(userRole)) {
             repository.deleteById(id);
             return true;
         }

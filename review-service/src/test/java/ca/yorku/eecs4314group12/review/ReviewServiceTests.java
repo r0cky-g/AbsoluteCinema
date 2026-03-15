@@ -163,8 +163,8 @@ class ReviewServiceTests {
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
         when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
 
-        // When
-        reviewService.deleteReview(1L, 1L);
+        // When - owner deleting their own review
+        reviewService.deleteReview(1L, 1L, "USER");
 
         // Then
         verify(reviewRepository, times(1)).save(any(Review.class));
@@ -175,11 +175,37 @@ class ReviewServiceTests {
         // Given
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
 
-        // When & Then
+        // When & Then - regular user trying to delete someone else's review
         assertThrows(IllegalStateException.class, () -> {
-            reviewService.deleteReview(1L, 999L);
+            reviewService.deleteReview(1L, 999L, "USER");
         });
         verify(reviewRepository, never()).save(any(Review.class));
+    }
+
+    @Test
+    void deleteReview_ModeratorCanDeleteAnyReview() {
+        // Given
+        when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
+        when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+
+        // When - moderator deleting someone else's review
+        reviewService.deleteReview(1L, 999L, "MODERATOR");
+
+        // Then
+        verify(reviewRepository, times(1)).save(any(Review.class));
+    }
+
+    @Test
+    void deleteReview_AdminCanDeleteAnyReview() {
+        // Given
+        when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
+        when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+
+        // When - admin deleting someone else's review
+        reviewService.deleteReview(1L, 999L, "ADMIN");
+
+        // Then
+        verify(reviewRepository, times(1)).save(any(Review.class));
     }
 
     @Test
