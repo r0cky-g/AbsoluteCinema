@@ -6,8 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Creates WebClient beans used by BackendClientService to call
- * api-service (movie lookups) and review-service (reviews).
+ * Creates WebClient beans used by BackendClientService to call backend services.
+ *
+ * uiApiClient    → api-service    (movie detail via TMDB shape)
+ * uiMovieClient  → movie-service  (trending, nowplaying, search via flat MovieDTO)
+ * uiReviewClient → review-service (reviews)
+ * uiForumClient  → forum-service  (forum posts and comments)
  */
 @Configuration
 public class WebClientConfig {
@@ -17,6 +21,14 @@ public class WebClientConfig {
             @Value("${app.api-service.url}") String apiServiceUrl) {
         return WebClient.builder()
                 .baseUrl(apiServiceUrl)
+                .build();
+    }
+
+    @Bean("uiMovieClient")
+    public WebClient movieServiceClient(
+            @Value("${app.movie-service.url}") String movieServiceUrl) {
+        return WebClient.builder()
+                .baseUrl(movieServiceUrl)
                 .build();
     }
 
@@ -34,5 +46,5 @@ public class WebClientConfig {
         return WebClient.builder()
                 .baseUrl(forumServiceUrl)
                 .build();
-}
+    }
 }

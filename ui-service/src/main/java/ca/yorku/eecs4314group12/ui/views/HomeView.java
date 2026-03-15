@@ -1,19 +1,15 @@
 package ca.yorku.eecs4314group12.ui.views;
 
-import ca.yorku.eecs4314group12.ui.data.Movie;
-import ca.yorku.eecs4314group12.ui.data.MovieSearchService;
-import ca.yorku.eecs4314group12.ui.data.SearchFilter;
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -25,17 +21,14 @@ import java.util.List;
 /**
  * Home / discovery page.
  *
- * Features a live search bar and collapsible advanced filter panel.
- * Filter logic is delegated to {@link MovieSearchService}.
+ * Shows two live sections from movie-service:
+ *   1. Now Playing  → GET /movie/nowplaying
+ *   2. Trending     → GET /movie/trending
  *
- * Searchable fields: title, original title, director, cast, tagline,
- *                    overview, genre, year, production company.
- * Filterable by: genre, year range, min user review score, min TMDB score,
- *                original language.
- * Sortable by: title, year, user score, TMDB score, runtime.
+ * Search bar hits → GET /movie/search/{query} and replaces both sections
+ * with results. Clearing the search restores the two sections.
  *
- * TODO: Replace DummyDataService-backed MovieSearchService with WebClient
- *       calls to movie-service once the search/filter API is finalized.
+ * Each card shows the TMDB poster image and navigates to /movie/{id} on click.
  */
 @Route(value = "home", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
@@ -43,283 +36,188 @@ import java.util.List;
 @AnonymousAllowed
 public class HomeView extends VerticalLayout {
 
-    private static final List<String> ALL_GENRES = List.of(
-            "Action", "Adventure", "Animation", "Comedy", "Crime",
-            "Documentary", "Drama", "Fantasy", "Horror", "Mystery",
-            "Romance", "Sci-Fi", "Thriller", "Western"
-    );
+    private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 
-    private static final List<String> LANGUAGES = List.of(
-            "Any", "English (en)", "Korean (ko)", "French (fr)",
-            "Spanish (es)", "Japanese (ja)", "German (de)", "Italian (it)"
-    );
+    private final BackendClientService backendClient;
+    private final TextField searchField;
+    private final VerticalLayout contentArea;
 
-    private final MovieSearchService searchService;
+    public HomeView(BackendClientService backendClient) {
+        this.backendClient = backendClient;
 
-    // Filter state
-    private String currentQuery    = "";
-    private String currentGenre    = "";
-    private String currentYearFrom = "";
-    private String currentYearTo   = "";
-    private double currentMinUser  = 0;
-    private double currentMinTmdb  = 0;
-    private String currentLang     = "";
-    private String currentSort     = "title";
-
-    // UI refs that need to be updated
-    private FlexLayout resultsGrid;
-    private Span resultCount;
-    private Div filterPanel;
-    private boolean filtersVisible = false;
-
-    public HomeView(MovieSearchService searchService) {
-        this.searchService = searchService;
         setSizeFull();
         setPadding(true);
         setSpacing(false);
-        getStyle()
-                .set("max-width", "1200px")
-                .set("margin", "0 auto")
-                .set("gap", "24px");
+        getStyle().set("max-width", "1200px").set("margin", "0 auto");
 
-        // Grid using CSS class for proper grid layout
-        resultsGrid = new FlexLayout();
-        resultsGrid.addClassName("movies-grid");
-        resultsGrid.getStyle().set("width", "100%");
-
-        resultCount = new Span();
-        resultCount.addClassName("result-count-badge");
-
-        filterPanel = buildFilterPanel();
-        filterPanel.setVisible(false);
-
-        add(buildSearchBar(), filterPanel, buildResultsSection());
-        runSearch();
-    }
-
-    // -------------------------------------------------------------------------
-    // Search bar
-    // -------------------------------------------------------------------------
-
-    private VerticalLayout buildSearchBar() {
-        TextField searchField = new TextField();
-        searchField.setPlaceholder("Search movies, genres, directors, cast…");
+        // ---- Search bar ----
+        searchField = new TextField();
+        searchField.setPlaceholder("Search movies…");
         searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setWidth("100%");
         searchField.setClearButtonVisible(true);
+        searchField.setWidth("100%");
+        searchField.getStyle().set("max-width", "600px");
+
+        Button searchBtn = new Button("Search");
+        searchBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        searchBtn.addClickListener(e -> doSearch());
+        searchField.addKeyPressListener(com.vaadin.flow.component.Key.ENTER, e -> doSearch());
         searchField.addValueChangeListener(e -> {
-            currentQuery = e.getValue();
-            runSearch();
+            if (e.getValue() == null || e.getValue().isBlank()) showSections();
         });
 
-        Button filterToggle = new Button("Filters", VaadinIcon.FILTER.create());
-        filterToggle.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        filterToggle.addClickListener(e -> {
-            filtersVisible = !filtersVisible;
-            filterPanel.setVisible(filtersVisible);
-            filterToggle.setText(filtersVisible ? "Hide Filters" : "Filters");
-        });
+        HorizontalLayout searchRow = new HorizontalLayout(searchField, searchBtn);
+        searchRow.setWidthFull();
+        searchRow.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        searchRow.getStyle().set("padding", "var(--lumo-space-m) 0");
 
-        HorizontalLayout row = new HorizontalLayout(searchField, filterToggle);
-        row.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        row.setWidth("100%");
-        row.expand(searchField);
+        // ---- Content area ----
+        contentArea = new VerticalLayout();
+        contentArea.setPadding(false);
+        contentArea.setSpacing(false);
+        contentArea.setWidthFull();
 
-        VerticalLayout wrap = new VerticalLayout(row);
-        wrap.addClassName("home-search-wrap");
-        wrap.setPadding(false);
-        wrap.setSpacing(false);
-        return wrap;
+        add(searchRow, contentArea);
+        showSections();
     }
 
     // -------------------------------------------------------------------------
-    // Filter panel
+    // Sections (Now Playing + Trending)
     // -------------------------------------------------------------------------
 
-    private Div buildFilterPanel() {
-        // Genre
-        ComboBox<String> genreBox = new ComboBox<>("Genre");
-        genreBox.setItems(ALL_GENRES);
-        genreBox.setClearButtonVisible(true);
-        genreBox.setPlaceholder("Any genre");
-        genreBox.addValueChangeListener(e -> {
-            currentGenre = e.getValue() == null ? "" : e.getValue();
-            runSearch();
-        });
-
-        // Year from/to
-        TextField yearFrom = new TextField("From year");
-        yearFrom.setPlaceholder("e.g. 1990");
-        yearFrom.setWidth("120px");
-        yearFrom.addValueChangeListener(e -> { currentYearFrom = e.getValue(); runSearch(); });
-
-        TextField yearTo = new TextField("To year");
-        yearTo.setPlaceholder("e.g. 2024");
-        yearTo.setWidth("120px");
-        yearTo.addValueChangeListener(e -> { currentYearTo = e.getValue(); runSearch(); });
-
-        // Min scores
-        NumberField minUserScore = new NumberField("Min user score");
-        minUserScore.setMin(0); minUserScore.setMax(10); minUserScore.setStep(0.5);
-        minUserScore.setPlaceholder("0–10");
-        minUserScore.setWidth("130px");
-        minUserScore.addValueChangeListener(e -> {
-            currentMinUser = e.getValue() == null ? 0 : e.getValue();
-            runSearch();
-        });
-
-        NumberField minTmdbScore = new NumberField("Min TMDB score");
-        minTmdbScore.setMin(0); minTmdbScore.setMax(10); minTmdbScore.setStep(0.5);
-        minTmdbScore.setPlaceholder("0–10");
-        minTmdbScore.setWidth("130px");
-        minTmdbScore.addValueChangeListener(e -> {
-            currentMinTmdb = e.getValue() == null ? 0 : e.getValue();
-            runSearch();
-        });
-
-        // Language
-        ComboBox<String> langBox = new ComboBox<>("Language");
-        langBox.setItems(LANGUAGES);
-        langBox.setValue("Any");
-        langBox.addValueChangeListener(e -> {
-            String val = e.getValue();
-            if (val == null || val.equals("Any")) {
-                currentLang = "";
-            } else {
-                currentLang = val.replaceAll(".*\\((.*)\\)", "$1");
-            }
-            runSearch();
-        });
-
-        // Sort
-        Select<String> sortSelect = new Select<>();
-        sortSelect.setLabel("Sort by");
-        sortSelect.setItems("Title", "Year", "User score", "TMDB score", "Runtime");
-        sortSelect.setValue("Title");
-        sortSelect.addValueChangeListener(e -> {
-            currentSort = switch (e.getValue()) {
-                case "Year"       -> "year";
-                case "User score" -> "userScore";
-                case "TMDB score" -> "tmdbScore";
-                case "Runtime"    -> "runtime";
-                default           -> "title";
-            };
-            runSearch();
-        });
-
-        // Reset
-        Button reset = new Button("Reset filters");
-        reset.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
-        reset.addClickListener(e -> {
-            genreBox.clear(); yearFrom.clear(); yearTo.clear();
-            minUserScore.clear(); minTmdbScore.clear();
-            langBox.setValue("Any"); sortSelect.setValue("Title");
-            currentGenre = ""; currentYearFrom = ""; currentYearTo = "";
-            currentMinUser = 0; currentMinTmdb = 0; currentLang = ""; currentSort = "title";
-            runSearch();
-        });
-
-        FlexLayout controls = new FlexLayout(
-                genreBox, yearFrom, yearTo, minUserScore, minTmdbScore, langBox, sortSelect, reset);
-        controls.setFlexWrap(FlexLayout.FlexWrap.WRAP);
-        controls.getStyle().set("gap", "var(--lumo-space-m)").set("align-items", "flex-end");
-
-        Div panel = new Div(controls);
-        panel.addClassName("home-filter-panel");
-        return panel;
+    private void showSections() {
+        contentArea.removeAll();
+        contentArea.add(buildSection("Now Playing", backendClient.getNowPlaying()));
+        contentArea.add(buildSection("Trending", backendClient.getTrending()));
     }
 
     // -------------------------------------------------------------------------
-    // Results section
+    // Search
     // -------------------------------------------------------------------------
 
-    private VerticalLayout buildResultsSection() {
-        H3 sectionTitle = new H3("Films");
-        sectionTitle.addClassName("section-heading");
-        sectionTitle.getStyle().set("margin", "0");
+    private void doSearch() {
+        String query = searchField.getValue();
+        if (query == null || query.isBlank()) {
+            showSections();
+            return;
+        }
 
-        HorizontalLayout header = new HorizontalLayout(sectionTitle, resultCount);
-        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
-        header.getStyle()
-                .set("margin-bottom", "var(--lumo-space-m)")
-                .set("gap", "var(--lumo-space-m)");
+        contentArea.removeAll();
+        List<MovieListItemDTO> results = backendClient.searchMovies(query);
 
-        VerticalLayout section = new VerticalLayout(header, resultsGrid);
+        H2 heading = new H2("Results for \"" + query + "\"");
+        heading.getStyle().set("margin", "var(--lumo-space-m) 0 var(--lumo-space-s) 0");
+
+        if (results.isEmpty()) {
+            Paragraph empty = new Paragraph("No movies found for \"" + query + "\".");
+            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
+            contentArea.add(heading, empty);
+        } else {
+            contentArea.add(heading, buildGrid(results));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Section builder
+    // -------------------------------------------------------------------------
+
+    private VerticalLayout buildSection(String title, List<MovieListItemDTO> movies) {
+        VerticalLayout section = new VerticalLayout();
         section.setPadding(false);
         section.setSpacing(false);
+        section.setWidthFull();
+        section.getStyle().set("margin-bottom", "var(--lumo-space-xl)");
+
+        H2 heading = new H2(title);
+        heading.getStyle().set("margin", "var(--lumo-space-m) 0 var(--lumo-space-s) 0");
+
+        if (movies.isEmpty()) {
+            Paragraph empty = new Paragraph("No movies available right now.");
+            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
+            section.add(heading, empty);
+        } else {
+            section.add(heading, buildGrid(movies));
+        }
+
         return section;
     }
 
     // -------------------------------------------------------------------------
-    // Search execution
+    // Grid of movie cards
     // -------------------------------------------------------------------------
 
-    private void runSearch() {
-        SearchFilter filter = new SearchFilter(
-                currentQuery, currentGenre, currentYearFrom, currentYearTo,
-                currentMinUser, currentMinTmdb, currentLang, currentSort
-        );
-        List<Movie> results = searchService.search(filter);
+    private FlexLayout buildGrid(List<MovieListItemDTO> movies) {
+        FlexLayout grid = new FlexLayout();
+        grid.getStyle()
+                .set("display", "grid")
+                .set("grid-template-columns", "repeat(auto-fill, minmax(160px, 1fr))")
+                .set("gap", "var(--lumo-space-m)")
+                .set("width", "100%");
 
-        resultsGrid.removeAll();
-        results.forEach(m -> resultsGrid.add(buildMovieCard(m)));
+        for (MovieListItemDTO movie : movies) {
+            grid.add(buildCard(movie));
+        }
 
-        int count = results.size();
-        resultCount.setText(count + " film" + (count == 1 ? "" : "s"));
+        return grid;
     }
 
-    // -------------------------------------------------------------------------
-    // Movie card — poster-first cinematic layout
-    // -------------------------------------------------------------------------
-
-    private Div buildMovieCard(Movie movie) {
-        // Poster area fills the card
-        Div poster = new Div();
-        poster.addClassName("movie-card__poster");
-        poster.setText(movie.getPosterEmoji());
-
-        // Gradient overlay — scores + title + meta at bottom
-        Div overlay = new Div();
-        overlay.addClassName("movie-card__overlay");
-
-        Div scores = buildScoreBadges(movie);
-        scores.addClassName("movie-card__scores");
-
-        Span title = new Span(movie.getTitle());
-        title.addClassName("movie-card__title");
-
-        Span meta = new Span(movie.getYear() + " · " + movie.getGenre());
-        meta.addClassName("movie-card__meta");
-
-        overlay.add(scores, title, meta);
-
-        Div card = new Div(poster, overlay);
+    private Div buildCard(MovieListItemDTO movie) {
+        Div card = new Div();
         card.addClassName("movie-card");
+        card.getStyle().set("cursor", "pointer");
         card.addClickListener(e ->
                 getUI().ifPresent(ui -> ui.navigate("movie/" + movie.getId())));
 
+        // Poster image
+        Div posterWrap = new Div();
+        posterWrap.addClassName("movie-card__poster");
+        posterWrap.getStyle()
+                .set("width", "100%")
+                .set("aspect-ratio", "2/3")
+                .set("overflow", "hidden")
+                .set("border-radius", "var(--lumo-border-radius-m)")
+                .set("background", "var(--lumo-contrast-10pct)");
+
+        String posterPath = movie.getPoster_path();
+        if (posterPath != null && !posterPath.isBlank()) {
+            String url = posterPath.startsWith("http") ? posterPath : TMDB_IMAGE_BASE + posterPath;
+            Image img = new Image(url, movie.getTitle() != null ? movie.getTitle() : "");
+            img.getStyle()
+                    .set("width", "100%")
+                    .set("height", "100%")
+                    .set("object-fit", "cover")
+                    .set("display", "block");
+            posterWrap.add(img);
+        } else {
+            // Fallback: title initial
+            Div fallback = new Div();
+            fallback.getStyle()
+                    .set("width", "100%").set("height", "100%")
+                    .set("display", "flex").set("align-items", "center").set("justify-content", "center")
+                    .set("font-size", "2rem");
+            String initial = movie.getTitle() != null && !movie.getTitle().isBlank()
+                    ? movie.getTitle().substring(0, 1).toUpperCase() : "?";
+            fallback.add(new Span(initial));
+            posterWrap.add(fallback);
+        }
+
+        // Overlay with title + meta
+        Div overlay = new Div();
+        overlay.addClassName("movie-card__overlay");
+
+        Span title = new Span(movie.getTitle() != null ? movie.getTitle() : "Unknown");
+        title.addClassName("movie-card__title");
+
+        String year = movie.getYear();
+        String genreStr = movie.getGenres() != null && !movie.getGenres().isEmpty()
+                ? movie.getGenres().get(0) : "";
+        String metaText = year.isBlank() ? genreStr : (genreStr.isBlank() ? year : year + " · " + genreStr);
+        Span meta = new Span(metaText);
+        meta.addClassName("movie-card__meta");
+
+        overlay.add(title, meta);
+        card.add(posterWrap, overlay);
+
         return card;
-    }
-
-    /**
-     * Two small score badges: TMDB (grey) and user score (gold).
-     */
-    private Div buildScoreBadges(Movie movie) {
-        Div badges = new Div();
-        badges.getStyle().set("display", "flex").set("gap", "5px").set("flex-wrap", "wrap");
-
-        if (movie.getTmdbScore() > 0) {
-            Span tmdb = new Span("🎬 " + movie.getTmdbScore());
-            tmdb.addClassNames("score-badge", "score-badge--tmdb");
-            badges.add(tmdb);
-        }
-
-        if (movie.getUserScore() > 0) {
-            Span user = new Span("★ " + movie.getUserScore());
-            user.addClassNames("score-badge", "score-badge--user");
-            badges.add(user);
-        }
-
-        return badges;
     }
 }

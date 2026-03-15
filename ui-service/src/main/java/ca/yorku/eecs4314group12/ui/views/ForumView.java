@@ -27,6 +27,10 @@ import java.util.List;
 /**
  * Forum page — lists all posts, lets users create posts and add comments.
  *
+ * Ownership rules:
+ *   - Only logged-in users can create posts or comments.
+ *   - Delete and Edit buttons are only shown to the post's author.
+ *
  * Data flow:
  *   Posts    → BackendClientService → forum-service GET    /forum/posts
  *   Create   → BackendClientService → forum-service POST   /forum/posts
@@ -109,6 +113,10 @@ public class ForumView extends VerticalLayout {
     }
 
     private Div buildPostCard(ForumPostDTO post) {
+        String currentUser = currentUsername();
+        boolean isOwner = currentUser != null
+                && currentUser.equalsIgnoreCase(post.getAuthorUsername());
+
         Div card = new Div();
         card.getStyle()
                 .set("background", "var(--lumo-base-color)")
@@ -119,6 +127,14 @@ public class ForumView extends VerticalLayout {
 
         H3 title = new H3(post.getTitle());
         title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
+
+        String author = post.getAuthorUsername() != null ? post.getAuthorUsername() : "Unknown";
+        Span authorSpan = new Span("Posted by " + author);
+        authorSpan.getStyle()
+                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("color", "var(--lumo-tertiary-text-color)")
+                .set("display", "block")
+                .set("margin-bottom", "var(--lumo-space-s)");
 
         Paragraph content = new Paragraph(post.getContent());
         content.getStyle()
@@ -149,22 +165,24 @@ public class ForumView extends VerticalLayout {
             openCommentDialog(post.getId(), commentsLayout, commentsSection);
         });
 
-        Button deleteBtn = new Button("Delete");
-        deleteBtn.addThemeVariants(
-                ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-        deleteBtn.addClickListener(e -> {
-            if (!isLoggedIn()) {
-                Notification.show("You must be logged in to delete posts.", 3000,
-                        Notification.Position.MIDDLE);
-                return;
-            }
-            deletePost(post.getId());
-        });
-
-        HorizontalLayout actions = new HorizontalLayout(commentBtn, deleteBtn);
+        HorizontalLayout actions = new HorizontalLayout(commentBtn);
         actions.setSpacing(true);
 
-        card.add(title, content, commentsSection, actions);
+        // Only the author sees Edit and Delete
+        if (isOwner) {
+            Button editBtn = new Button("Edit");
+            editBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClickListener(e -> openEditPostDialog(post));
+
+            Button deleteBtn = new Button("Delete");
+            deleteBtn.addThemeVariants(
+                    ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClickListener(e -> deletePost(post.getId()));
+
+            actions.add(editBtn, deleteBtn);
+        }
+
+        card.add(title, authorSpan, content, commentsSection, actions);
         return card;
     }
 
@@ -244,7 +262,7 @@ public class ForumView extends VerticalLayout {
                 errorMsg.setText("Title and content are required.");
                 return;
             }
-            boolean ok = backendClient.createPost(t, c).isPresent();
+            boolean ok = backendClient.createPost(t, c, currentUsername()).isPresent();
             if (ok) {
                 dialog.close();
                 loadPosts();
@@ -259,12 +277,68 @@ public class ForumView extends VerticalLayout {
         Button cancelBtn = new Button("Cancel", ev -> dialog.close());
         cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        HorizontalLayout buttons = new HorizontalLayout(submitBtn, cancelBtn);
-
-        VerticalLayout layout = new VerticalLayout(heading, titleField, contentField, errorMsg, buttons);
+        VerticalLayout layout = new VerticalLayout(heading, titleField, contentField, errorMsg,
+                new HorizontalLayout(submitBtn, cancelBtn));
         layout.setPadding(false);
         layout.setSpacing(true);
+        dialog.add(layout);
+        dialog.open();
+    }
 
+    private void openEditPostDialog(ForumPostDTO post) {
+        Dialog dialog = new Dialog();
+        dialog.setWidth("520px");
+        dialog.setCloseOnOutsideClick(true);
+        dialog.setCloseOnEsc(true);
+
+        H2 heading = new H2("Edit Post");
+        heading.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
+
+        TextField titleField = new TextField("Title");
+        titleField.setWidthFull();
+        titleField.setValue(post.getTitle());
+        titleField.setRequired(true);
+        titleField.setMaxLength(120);
+
+        TextArea contentField = new TextArea("Content");
+        contentField.setWidthFull();
+        contentField.setValue(post.getContent());
+        contentField.setRequired(true);
+        contentField.setMinHeight("120px");
+
+        Span errorMsg = new Span();
+        errorMsg.getStyle()
+                .set("color", "var(--lumo-error-color)")
+                .set("font-size", "var(--lumo-font-size-s)");
+
+        Button submitBtn = new Button("Save");
+        submitBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        submitBtn.addClickListener(e -> {
+            String t = titleField.getValue().trim();
+            String c = contentField.getValue().trim();
+            if (t.isEmpty() || c.isEmpty()) {
+                errorMsg.setText("Title and content are required.");
+                return;
+            }
+            boolean ok = backendClient.updatePost(post.getId(), t, c).isPresent();
+            if (ok) {
+                dialog.close();
+                loadPosts();
+                Notification n = Notification.show("Post updated!", 3000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } else {
+                errorMsg.setText("Failed to update post. Try again.");
+            }
+        });
+
+        Button cancelBtn = new Button("Cancel", ev -> dialog.close());
+        cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        VerticalLayout layout = new VerticalLayout(heading, titleField, contentField, errorMsg,
+                new HorizontalLayout(submitBtn, cancelBtn));
+        layout.setPadding(false);
+        layout.setSpacing(true);
         dialog.add(layout);
         dialog.open();
     }
@@ -316,12 +390,10 @@ public class ForumView extends VerticalLayout {
         Button cancelBtn = new Button("Cancel", ev -> dialog.close());
         cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        HorizontalLayout buttons = new HorizontalLayout(submitBtn, cancelBtn);
-
-        VerticalLayout layout = new VerticalLayout(heading, contentField, errorMsg, buttons);
+        VerticalLayout layout = new VerticalLayout(heading, contentField, errorMsg,
+                new HorizontalLayout(submitBtn, cancelBtn));
         layout.setPadding(false);
         layout.setSpacing(true);
-
         dialog.add(layout);
         dialog.open();
     }
@@ -337,7 +409,7 @@ public class ForumView extends VerticalLayout {
     }
 
     // -------------------------------------------------------------------------
-    // Auth helper
+    // Auth helpers
     // -------------------------------------------------------------------------
 
     private boolean isLoggedIn() {
@@ -345,5 +417,10 @@ public class ForumView extends VerticalLayout {
         return auth != null
                 && auth.isAuthenticated()
                 && !auth.getPrincipal().equals("anonymousUser");
+    }
+
+    private String currentUsername() {
+        if (!isLoggedIn()) return null;
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

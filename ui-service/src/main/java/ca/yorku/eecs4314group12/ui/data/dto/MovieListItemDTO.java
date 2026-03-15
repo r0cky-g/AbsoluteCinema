@@ -3,10 +3,14 @@ package ca.yorku.eecs4314group12.ui.data.dto;
 import java.util.List;
 
 /**
- * Mirrors movie-service's MovieDTO (flat structure).
- * Used for GET /api/movie/{id} via api-service.
+ * Matches movie-service's MovieDTO returned by list endpoints:
+ *   GET /movie/trending
+ *   GET /movie/nowplaying
+ *   GET /movie/search/{name}
+ *
+ * Same flat structure as MovieDTO — now includes poster_path and profile_path.
  */
-public class MovieDTO {
+public class MovieListItemDTO {
 
     private int id;
     private String title;
@@ -24,12 +28,12 @@ public class MovieDTO {
     private boolean adult;
     private List<String> genres;
     private List<String> production_companies;
-    private List<CastMemberDTO> cast;
-    private List<CrewMemberDTO> crew;
+    private List<ActorItemDTO> cast;
+    private List<CrewItemDTO> crew;
 
     // ---- Nested types ----
 
-    public static class CastMemberDTO {
+    public static class ActorItemDTO {
         private String original_name;
         private String name;
         private String character;
@@ -45,7 +49,7 @@ public class MovieDTO {
         public void setProfile_path(String v) { this.profile_path = v; }
     }
 
-    public static class CrewMemberDTO {
+    public static class CrewItemDTO {
         private String original_name;
         private String name;
         private String department;
@@ -95,33 +99,24 @@ public class MovieDTO {
     public void setGenres(List<String> v) { this.genres = v; }
     public List<String> getProduction_companies() { return production_companies; }
     public void setProduction_companies(List<String> v) { this.production_companies = v; }
-    public List<CastMemberDTO> getCast() { return cast; }
-    public void setCast(List<CastMemberDTO> v) { this.cast = v; }
-    public List<CrewMemberDTO> getCrew() { return crew; }
-    public void setCrew(List<CrewMemberDTO> v) { this.crew = v; }
+    public List<ActorItemDTO> getCast() { return cast; }
+    public void setCast(List<ActorItemDTO> v) { this.cast = v; }
+    public List<CrewItemDTO> getCrew() { return crew; }
+    public void setCrew(List<CrewItemDTO> v) { this.crew = v; }
 
     // ---- Convenience helpers ----
 
     public String getYear() {
         return release_date != null && release_date.length() >= 4
-                ? release_date.substring(0, 4) : "N/A";
-    }
-
-    public String getRuntimeFormatted() {
-        if (runtime <= 0) return "N/A";
-        return runtime / 60 + "h " + runtime % 60 + "m";
+                ? release_date.substring(0, 4) : "";
     }
 
     public String getDirector() {
         if (crew == null) return "Unknown";
         return crew.stream()
                 .filter(c -> "Director".equals(c.getJob()))
-                .map(CrewMemberDTO::getOriginal_name)
+                .map(CrewItemDTO::getOriginal_name)
                 .findFirst()
                 .orElse("Unknown");
-    }
-
-    public List<String> getCompanyNames() {
-        return production_companies != null ? production_companies : List.of();
     }
 }

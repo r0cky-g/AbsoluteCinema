@@ -15,17 +15,21 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import ca.yorku.eecs4314group12.ui.data.dto.ForumCommentDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ForumPostDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 
 /**
  * Gateway service for all real backend calls from the ui-service.
  *
- * Movie data   → api-service    (port 8081) GET /api/movie/{id}
- * Review data  → review-service (port 8084) GET /api/reviews/movie/{id}
- *                                           GET /api/reviews/movie/{id}/stats
- * Forum data   → forum-service  (port 8085) GET/POST /forum/posts
- *                                           GET/POST /forum/comments
+ * Movie detail  → api-service    (port 8081) GET /api/movie/{id}
+ * Movie lists   → movie-service  (port 8083) GET /movie/trending
+ *                                            GET /movie/nowplaying
+ *                                            GET /movie/search/{name}
+ * Review data   → review-service (port 8084) GET /api/reviews/movie/{id}
+ *                                            GET /api/reviews/movie/{id}/stats
+ * Forum data    → forum-service  (port 8085) GET/POST /forum/posts
+ *                                            GET/POST /forum/comments
  *
  * All methods return Optional or empty List on failure so views can fall back
  * gracefully without crashing.
@@ -37,24 +41,27 @@ public class BackendClientService {
 
     private final WebClient apiClient;
     private final WebClient reviewClient;
+    private final WebClient movieClient;
     private final WebClient forumClient;
 
     public BackendClientService(
             @Qualifier("uiApiClient") WebClient apiClient,
             @Qualifier("uiReviewClient") WebClient reviewClient,
+            @Qualifier("uiMovieClient") WebClient movieClient,
             @Qualifier("uiForumClient") WebClient forumClient) {
         this.apiClient = apiClient;
         this.reviewClient = reviewClient;
+        this.movieClient = movieClient;
         this.forumClient = forumClient;
     }
 
     // -------------------------------------------------------------------------
-    // Movie
+    // Movie detail (via api-service → TMDB shape)
     // -------------------------------------------------------------------------
 
     /**
      * Fetches a single movie from api-service → movie-service → TMDB.
-     * Returns empty if the movie doesn't exist or the service is down.
+     * Returns the full TMDB-shaped MovieDTO including credits, poster_path, vote_average.
      */
     public Optional<MovieDTO> getMovieById(int id) {
         try {
@@ -74,13 +81,67 @@ public class BackendClientService {
     }
 
     // -------------------------------------------------------------------------
+    // Movie lists (via movie-service directly → flat MovieDTO shape)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Fetches now playing movies from movie-service → TMDB.
+     */
+    public List<MovieListItemDTO> getNowPlaying() {
+        try {
+            MovieListResult result = movieClient.get()
+                    .uri("/movie/nowplaying")
+                    .retrieve()
+                    .bodyToMono(MovieListResult.class)
+                    .block();
+            return result != null && result.getResults() != null ? result.getResults() : List.of();
+        } catch (Exception e) {
+            log.error("Failed to fetch now playing movies: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Fetches trending movies from movie-service → TMDB.
+     */
+    public List<MovieListItemDTO> getTrending() {
+        try {
+            MovieListResult result = movieClient.get()
+                    .uri("/movie/trending")
+                    .retrieve()
+                    .bodyToMono(MovieListResult.class)
+                    .block();
+            return result != null && result.getResults() != null ? result.getResults() : List.of();
+        } catch (Exception e) {
+            log.error("Failed to fetch trending movies: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Searches movies by name via movie-service → MongoDB cache / TMDB.
+     */
+    public List<MovieListItemDTO> searchMovies(String query) {
+        if (query == null || query.isBlank()) return List.of();
+        try {
+            MovieListResult result = movieClient.get()
+                    .uri("/movie/search/{name}", query.trim())
+                    .retrieve()
+                    .bodyToMono(MovieListResult.class)
+                    .block();
+            return result != null && result.getResults() != null ? result.getResults() : List.of();
+        } catch (Exception e) {
+            log.error("Failed to search movies for '{}': {}", query, e.getMessage());
+            return List.of();
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Reviews
     // -------------------------------------------------------------------------
 
     /**
      * Fetches all reviews for a movie from review-service.
-     * Returns empty list if no reviews exist or the service is down.
-     *
      * Response shape: { success: true, data: [ ReviewDTO, ... ] }
      */
     public List<ReviewDTO> getReviewsForMovie(long movieId) {
@@ -102,8 +163,6 @@ public class BackendClientService {
 
     /**
      * Fetches average rating + review count for a movie from review-service.
-     * Returns empty if the service is down.
-     *
      * Response shape: { success: true, data: { averageRating: 8.5, reviewCount: 12 } }
      */
     public Optional<ReviewStatsDTO> getReviewStats(long movieId) {
@@ -124,9 +183,7 @@ public class BackendClientService {
     }
 
     /**
-     * Submits a new review to review-service POST /api/reviews.
-     * Returns true on success (HTTP 201), false on conflict (duplicate review)
-     * or any server/network error.
+     * Submits a new review. Returns true on HTTP 201, false on conflict or error.
      */
     public boolean createReview(ReviewDTO review) {
         try {
@@ -164,9 +221,12 @@ public class BackendClientService {
         }
     }
 
-    public Optional<ForumPostDTO> createPost(String title, String content) {
+    public Optional<ForumPostDTO> createPost(String title, String content, String authorUsername) {
         try {
-            Map<String, String> body = Map.of("title", title, "content", content);
+            Map<String, String> body = Map.of(
+                    "title", title,
+                    "content", content,
+                    "authorUsername", authorUsername != null ? authorUsername : "");
             ForumPostDTO post = forumClient.post()
                     .uri("/forum/posts")
                     .bodyValue(body)
@@ -176,6 +236,22 @@ public class BackendClientService {
             return Optional.ofNullable(post);
         } catch (Exception e) {
             log.error("Failed to create forum post: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
+        try {
+            Map<String, String> body = Map.of("title", title, "content", content);
+            ForumPostDTO post = forumClient.put()
+                    .uri("/forum/posts/{id}", postId)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(ForumPostDTO.class)
+                    .block();
+            return Optional.ofNullable(post);
+        } catch (Exception e) {
+            log.error("Failed to update forum post {}: {}", postId, e.getMessage());
             return Optional.empty();
         }
     }
@@ -227,9 +303,17 @@ public class BackendClientService {
     }
 
     // -------------------------------------------------------------------------
-    // Inner class — matches the ApiResponse wrapper review-service returns
+    // Inner classes
     // -------------------------------------------------------------------------
 
+    /** Matches the { results: [...] } wrapper from movie-service list endpoints. */
+    public static class MovieListResult {
+        private List<MovieListItemDTO> results;
+        public List<MovieListItemDTO> getResults() { return results; }
+        public void setResults(List<MovieListItemDTO> results) { this.results = results; }
+    }
+
+    /** Matches the ApiResponse wrapper review-service returns. */
     public static class ApiResponse<T> {
         private boolean success;
         private T data;

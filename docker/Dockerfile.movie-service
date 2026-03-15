@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /app
 
 COPY movie-service/.mvn/ movie-service/.mvn/
@@ -16,7 +16,7 @@ RUN movie-service/mvnw -f movie-service/pom.xml dependency:go-offline -q
 COPY movie-service/src movie-service/src
 RUN movie-service/mvnw -f movie-service/pom.xml package -Dmaven.test.skip=true -q
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/movie-service/target/*.jar app.jar
 EXPOSE 8083
