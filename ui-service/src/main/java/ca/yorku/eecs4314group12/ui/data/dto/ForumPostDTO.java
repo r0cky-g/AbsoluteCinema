@@ -4,7 +4,7 @@ public class ForumPostDTO {
     private Long id;
     private String title;
     private String content;
-    private String authorUsername;
+    private Long userId;
 
     public ForumPostDTO() {}
 
@@ -14,6 +14,6 @@ public class ForumPostDTO {
     public void setTitle(String title) { this.title = title; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
-    public String getAuthorUsername() { return authorUsername; }
-    public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

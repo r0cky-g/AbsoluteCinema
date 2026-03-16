@@ -187,8 +187,8 @@ public class ReviewService {
     
     // Delete a review (soft delete)
     @Transactional
-    public void deleteReview(Long id, Long userId) {
-        logger.info("Deleting review with ID {} by user {}", id, userId);
+    public void deleteReview(Long id, Long userId, String userRole) {
+        logger.info("Deleting review with ID {} by user {} with role {}", id, userId, userRole);
         
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Review not found with ID: " + id));
@@ -202,9 +202,12 @@ public class ReviewService {
         //     throw new ForbiddenException("Not authorized to delete this review");
         // }
         
-        //  Only the owner can delete their review
-        if (!review.getUserId().equals(userId)) {
-            throw new IllegalStateException("User can only delete their own reviews");
+        // Check if user is owner OR has moderator/admin role
+        boolean isOwner = review.getUserId().equals(userId);
+        boolean isModeratorOrAdmin = "MODERATOR".equals(userRole) || "ADMIN".equals(userRole);
+        
+        if (!isOwner && !isModeratorOrAdmin) {
+            throw new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin");
         }
         
         review.softDelete();

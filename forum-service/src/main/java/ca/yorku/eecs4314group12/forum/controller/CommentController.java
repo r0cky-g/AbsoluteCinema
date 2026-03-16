@@ -50,7 +50,7 @@ public class CommentController {
                         .body("Cannot delete comments without owner information. Contact admin.");
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("You can only delete your own comments (or you must be an admin)");
+                        .body("You can only delete your own comments (or you must be a moderator/admin)");
             }
         }
     }

@@ -48,7 +48,7 @@ public class ForumController {
                         .body("Cannot delete posts without owner information. Contact admin.");
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("You can only delete your own posts (or you must be an admin)");
+                        .body("You can only delete your own posts (or you must be a moderator/admin)");
             }
         }
     }

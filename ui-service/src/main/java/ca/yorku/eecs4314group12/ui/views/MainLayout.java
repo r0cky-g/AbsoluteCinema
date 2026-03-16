@@ -19,6 +19,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 
 /**
  * Main application shell — AppLayout with top navbar and collapsible drawer.
@@ -32,7 +33,10 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
 
-    public MainLayout() {
+    private final BackendClientService backendClient;
+
+    public MainLayout(BackendClientService backendClient) {
+        this.backendClient = backendClient;
         createHeader();
         createDrawer();
     }

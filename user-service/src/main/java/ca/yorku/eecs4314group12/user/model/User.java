@@ -43,11 +43,6 @@ public class User {
     @Past(message = "Date of birth must be in the past")
     private LocalDate dob;
 
-    //user's role setup
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role = Role.USER;
-
     //email verification
     @Pattern(regexp = "^[0-9]{4}$",
             message = "Verification code must be exactly 4 digits")
@@ -68,8 +63,10 @@ public class User {
     @Column(name = "genre")
     private Set<String> likedGenres = new HashSet<>();
 
-    
-
+    // user role
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     //constructors
     public User() {}
@@ -78,7 +75,6 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = Role.USER;
     }
 
     //Getters
@@ -93,9 +89,6 @@ public class User {
     }
     public LocalDate getDob() { 
         return dob; 
-    }
-    public Role getRole() { 
-        return role; 
     }
     public boolean isEmailVerified() { 
         return emailVerified; 
@@ -114,6 +107,10 @@ public class User {
         return likedGenres;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
     //setters
     public void setId(Long id) { 
         this.id = id;
@@ -130,9 +127,6 @@ public class User {
     public void setDob(LocalDate dob) { 
         this.dob = dob; 
     }
-    public void setRole(Role role) { 
-        this.role = role; 
-    }
     public void setEmailVerified(boolean emailVerified) { 
         this.emailVerified = emailVerified; 
     }
@@ -144,5 +138,9 @@ public class User {
     }
     public void setLikedGenres(Set<String> likedGenres) {
         this.likedGenres = likedGenres;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
