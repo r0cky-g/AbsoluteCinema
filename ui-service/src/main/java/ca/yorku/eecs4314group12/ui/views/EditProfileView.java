@@ -1,6 +1,8 @@
 package ca.yorku.eecs4314group12.ui.views;
 
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 import ca.yorku.eecs4314group12.ui.security.InMemoryUserRegistry;
+import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -52,9 +54,15 @@ public class EditProfileView extends VerticalLayout {
     );
 
     private final InMemoryUserRegistry userRegistry;
+    private final BackendClientService backendClient;
+    private final UserSessionService userSessionService;
 
-    public EditProfileView(InMemoryUserRegistry userRegistry) {
+    public EditProfileView(InMemoryUserRegistry userRegistry, 
+                          BackendClientService backendClient,
+                          UserSessionService userSessionService) {
         this.userRegistry = userRegistry;
+        this.backendClient = backendClient;
+        this.userSessionService = userSessionService;
 
         setSizeFull();
         setPadding(true);
@@ -270,14 +278,32 @@ public class EditProfileView extends VerticalLayout {
 
         CheckboxGroup<String> genreGroup = new CheckboxGroup<>();
         genreGroup.setItems(ALL_GENRES.stream().sorted().toList());
-        // TODO: pre-populate from user-service GET /user/{id} likedGenres field
+        
+        // Load existing preferences
+        if (userSessionService.getUserId() != null) {
+            backendClient.getUserData(userSessionService.getUserId())
+                    .ifPresent(userData -> {
+                        if (userData.getLikedGenres() != null && !userData.getLikedGenres().isEmpty()) {
+                            genreGroup.setValue(userData.getLikedGenres());
+                        }
+                    });
+        }
 
         Button savePrefsBtn = new Button("Save Preferences");
         savePrefsBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         savePrefsBtn.addClickListener(e -> {
             Set<String> selected = genreGroup.getSelectedItems();
-            // TODO: send selected genres to user-service PUT /user/{id}
-            showSuccess("Preferences saved! (" + selected.size() + " genre(s) selected)");
+            if (userSessionService.getUserId() != null) {
+                boolean success = backendClient.updateUserPreferences(
+                        userSessionService.getUserId(), selected);
+                if (success) {
+                    showSuccess("Preferences saved! (" + selected.size() + " genre(s) selected)");
+                } else {
+                    showError("Failed to save preferences. Please try again.");
+                }
+            } else {
+                showError("Unable to save preferences. Please log in again.");
+            }
         });
 
         Button backBtn = new Button("← Back to Account");

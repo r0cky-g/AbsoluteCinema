@@ -211,13 +211,14 @@ public class BackendClientService {
      * Registers a new user via user-service POST /user/register.
      * Returns true on success (HTTP 201).
      */
-    public boolean registerUser(String username, String password, String email) {
+    public boolean registerUser(String username, String password, String email, boolean moderator) {
         try {
             Map<String, Object> body = Map.of(
                     "username", username,
                     "password", password,
                     "email", email,
-                    "over18", true);
+                    "over18", true,
+                    "moderator", moderator);
             userClient.post()
                     .uri("/user/register")
                     .bodyValue(body)
@@ -294,19 +295,84 @@ public class BackendClientService {
     }
 
     // -------------------------------------------------------------------------
+    // User preferences
+    // -------------------------------------------------------------------------
+
+    /**
+     * Gets user data including preferences (liked genres) via user-service GET /user/{id}.
+     */
+    public Optional<UserResponseDTO> getUserData(long userId) {
+        try {
+            UserResponseDTO userData = userClient.get()
+                    .uri("/user/{id}", userId)
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return Optional.ofNullable(userData);
+        } catch (Exception e) {
+            log.error("Failed to fetch user data for user {}: {}", userId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Updates user preferences (liked genres) via user-service PUT /user/{id}.
+     */
+    public boolean updateUserPreferences(long userId, java.util.Set<String> likedGenres) {
+        try {
+            // Get existing user data first
+            Optional<UserResponseDTO> existingUserOpt = getUserData(userId);
+            if (existingUserOpt.isEmpty()) {
+                log.error("User {} not found", userId);
+                return false;
+            }
+
+            UserResponseDTO existingUser = existingUserOpt.get();
+            
+            // Create update payload with required fields and likedGenres
+            // Note: We need to include all required fields (username, email) and preserve other fields
+            Map<String, Object> updatePayload = new java.util.HashMap<>();
+            updatePayload.put("username", existingUser.getUsername());
+            updatePayload.put("email", existingUser.getEmail());
+            updatePayload.put("likedGenres", likedGenres);
+            // Note: over18 and other fields will use defaults if not provided
+            // The service will preserve existing values for fields not in the request
+            
+            userClient.put()
+                    .uri("/user/{id}", userId)
+                    .bodyValue(updatePayload)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to update preferences for user {}: {}", userId, e.getMessage());
+            return false;
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Recommendations
     // -------------------------------------------------------------------------
 
     public List<MovieListItemDTO> getRecommendations(long userId) {
         try {
+            // Note: user-service returns List<MovieDTO>, but we need MovieListItemDTO
+            // Spring will map common fields automatically
             List<MovieListItemDTO> list = userClient.get()
                     .uri("/user/{userId}/recommendations", userId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<MovieListItemDTO>>() {})
                     .block();
-            return list != null ? list : List.of();
+            if (list != null) {
+                log.debug("Fetched {} recommendations for user {}", list.size(), userId);
+                return list;
+            } else {
+                log.warn("Recommendations endpoint returned null for user {}", userId);
+                return List.of();
+            }
         } catch (Exception e) {
-            log.error("Failed to fetch recommendations for user {}: {}", userId, e.getMessage());
+            log.error("Failed to fetch recommendations for user {}: {}", userId, e.getMessage(), e);
             return List.of();
         }
     }

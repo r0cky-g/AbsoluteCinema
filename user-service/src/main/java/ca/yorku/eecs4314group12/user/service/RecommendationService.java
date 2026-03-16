@@ -16,20 +16,20 @@ import java.util.stream.Collectors;
 public class RecommendationService {
 
     private static final Logger logger = LoggerFactory.getLogger(RecommendationService.class);
-    private static final int MAX_RECOMMENDATIONS = 10;
+    private static final int MAX_RECOMMENDATIONS = 5;
 
-    private final WatchlistRepository watchlistRepository;
     private final MovieClient movieClient;
+    private final WatchlistRepository watchlistRepository;
 
-    public RecommendationService(WatchlistRepository watchlistRepository, MovieClient movieClient) {
-        this.watchlistRepository = watchlistRepository;
+    public RecommendationService(MovieClient movieClient, WatchlistRepository watchlistRepository) {
         this.movieClient = movieClient;
+        this.watchlistRepository = watchlistRepository;
     }
 
     public List<MovieDTO> getRecommendedMovies(Long userId) {
         logger.info("Getting recommendations for user {}", userId);
 
-        // Get user's watchlist
+        // Step 1: Get user's watchlist (movie IDs)
         List<Watchlist> watchlist = watchlistRepository.findByUserId(userId);
         
         if (watchlist.isEmpty()) {
@@ -37,7 +37,7 @@ public class RecommendationService {
             return Collections.emptyList();
         }
 
-        // Fetch TMDB metadata for all watchlist movies
+        // Step 2: Fetch movie details for each watchlist movie
         List<MovieDTO> watchlistMovies = new ArrayList<>();
         Set<Integer> watchlistMovieIds = new HashSet<>();
         
@@ -48,19 +48,22 @@ public class RecommendationService {
         }
 
         if (watchlistMovies.isEmpty()) {
-            logger.warn("Could not fetch metadata for any watchlist movies for user {}", userId);
+            logger.warn("Could not fetch metadata for any watchlist movies for user {} (watchlist had {} items)", 
+                    userId, watchlist.size());
             return Collections.emptyList();
         }
 
-        // Extract common features from watchlist
+        logger.info("Successfully fetched {} watchlist movies for user {}", watchlistMovies.size(), userId);
+
+        // Step 3: Extract information from watchlist movies
         Set<String> preferredGenres = extractGenres(watchlistMovies);
         Set<String> preferredActors = extractActors(watchlistMovies);
         Set<String> preferredDirectors = extractDirectors(watchlistMovies);
 
-        logger.debug("User {} preferences - Genres: {}, Actors: {}, Directors: {}", 
+        logger.info("User {} preferences from watchlist - Genres: {}, Actors: {}, Directors: {}", 
                 userId, preferredGenres.size(), preferredActors.size(), preferredDirectors.size());
 
-        // Get trending movies as recommendation pool
+        // Step 4: Get trending movies as recommendation pool
         Optional<MoviesTrendingDTO> trendingOpt = movieClient.getTrendingMovies();
         if (trendingOpt.isEmpty() || trendingOpt.get().getResults() == null) {
             logger.warn("Could not fetch trending movies for recommendations");
@@ -68,12 +71,12 @@ public class RecommendationService {
         }
 
         List<MovieDTO> trendingMovies = trendingOpt.get().getResults();
+        logger.info("Fetched {} trending movies for recommendation pool", trendingMovies.size());
 
-        // Score and rank movies
+        // Step 5: Score and rank movies based on similarity to watchlist
         List<MovieScore> scoredMovies = trendingMovies.stream()
                 .filter(movie -> !watchlistMovieIds.contains(movie.getId())) // Exclude already in watchlist
                 .map(movie -> scoreMovie(movie, preferredGenres, preferredActors, preferredDirectors))
-                .filter(score -> score.score > 0) // Only include movies with some similarity
                 .sorted((a, b) -> Double.compare(b.score, a.score)) // Sort by score descending
                 .limit(MAX_RECOMMENDATIONS)
                 .collect(Collectors.toList());
@@ -82,7 +85,29 @@ public class RecommendationService {
                 .map(score -> score.movie)
                 .collect(Collectors.toList());
 
-        logger.info("Generated {} recommendations for user {}", recommendations.size(), userId);
+        // If we have fewer than MAX_RECOMMENDATIONS, fill with top trending movies (even if score is 0)
+        if (recommendations.size() < MAX_RECOMMENDATIONS) {
+            int remaining = MAX_RECOMMENDATIONS - recommendations.size();
+            Set<Integer> alreadyRecommended = recommendations.stream()
+                    .map(MovieDTO::getId)
+                    .collect(Collectors.toSet());
+            
+            List<MovieDTO> additionalMovies = trendingMovies.stream()
+                    .filter(movie -> !watchlistMovieIds.contains(movie.getId()))
+                    .filter(movie -> !alreadyRecommended.contains(movie.getId()))
+                    .limit(remaining)
+                    .collect(Collectors.toList());
+            
+            recommendations.addAll(additionalMovies);
+        }
+
+        logger.info("Generated {} recommendations for user {} based on watchlist (preferences: genres={}, actors={}, directors={})", 
+                recommendations.size(), userId, preferredGenres.size(), preferredActors.size(), preferredDirectors.size());
+        
+        if (recommendations.isEmpty()) {
+            logger.warn("No recommendations generated for user {} - check if trending movies match watchlist preferences", userId);
+        }
+        
         return recommendations;
     }
 
@@ -120,7 +145,7 @@ public class RecommendationService {
                                    Set<String> preferredActors, Set<String> preferredDirectors) {
         double score = 0.0;
 
-        // Genre matching (weight: 3.0)
+        // Genre matching (weight: 3.0 per matching genre)
         if (movie.getGenres() != null) {
             long genreMatches = movie.getGenres().stream()
                     .filter(Objects::nonNull)
@@ -129,7 +154,7 @@ public class RecommendationService {
             score += genreMatches * 3.0;
         }
 
-        // Actor matching (weight: 2.0)
+        // Actor matching (weight: 2.0 per matching actor)
         if (movie.getCast() != null) {
             long actorMatches = movie.getCast().stream()
                     .filter(Objects::nonNull)
@@ -140,17 +165,16 @@ public class RecommendationService {
             score += actorMatches * 2.0;
         }
 
-        // Director matching (weight: 4.0)
+        // Director matching (weight: 4.0 per matching director)
         if (movie.getCrew() != null) {
-            boolean directorMatch = movie.getCrew().stream()
+            long directorMatches = movie.getCrew().stream()
                     .filter(Objects::nonNull)
                     .filter(crew -> "Director".equalsIgnoreCase(crew.getJob()))
                     .map(crew -> crew.getName())
                     .filter(Objects::nonNull)
-                    .anyMatch(preferredDirectors::contains);
-            if (directorMatch) {
-                score += 4.0;
-            }
+                    .filter(preferredDirectors::contains)
+                    .count();
+            score += directorMatches * 4.0;
         }
 
         return new MovieScore(movie, score);

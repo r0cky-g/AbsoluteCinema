@@ -13,6 +13,7 @@ import ca.yorku.eecs4314group12.user.service.WatchlistService;
 import ca.yorku.eecs4314group12.user.service.RecommendationService;
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
 import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
+import ca.yorku.eecs4314group12.user.dto.UserUpdateRequest;
 import ca.yorku.eecs4314group12.user.dto.UserResponseDTO;
 import ca.yorku.eecs4314group12.user.dto.MovieDTO;
 
@@ -44,6 +45,11 @@ public class UserController {
                 request.getPassword());
 
         user.setOver18(request.isOver18());
+        
+        // Set role to MODERATOR if moderator flag is true, otherwise default to USER
+        if (request.isModerator()) {
+            user.setRole(ca.yorku.eecs4314group12.user.model.Role.MODERATOR);
+        }
 
         User createdUser = service.createUser(user);
 
@@ -104,9 +110,9 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponseDTO updateUser(
             @PathVariable Long id,
-            @Valid @RequestBody User user) {
+            @Valid @RequestBody UserUpdateRequest request) {
 
-        User updatedUser = service.updateUser(id, user);
+        User updatedUser = service.updateUser(id, request);
 
         return toDTO(updatedUser);
     }
@@ -171,6 +177,7 @@ public class UserController {
                 user.getUsername(),
                 user.getEmail(),
                 user.isEmailVerified(),
-                user.getRole() != null ? user.getRole().name() : "USER");
+                user.getRole() != null ? user.getRole().name() : "USER",
+                user.getLikedGenres());
     }
 }

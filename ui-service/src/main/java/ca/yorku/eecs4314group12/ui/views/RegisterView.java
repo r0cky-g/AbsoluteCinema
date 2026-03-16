@@ -66,6 +66,8 @@ public class RegisterView extends VerticalLayout {
 
         Checkbox over18Box = new Checkbox("I confirm I am 18 or older");
 
+        Checkbox moderatorBox = new Checkbox("Create as moderator");
+
         Button registerBtn = new Button("Create Account");
         registerBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         registerBtn.setWidth("100%"); registerBtn.setMaxWidth("360px");
@@ -92,7 +94,8 @@ public class RegisterView extends VerticalLayout {
                 showError("Passwords do not match."); return;
             }
 
-            boolean serviceSuccess = backendClient.registerUser(username, password, email);
+            boolean isModerator = moderatorBox.getValue();
+            boolean serviceSuccess = backendClient.registerUser(username, password, email, isModerator);
             if (serviceSuccess) {
                 userRegistry.register(username, password, email);
                 Notification.show("Account created! You can now log in.",
@@ -115,7 +118,7 @@ public class RegisterView extends VerticalLayout {
         loginPrompt.add(loginLink);
 
         VerticalLayout form = new VerticalLayout(
-                usernameField, emailField, passwordField, confirmPasswordField, over18Box, registerBtn);
+                usernameField, emailField, passwordField, confirmPasswordField, over18Box, moderatorBox, registerBtn);
         form.setPadding(true); form.setSpacing(true);
         form.setAlignItems(FlexComponent.Alignment.CENTER);
         form.getStyle()

@@ -131,34 +131,47 @@ public class UserService {
     }
 
     //update user
-    public User updateUser(Long id, User updatedUser) {
+    public User updateUser(Long id, ca.yorku.eecs4314group12.user.dto.UserUpdateRequest request) {
 
         User existingUser = getUserById(id);
 
-        if (!existingUser.getEmail().equals(updatedUser.getEmail()) &&
-                repo.existsByEmail(updatedUser.getEmail())) {
+        if (!existingUser.getEmail().equals(request.getEmail()) &&
+                repo.existsByEmail(request.getEmail())) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Email already registered");
         }
 
-        if (!existingUser.getUsername().equals(updatedUser.getUsername()) &&
-                repo.existsByUsername(updatedUser.getUsername())) {
+        if (!existingUser.getUsername().equals(request.getUsername()) &&
+                repo.existsByUsername(request.getUsername())) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Username already taken");
         }
 
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setUsername(request.getUsername());
+        existingUser.setEmail(request.getEmail());
 
-        if (updatedUser.getPassword() != null &&
-                !updatedUser.getPassword().isBlank()) {
+        if (request.getPassword() != null &&
+                !request.getPassword().isBlank()) {
 
             existingUser.setPassword(
-                    passwordEncoder.encode(updatedUser.getPassword()));
+                    passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Update liked genres if provided
+        if (request.getLikedGenres() != null) {
+            existingUser.setLikedGenres(request.getLikedGenres());
+        }
+
+        // Update other fields if provided
+        if (request.getDob() != null) {
+            existingUser.setDob(request.getDob());
+        }
+        if (request.getOver18() != null) {
+            existingUser.setOver18(request.getOver18());
         }
 
         return repo.save(existingUser);

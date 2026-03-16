@@ -1,11 +1,14 @@
 package ca.yorku.eecs4314group12.ui.data.dto;
 
+import java.util.Set;
+
 public class UserResponseDTO {
     private Long id;
     private String username;
     private String email;
     private boolean emailVerified;
     private String role;
+    private Set<String> likedGenres;
 
     public UserResponseDTO() {}
 
@@ -19,4 +22,6 @@ public class UserResponseDTO {
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public Set<String> getLikedGenres() { return likedGenres; }
+    public void setLikedGenres(Set<String> likedGenres) { this.likedGenres = likedGenres; }
 }
