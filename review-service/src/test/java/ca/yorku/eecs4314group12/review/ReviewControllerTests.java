@@ -3,12 +3,12 @@ package ca.yorku.eecs4314group12.review;
 import ca.yorku.eecs4314group12.review.controller.ReviewController;
 import ca.yorku.eecs4314group12.review.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.review.service.ReviewService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,7 +32,7 @@ class ReviewControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private ReviewService reviewService;
 
     private ReviewDTO testReviewDTO;
@@ -189,8 +189,10 @@ class ReviewControllerTests {
     @Test
     void deleteReview_WrongUser_ReturnsForbidden() throws Exception {
         // Given
-        when(reviewService.deleteReview(1L, 999L, "USER"))
-                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
+    	
+    	// when can't accept void methods, will need to use another statement.
+//        when(reviewService.deleteReview(1L, 999L, "USER"))
+//                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
 
         // When & Then
         mockMvc.perform(delete("/api/reviews/1")
