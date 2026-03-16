@@ -51,6 +51,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       DB_PASSWORD: ${DB_PASSWORD}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      APP_MOVIE_SERVICE_URL: http://movie-service:8083
     ports:
       - "8082:8082"
     depends_on:
