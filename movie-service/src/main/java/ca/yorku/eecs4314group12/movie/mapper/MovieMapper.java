@@ -23,11 +23,13 @@ public interface MovieMapper {
 	
 	Movie toMovie(MovieDTO movieDTO);
 	
-	@Mapping(source = "genres", target = "genres", qualifiedByName = "mapGenres")
-	@Mapping(source = "release_dates", target = "age_rating", qualifiedByName = "extractUSRating")
-	@Mapping(source = "credits.cast", target = "cast")
-	@Mapping(source = "credits.crew", target = "crew")
-	@Mapping(source = "production_companies", target = "production_companies", qualifiedByName = "mapProductionCompanies")
+	@BeanMapping(ignoreByDefault = true)
+	@Mapping(target = "id")
+	@Mapping(target = "adult")
+	@Mapping(target = "original_title")
+	@Mapping(target = "title")
+	@Mapping(target = "release_date")
+	@Mapping(target = "poster_path")
 	MovieDTO toMovieDTO(TmdbMovieDTO tmdbMovieDTO);
 
 	MovieDTO toMovieDTO(Movie movie);
@@ -48,7 +50,6 @@ public interface MovieMapper {
 	// Explicitly defined custom behaviour when mapping certain fields or objects
 	@Named("mapGenres")
     default List<String> mapGenres(List<TmdbGenreDTO> genres) {
-        if (genres == null) return java.util.Collections.emptyList();
         return genres.stream()
                 .map(TmdbGenreDTO::getName)  
                 .collect(Collectors.toList());
@@ -56,7 +57,6 @@ public interface MovieMapper {
 	
 	@Named("extractUSRating")
     default String extractUsRating(TmdbReleaseDatesDTO releaseDates) {
-        if (releaseDates == null || releaseDates.getResults() == null) return "Unrated";
         return releaseDates.getResults().stream()
                 .filter(r -> "US".equals(r.getIso_3166_1()))  
                 .findFirst()
@@ -69,7 +69,6 @@ public interface MovieMapper {
 	
 	@Named("mapProductionCompanies")
     default List<String> mapProductionCompanies(List<TmdbCompanyDTO> companies) {
-        if (companies == null) return java.util.Collections.emptyList();
         return companies.stream()
                 .map(TmdbCompanyDTO::getName)  
                 .collect(Collectors.toList());
