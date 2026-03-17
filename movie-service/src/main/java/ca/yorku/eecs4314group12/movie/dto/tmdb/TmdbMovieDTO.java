@@ -13,6 +13,7 @@ public class TmdbMovieDTO {
 	private String overview;
 	private String release_date;
 	private List<TmdbGenreDTO> genres;
+	private List<Integer> genre_ids;
 	private int budget;
 	private int revenue;
 	private int runtime;
@@ -92,6 +93,14 @@ public class TmdbMovieDTO {
 
 	public void setGenres(List<TmdbGenreDTO> genres) {
 		this.genres = genres;
+	}
+	
+	public List<Integer> getGenre_ids() {
+		return genre_ids;
+	}
+
+	public void setGenre_ids(List<Integer> genre_ids) {
+		this.genre_ids = genre_ids;
 	}
 
 	public int getBudget() {
