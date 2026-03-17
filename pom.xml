@@ -20,6 +20,7 @@
 		<module>user-service</module>
 		<module>review-service</module>
 		<module>forum-service</module>
+		<module>ui-service</module>  <!-- Added -->
 	</modules>
 	
 	<properties>

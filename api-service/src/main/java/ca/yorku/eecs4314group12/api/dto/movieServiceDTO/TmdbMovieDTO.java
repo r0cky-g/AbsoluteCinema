@@ -1,178 +1,98 @@
 package ca.yorku.eecs4314group12.api.dto.movieServiceDTO;
 
-import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Mirrors movie-service's MovieDTO exactly.
+ * Updated to match the new flat structure after MongoDB caching was added.
+ */
 public class TmdbMovieDTO {
-	
-	private int id;
-	private boolean adult;
-	private String original_language;
-	private String original_title;
-	private String title;
-	private String tagline;
-	private String overview;
-	private String poster_path;
-	private String release_date;
-	private ArrayList<TmdbGenreDTO> genres;
-	private int budget;
-	private int revenue;
-	private int runtime;
-	private String status;
-	private TmdbReleaseDates release_dates;
-	private TmdbImagesDTO images;
-	private TmdbVideosDTO videos;
-	private TmdbCreditsDTO credits;
-	private ArrayList<TmdbCompanyDTO> production_companies;
-	
-	public int getId() {
-		return id;
-	}
-	
-	public void setId(int id) {
-		this.id = id;
-	}
-	
-	public boolean isAdult() {
-		return adult;
-	}
 
-	public void setAdult(boolean adult) {
-		this.adult = adult;
-	}
+    private int id;
+    private boolean adult;
+    private String original_language;
+    private String original_title;
+    private String title;
+    private List<String> genres;
+    private String age_rating;
+    private String release_date;
+    private String tagline;
+    private String overview;
+    private int budget;
+    private int revenue;
+    private int runtime;
+    private String poster_path;
+    private String status;
+    private List<ActorDTO> cast;
+    private List<CrewMemberDTO> crew;
+    private List<String> production_companies;
 
-	public String getOriginal_language() {
-		return original_language;
-	}
-	
-	public void setOriginal_language(String original_language) {
-		this.original_language = original_language;
-	}
-	
-	public String getOriginal_title() {
-		return original_title;
-	}
-	
-	public void setOriginal_title(String original_title) {
-		this.original_title = original_title;
-	}
-	
-	public String getTitle() {
-		return title;
-	}
+    public static class ActorDTO {
+        private String original_name;
+        private String name;
+        private String character;
+        private String profile_path;
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+        public String getOriginal_name() { return original_name; }
+        public void setOriginal_name(String v) { this.original_name = v; }
+        public String getName() { return name; }
+        public void setName(String v) { this.name = v; }
+        public String getCharacter() { return character; }
+        public void setCharacter(String v) { this.character = v; }
+        public String getProfile_path() { return profile_path; }  
+        public void setProfile_path(String v) { this.profile_path = v; }  
+    }
 
-	public String getTagline() {
-		return tagline;
-	}
+    public static class CrewMemberDTO {
+        private String original_name;
+        private String name;
+        private String department;
+        private String job;
 
-	public void setTagline(String tagline) {
-		this.tagline = tagline;
-	}
+        public String getOriginal_name() { return original_name; }
+        public void setOriginal_name(String v) { this.original_name = v; }
+        public String getName() { return name; }
+        public void setName(String v) { this.name = v; }
+        public String getDepartment() { return department; }
+        public void setDepartment(String v) { this.department = v; }
+        public String getJob() { return job; }
+        public void setJob(String v) { this.job = v; }
+    }
 
-	public String getOverview() {
-		return overview;
-	}
-	
-	public void setOverview(String overview) {
-		this.overview = overview;
-	}
-	
-	public String getPoster_path() {
-		return poster_path;
-	}
-	
-	public void setPoster_path(String poster_path) {
-		this.poster_path = poster_path;
-	}
-	
-	public String getRelease_date() {
-		return release_date;
-	}
-	
-	public void setRelease_date(String release_date) {
-		this.release_date = release_date;
-	}
-	
-	public ArrayList<TmdbGenreDTO> getGenres() {
-		return genres;
-	}
-
-	public void setGenres(ArrayList<TmdbGenreDTO> genres) {
-		this.genres = genres;
-	}
-
-	public int getBudget() {
-		return budget;
-	}
-
-	public void setBudget(int budget) {
-		this.budget = budget;
-	}
-
-	public int getRevenue() {
-		return revenue;
-	}
-	
-	public void setRevenue(int revenue) {
-		this.revenue = revenue;
-	}
-	
-	public int getRuntime() {
-		return runtime;
-	}
-	
-	public void setRuntime(int runtime) {
-		this.runtime = runtime;
-	}
-	
-	public String getStatus() {
-		return status;
-	}
-	
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	
-	public TmdbReleaseDates getRelease_dates() {
-		return release_dates;
-	}
-
-	public void setRelease_dates(TmdbReleaseDates release_dates) {
-		this.release_dates = release_dates;
-	}
-
-	public TmdbImagesDTO getImages() {
-		return images;
-	}
-	
-	public void setImages(TmdbImagesDTO images) {
-		this.images = images;
-	}
-	
-	public TmdbVideosDTO getVideos() {
-		return videos;
-	}
-	
-	public void setVideos(TmdbVideosDTO videos) {
-		this.videos = videos;
-	}
-	
-	public TmdbCreditsDTO getCredits() {
-		return credits;
-	}
-	
-	public void setCredits(TmdbCreditsDTO credits) {
-		this.credits = credits;
-	}
-
-	public ArrayList<TmdbCompanyDTO> getProduction_companies() {
-		return production_companies;
-	}
-
-	public void setProduction_companies(ArrayList<TmdbCompanyDTO> production_companies) {
-		this.production_companies = production_companies;
-	}
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public boolean isAdult() { return adult; }
+    public void setAdult(boolean adult) { this.adult = adult; }
+    public String getOriginal_language() { return original_language; }
+    public void setOriginal_language(String v) { this.original_language = v; }
+    public String getOriginal_title() { return original_title; }
+    public void setOriginal_title(String v) { this.original_title = v; }
+    public String getTitle() { return title; }
+    public void setTitle(String v) { this.title = v; }
+    public List<String> getGenres() { return genres; }
+    public void setGenres(List<String> v) { this.genres = v; }
+    public String getAge_rating() { return age_rating; }
+    public void setAge_rating(String v) { this.age_rating = v; }
+    public String getRelease_date() { return release_date; }
+    public void setRelease_date(String v) { this.release_date = v; }
+    public String getTagline() { return tagline; }
+    public void setTagline(String v) { this.tagline = v; }
+    public String getOverview() { return overview; }
+    public void setOverview(String v) { this.overview = v; }
+    public int getBudget() { return budget; }
+    public void setBudget(int v) { this.budget = v; }
+    public int getRevenue() { return revenue; }
+    public void setRevenue(int v) { this.revenue = v; }
+    public int getRuntime() { return runtime; }
+    public void setRuntime(int v) { this.runtime = v; }
+    public String getPoster_path() { return poster_path; }
+    public void setPoster_path(String v) { this.poster_path = v; }
+    public String getStatus() { return status; }
+    public void setStatus(String v) { this.status = v; }
+    public List<ActorDTO> getCast() { return cast; }
+    public void setCast(List<ActorDTO> v) { this.cast = v; }
+    public List<CrewMemberDTO> getCrew() { return crew; }
+    public void setCrew(List<CrewMemberDTO> v) { this.crew = v; }
+    public List<String> getProduction_companies() { return production_companies; }
+    public void setProduction_companies(List<String> v) { this.production_companies = v; }
 }

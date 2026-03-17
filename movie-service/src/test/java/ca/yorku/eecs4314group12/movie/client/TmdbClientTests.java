@@ -6,10 +6,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import ca.yorku.eecs4314group12.movie.dto.tmdb.TmdbMovieDTO;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
 
 class TmdbClientTests {
 

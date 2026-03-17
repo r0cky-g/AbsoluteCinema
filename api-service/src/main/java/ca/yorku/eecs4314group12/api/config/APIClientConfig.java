@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.api.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -7,11 +8,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class APIClientConfig {
 
-        // configure to use resourcies/application.yaml
-    private final String userIp = "http://localhost:8082";
-    private final String movieIp = "http://localhost:8080"; //should be 8083
-    private final String reviewIp = "http://localhost:8084";
-    // private final String forumIp = "";
+    @Value("${app.user-service.url:http://localhost:8082}")
+    private String userIp;
+
+    @Value("${app.movie-service.url:http://localhost:8083}")
+    private String movieIp;
+
+    @Value("${app.review-service.url:http://localhost:8084}")
+    private String reviewIp;
 
     @Bean("APIUserClient")
     public WebClient userClient() {
@@ -26,18 +30,11 @@ public class APIClientConfig {
                 .baseUrl(movieIp)
                 .build();
     }
-    
+
     @Bean("APIReviewClient")
     public WebClient reviewClient() {
         return WebClient.builder()
                 .baseUrl(reviewIp)
                 .build();
     }
-
-    // @Bean("APIForumClient")
-    // public WebClient forumClient() {
-    //     return WebClient.builder()
-    //             .baseUrl(forumIp)
-    //             .build();
-    // }
 }

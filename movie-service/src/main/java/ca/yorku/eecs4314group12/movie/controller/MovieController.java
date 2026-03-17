@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ca.yorku.eecs4314group12.movie.dto.TmdbMovieDTO;
+import ca.yorku.eecs4314group12.movie.dto.*;
 import ca.yorku.eecs4314group12.movie.service.MovieService;
 
 @RestController
@@ -18,8 +18,22 @@ public class MovieController {
 	}
 	
 	@GetMapping("/{id}")
-	public TmdbMovieDTO getMovieDetails(@PathVariable int id) {
+	public MovieDTO getDetails(@PathVariable int id) {
 		return movieService.getDetails(id);
 	}
-
+	
+	@GetMapping("/search/{name}")
+	public MovieSearchDTO getDetails(@PathVariable String name) {
+		return movieService.getSearch(name);
+	}
+	
+	@GetMapping("/trending")
+	public MoviesTrendingDTO getTrending() {
+		return movieService.getTrending();
+	}
+	
+	@GetMapping("/nowplaying")
+	public MoviesNowPlayingDTO getNowPlaying() {
+		return movieService.getNowPlaying();
+	}
 }

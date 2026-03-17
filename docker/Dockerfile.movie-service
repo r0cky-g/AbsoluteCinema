@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jdk-jammy AS build
+WORKDIR /app
+
+COPY movie-service/.mvn/ movie-service/.mvn/
+COPY movie-service/mvnw movie-service/mvnw
+RUN sed -i 's/\r//' movie-service/mvnw && chmod +x movie-service/mvnw
+
+COPY pom.xml pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' pom.xml
+RUN movie-service/mvnw install -f pom.xml -N -q
+
+COPY movie-service/pom.xml movie-service/pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' movie-service/pom.xml
+RUN movie-service/mvnw -f movie-service/pom.xml dependency:go-offline -q
+
+COPY movie-service/src movie-service/src
+RUN movie-service/mvnw -f movie-service/pom.xml package -Dmaven.test.skip=true -q
+
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+COPY --from=build /app/movie-service/target/*.jar app.jar
+EXPOSE 8083
+ENTRYPOINT ["java", "-jar", "app.jar"]

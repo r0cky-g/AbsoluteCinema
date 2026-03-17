@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /app
+
+COPY forum-service/.mvn/ forum-service/.mvn/
+COPY forum-service/mvnw forum-service/mvnw
+RUN sed -i 's/\r//' forum-service/mvnw && chmod +x forum-service/mvnw
+
+COPY pom.xml pom.xml
+RUN sed -i 's|<n>|<n>|g; s|</n>|</n>|g' pom.xml
+RUN forum-service/mvnw install -f pom.xml -N -q
+
+COPY forum-service/pom.xml forum-service/pom.xml
+RUN sed -i 's|<n>|<n>|g; s|</n>|</n>|g' forum-service/pom.xml
+RUN forum-service/mvnw -f forum-service/pom.xml dependency:go-offline -q
+
+COPY forum-service/src forum-service/src
+RUN forum-service/mvnw -f forum-service/pom.xml package -Dmaven.test.skip=true -q
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/forum-service/target/*.jar app.jar
+EXPOSE 8085
+ENTRYPOINT ["java", "-jar", "app.jar"]

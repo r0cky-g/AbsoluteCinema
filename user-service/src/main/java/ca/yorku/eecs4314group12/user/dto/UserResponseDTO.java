@@ -1,5 +1,7 @@
 package ca.yorku.eecs4314group12.user.dto;
 
+import java.util.Set;
+
 public class UserResponseDTO {
 
     private Long id;
@@ -7,6 +9,7 @@ public class UserResponseDTO {
     private String email;
     private boolean emailVerified;
     private String role;
+    private Set<String> likedGenres;
 
     public UserResponseDTO(Long id,
             String username,
@@ -18,6 +21,20 @@ public class UserResponseDTO {
         this.email = email;
         this.emailVerified = emailVerified;
         this.role = role;
+    }
+
+    public UserResponseDTO(Long id,
+            String username,
+            String email,
+            boolean emailVerified,
+            String role,
+            Set<String> likedGenres) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.emailVerified = emailVerified;
+        this.role = role;
+        this.likedGenres = likedGenres;
     }
 
     public Long getId() {
@@ -38,5 +55,13 @@ public class UserResponseDTO {
 
     public String getRole() {
         return role;
+    }
+
+    public Set<String> getLikedGenres() {
+        return likedGenres;
+    }
+
+    public void setLikedGenres(Set<String> likedGenres) {
+        this.likedGenres = likedGenres;
     }
 }

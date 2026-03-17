@@ -18,6 +18,8 @@ public class UserRegisterRequest {
 
       private boolean over18;
 
+      private boolean moderator;
+
       // getters & setters
       public String getUsername() {
             return username;
@@ -49,5 +51,13 @@ public class UserRegisterRequest {
 
       public void setOver18(boolean over18) {
             this.over18 = over18;
+      }
+
+      public boolean isModerator() {
+            return moderator;
+      }
+
+      public void setModerator(boolean moderator) {
+            this.moderator = moderator;
       }
 }

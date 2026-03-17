@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /app
+
+COPY ui-service/.mvn/ ui-service/.mvn/
+COPY ui-service/mvnw ui-service/mvnw
+RUN sed -i 's/\r//' ui-service/mvnw && chmod +x ui-service/mvnw
+
+COPY pom.xml pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' pom.xml
+RUN ui-service/mvnw install -f pom.xml -N -q
+
+COPY ui-service/pom.xml ui-service/pom.xml
+RUN sed -i 's|<n>|<name>|g; s|</n>|</name>|g' ui-service/pom.xml
+RUN ui-service/mvnw -f ui-service/pom.xml dependency:go-offline -q
+
+COPY ui-service/src ui-service/src
+RUN ui-service/mvnw -f ui-service/pom.xml package -Dmaven.test.skip=true -q -Dvaadin.productionMode=true
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/ui-service/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-Xmx512m", "-Dvaadin.productionMode=true", "-jar", "app.jar"]
