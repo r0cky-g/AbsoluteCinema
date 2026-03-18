@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieDTO;
-import ca.yorku.eecs4314group12.api.exception.ApiException;
+import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieSearchDTO;
+import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesNowPlayingDTO;
+import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.api.service.MovieService;
 import reactor.core.publisher.Mono;
 
@@ -31,10 +33,26 @@ public class APIController {
         return movieService.getDetails(id);
     }
 
+    @GetMapping("/movie/search/{name}")
+    public Mono<ResponseEntity<MovieSearchDTO>> searchMovie(@PathVariable String name) {
+        return movieService.getDetails(name);
+    }
+
+    @GetMapping("/movie/trending")
+    public Mono<ResponseEntity<MoviesTrendingDTO>> getMovieTrending() {
+        return movieService.getTrending();
+    }
+
+    @GetMapping("/movie/nowplaying")
+    public Mono<ResponseEntity<MoviesNowPlayingDTO>> getMovieNowPlaying() {
+        return movieService.getNowPlaying();
+    }
+
+    
+
     @GetMapping("/test")
     public ResponseEntity<String> testmethod() {
-        throw new ApiException(200, "help me this isn't working", null);
-        // ResponseEntity<String> response = new ResponseEntity<String>("working", HttpStatusCode.valueOf(200));
-        // return response;
+        ResponseEntity<String> response = new ResponseEntity<String>("gateway is working", HttpStatusCode.valueOf(200));
+        return response;
     }
 }
