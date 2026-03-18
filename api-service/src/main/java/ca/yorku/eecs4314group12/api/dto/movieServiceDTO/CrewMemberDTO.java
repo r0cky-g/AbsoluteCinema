@@ -1,8 +1,9 @@
 package ca.yorku.eecs4314group12.api.dto.movieServiceDTO;
 
-public class TmdbCreditsCrewDTO {
+public class CrewMemberDTO {
 	
 	private String original_name;
+	private String name;
 	private String department;
 	private String job;
 	private String profile_path;
@@ -15,6 +16,14 @@ public class TmdbCreditsCrewDTO {
 		this.original_name = original_name;
 	}
 	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public String getDepartment() {
 		return department;
 	}

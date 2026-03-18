@@ -5,21 +5,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import ca.yorku.eecs4314group12.api.dto.ApiResponse;
-
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ApiResponse> handleApiException(ApiException ex) {
-        ApiResponse error = new ApiResponse(
-                ex.getMessage(),
-                ex.getTimestamp()
-        );
+    public ResponseEntity<String> handleApiException(ApiException ex) {
+        String body = ex.getMessage() != null ? ex.getMessage() : "HTTP " + ex.getStatus();
+
         HttpStatus status = HttpStatus.resolve(ex.getStatus());
-        if (status == null || ex.getStatus() < 100 || ex.getStatus() >= 600) {
+        if (status == null) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return new ResponseEntity<>(error, status);
+
+        return new ResponseEntity<>(body, ex.getHeaders(), status);
     }
 }
