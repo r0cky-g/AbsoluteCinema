@@ -11,8 +11,8 @@ public class TmdbClient {
 	private final WebClient webClient;
 	private final String token;
 	
-	public TmdbClient(WebClient tdmbWebClient, @Value("${tmdb.token}") String tmdbToken) {
-		webClient = tdmbWebClient;
+	public TmdbClient(WebClient tmdbWebClient, @Value("${tmdb.token}") String tmdbToken) {
+		webClient = tmdbWebClient;
 		token = tmdbToken;
 	}
 	
