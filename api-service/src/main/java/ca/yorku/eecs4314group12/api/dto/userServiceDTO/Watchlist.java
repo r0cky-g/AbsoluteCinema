@@ -2,23 +2,11 @@ package ca.yorku.eecs4314group12.api.dto.userServiceDTO;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "user_watchlist")
 public class Watchlist {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "user_id", nullable = false)
     private Long userId;
-
-    @Column(name = "movie_id", nullable = false)
     private Integer movieId;
-
-    @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 
     public Watchlist() {

@@ -1,13 +1,9 @@
 package ca.yorku.eecs4314group12.api.dto.forumServiceDTO;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
 public class Comment {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long postId;
     private Long userId;

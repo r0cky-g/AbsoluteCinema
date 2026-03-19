@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.Comment;
@@ -12,11 +13,12 @@ import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.CreateCommentRequest;
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.ForumPost;
 import reactor.core.publisher.Mono;
 
+@Component
 public class ForumClient {
 
     private final BaseWebClient baseWebClient;
 
-    public ForumClient(@Qualifier("ForumMovieClient") WebClient webClient) {
+    public ForumClient(@Qualifier("APIForumClient") WebClient webClient) {
         this.baseWebClient = new BaseWebClient(webClient);
     }
 

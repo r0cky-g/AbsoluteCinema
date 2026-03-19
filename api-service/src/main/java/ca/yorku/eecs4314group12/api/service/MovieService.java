@@ -1,6 +1,5 @@
 package ca.yorku.eecs4314group12.api.service;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 

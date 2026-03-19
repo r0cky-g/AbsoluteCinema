@@ -41,7 +41,7 @@ public class APIClientConfig {
                 .build();
     }
 
-    @Bean("ForumReviewClient")
+    @Bean("APIForumClient")
     public WebClient forumClient() {
         return WebClient.builder()
                 .baseUrl(forumIp)

@@ -1,25 +1,11 @@
 package ca.yorku.eecs4314group12.api.dto.forumServiceDTO;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-@Entity
-@Table(name = "forum_posts")
 public class ForumPost {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String title;
-
     private String content;
-    
-    @Column(name = "user_id")
     private Long userId;
 
     public ForumPost() {
