@@ -34,7 +34,7 @@ class TmdbClientTests {
 	}
 
 	@Test
-	void test_1_getMovieDetails() throws InterruptedException {
+	void test_1_getMovieDetails_US() throws InterruptedException {
 		String fakeJson = """
 			{
 				"id": 550,
@@ -74,7 +74,7 @@ class TmdbClientTests {
 	}
 	
 	@Test
-	void test_2_getMovieDetails() throws InterruptedException {
+	void test_2_getMovieDetails_Foreign() throws InterruptedException {
 		String fakeJson = """
 			{
 				"id": 496243,
