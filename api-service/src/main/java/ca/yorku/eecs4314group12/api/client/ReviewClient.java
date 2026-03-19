@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -20,39 +21,38 @@ public class ReviewClient {
         this.baseWebClient = new BaseWebClient(webClient);
     }
 
-    public Mono<ReviewDTO> createReview(ReviewDTO reviewDTO) {
-        return baseWebClient.post("/review/", reviewDTO, new ParameterizedTypeReference<ReviewDTO>() {});
+    public Mono<ResponseEntity<ReviewDTO>> createReview(ReviewDTO reviewDTO) {
+        return baseWebClient.post("/api/reviews", reviewDTO, new ParameterizedTypeReference<ReviewDTO>() {});
     }
 
-    public Mono<List<ReviewDTO>> getReviewsByMovie(Long movieId) {
-        return baseWebClient.get("/review/movie/{movieId}", new ParameterizedTypeReference<List<ReviewDTO>>() {}, movieId);
+    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByMovie(Long movieId) {
+        return baseWebClient.get("/api/reviews/movie/{movieId}", new ParameterizedTypeReference<List<ReviewDTO>>() {}, movieId);
     }
 
-    public Mono<List<ReviewDTO>> getReviewsByUser(long userId) {
-        return baseWebClient.get("/review/user/{userId}", new ParameterizedTypeReference<List<ReviewDTO>>() {}, userId);
+    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByUser(long userId) {
+        return baseWebClient.get("/api/reviews/user/{userId}", new ParameterizedTypeReference<List<ReviewDTO>>() {}, userId);
     }
 
-    public Mono<ReviewDTO> getReviewByID(long id) {
-        return baseWebClient.get("/review/{id}", new ParameterizedTypeReference<ReviewDTO>() {}, id);
+    public Mono<ResponseEntity<ReviewDTO>> getReviewByID(long id) {
+        return baseWebClient.get("/api/reviews/{id}", new ParameterizedTypeReference<ReviewDTO>() {}, id);
     }
 
-    public Mono<ReviewDTO> updateReview(Long id, ReviewDTO reviewDTO) {
-        return baseWebClient.put("/review/{id}", reviewDTO, new ParameterizedTypeReference<ReviewDTO>() {}, id);
+    public Mono<ResponseEntity<ReviewDTO>> updateReview(Long id, ReviewDTO reviewDTO) {
+        return baseWebClient.put("/api/reviews/{id}", reviewDTO, new ParameterizedTypeReference<ReviewDTO>() {}, id);
     }
 
-    // need a basic api response, 
-    // ApiErrorResponse perchance?
-    // public void deleteReview(Long id, Long userId) {
-    //     baseWebClient.delete("/review/{id}", null, id, userId);
-    // }
+    // should include role
+    public Mono<ResponseEntity<Void>> deleteReview(Long id, Long userId) {
+        return baseWebClient.delete("/api/reviews/{id}", null, id, userId);
+    }
 
     // would really like to get <String, DTO> not just generic
-    public Mono<Map<String, Object>> getMovieStats(Long movieId) {
-        return baseWebClient.get("/review/movie/{movieId}/stats", new ParameterizedTypeReference<Map<String, Object>>() {}, movieId);
+    public Mono<ResponseEntity<Map<String, Object>>> getMovieStats(Long movieId) {
+        return baseWebClient.get("/api/reviews/movie/{movieId}/stats", new ParameterizedTypeReference<Map<String, Object>>() {}, movieId);
     }
 
-    public Mono<ReviewDTO> markAsHelpful(Long id) {
-        return baseWebClient.post("/review/{id}/helpful", null, new ParameterizedTypeReference<ReviewDTO>() {}, id);
+    public Mono<ResponseEntity<ReviewDTO>> markAsHelpful(Long id) {
+        return baseWebClient.post("/api/reviews/{id}/helpful", null, new ParameterizedTypeReference<ReviewDTO>() {}, id);
     }
 
 }

@@ -8,24 +8,22 @@ public class ApiResponse {
 
     private String message;
    
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
-    private Instant timestamp;
+    // @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    // private Instant timestamp;
 
-    public ApiResponse() {
-        this.timestamp = Instant.now();
-    }
+    // public ApiResponse() {
+    //     this.timestamp = Instant.now();
+    // }
 
     public ApiResponse(String message) {
         this.message = message;
-        this.timestamp = Instant.now();
+        // this.timestamp = Instant.now();
     }
 
-    public ApiResponse(String message, Instant timestamp) {
-        this.message = message;
-        this.timestamp = timestamp;
-    }
-
-    // Getters and setters
+    // public ApiResponse(String message, Instant timestamp) {
+    //     this.message = message;
+    //     this.timestamp = timestamp;
+    // }
 
     public String getMessage() {
         return message;
@@ -35,11 +33,11 @@ public class ApiResponse {
         this.message = message;
     }
 
-    public Instant getTimestamp() {
-        return timestamp;
-    }
+    // public Instant getTimestamp() {
+    //     return timestamp;
+    // }
 
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
-    }
+    // public void setTimestamp(Instant timestamp) {
+    //     this.timestamp = timestamp;
+    // }
 }

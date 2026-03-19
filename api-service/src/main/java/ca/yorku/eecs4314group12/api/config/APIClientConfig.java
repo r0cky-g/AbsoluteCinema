@@ -17,6 +17,9 @@ public class APIClientConfig {
     @Value("${app.review-service.url:http://localhost:8084}")
     private String reviewIp;
 
+    @Value("${app.forum-service.url:http://localhost:8085}")
+    private String forumIp;
+
     @Bean("APIUserClient")
     public WebClient userClient() {
         return WebClient.builder()
@@ -35,6 +38,13 @@ public class APIClientConfig {
     public WebClient reviewClient() {
         return WebClient.builder()
                 .baseUrl(reviewIp)
+                .build();
+    }
+
+    @Bean("APIForumClient")
+    public WebClient forumClient() {
+        return WebClient.builder()
+                .baseUrl(forumIp)
                 .build();
     }
 }
