@@ -46,7 +46,7 @@ public class TmdbClient {
 				.block();
 	}
 	
-	public TmdbMovieSearchDTO getSearch(String movieName) {
+	public TmdbMovieSearchDTO getMovieSearch(String movieName) {
 		return webClient.get()
 				.uri("/search/movie?query="+movieName+"&include_adult=false&language=en-US&page=1")
 				.header("accept", "application/json")
