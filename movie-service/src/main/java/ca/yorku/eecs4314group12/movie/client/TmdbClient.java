@@ -11,8 +11,8 @@ public class TmdbClient {
 	private final WebClient webClient;
 	private final String token;
 	
-	public TmdbClient(WebClient tdmbWebClient, @Value("${tmdb.token}") String tmdbToken) {
-		webClient = tdmbWebClient;
+	public TmdbClient(WebClient tmdbWebClient, @Value("${tmdb.token}") String tmdbToken) {
+		webClient = tmdbWebClient;
 		token = tmdbToken;
 	}
 	
@@ -46,7 +46,7 @@ public class TmdbClient {
 				.block();
 	}
 	
-	public TmdbMovieSearchDTO getSearch(String movieName) {
+	public TmdbMovieSearchDTO getMovieSearch(String movieName) {
 		return webClient.get()
 				.uri("/search/movie?query="+movieName+"&include_adult=false&language=en-US&page=1")
 				.header("accept", "application/json")

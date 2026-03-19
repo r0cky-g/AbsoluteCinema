@@ -56,7 +56,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 | Movie poster & cast images | **Live** — loaded directly from TMDB image CDN |
 | Reviews on movie pages | **Live** — review-service |
 | User score on movie pages | **Live** — calculated from review-service average |
-| Home page grid | **Dummy** — labelled `[DUMMY]` — pending a list/search endpoint on movie-service |
+| Home page grid | **Live** — uses now_playing, trending, and search endpoint |
 | Account page reviews | **Dummy** — labelled `[DUMMY]` — pending user-service integration |
 | User accounts | **In-memory** — pending user-service integration |
 
@@ -83,7 +83,7 @@ cp .env.example .env
 
 Edit `.env`:
 ```
-TDMB_TOKEN=your_tmdb_read_access_token_here
+TMDB_TOKEN=your_tmdb_read_access_token_here
 DB_PASSWORD=postgres
 MAIL_PASSWORD=
 ```
@@ -261,8 +261,6 @@ curl -X DELETE "http://localhost:8085/forum/posts/1?userId=2&userRole=ADMIN"
 ---
 
 ## What's Still Pending
-
-- **Home page grid** — movie-service needs a `GET /movie/popular` or `/movie/search` endpoint; home page currently shows `[DUMMY]` placeholder cards
 - **Persistent user accounts** — replace in-memory auth with real user-service calls; also enables correct user ID on submitted reviews
 - **Username on reviews** — review-service needs to enrich `ReviewDTO` with usernames fetched from user-service
 - **Account page reviews** — requires real auth (above) to look up the current user's review history

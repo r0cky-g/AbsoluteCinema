@@ -61,7 +61,7 @@ public class MovieService {
 	}
 	
 	private MovieSearchDTO callTmdbForSearchAndSaveResults(String name) {
-		TmdbMovieSearchDTO tmdbSearchDTO = tmdbClient.getSearch(name);
+		TmdbMovieSearchDTO tmdbSearchDTO = tmdbClient.getMovieSearch(name);
 		MovieSearchDTO searchDTO = movMap.toMovieSearchDTO(tmdbSearchDTO);
 		saveMovieFromSearchResults(searchDTO);
 		return searchDTO;

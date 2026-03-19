@@ -30,7 +30,7 @@ services:
     container_name: movie-service
     environment:
       SERVER_PORT: 8083
-      TDMB_TOKEN: ${TDMB_TOKEN}
+      TMDB_TOKEN: ${TMDB_TOKEN}
       MONGODB_URI: ${MONGODB_URI}
     ports:
       - "8083:8083"
