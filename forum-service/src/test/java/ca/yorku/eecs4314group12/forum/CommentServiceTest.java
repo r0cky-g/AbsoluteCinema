@@ -164,4 +164,61 @@ class CommentServiceTest {
 
         assertNull(found);
     }
+
+    @Test
+    void testGetCommentsByPost_EmptyList() {
+        Long postId = 1L;
+        when(repository.findByPostId(postId)).thenReturn(Arrays.asList());
+
+        List<Comment> comments = commentService.getCommentsByPost(postId);
+
+        assertNotNull(comments);
+        assertEquals(0, comments.size());
+        verify(repository, times(1)).findByPostId(postId);
+    }
+
+    @Test
+    void testCreateComment_SetsTimestamp() {
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setPostId(1L);
+        request.setUserId(1L);
+        request.setContent("Test comment");
+
+        when(repository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Comment created = commentService.createComment(request);
+
+        assertNotNull(created.getCreatedAt());
+    }
+
+    @Test
+    void testDeleteComment_ModeratorCanDeleteAnyComment() {
+        Long id8 = 1L;
+        Long user1 = 1L;
+        Long user2 = 2L;
+        Comment comment = new Comment();
+        comment.setUserId(user1);
+
+        when(repository.findById(id8)).thenReturn(Optional.of(comment));
+
+        boolean result = commentService.deleteComment(id8, user2, "MODERATOR");
+
+        assertTrue(result);
+        verify(repository, times(1)).deleteById(id8);
+    }
+
+    @Test
+    void testDeleteComment_UnknownRoleCannotDelete() {
+        Long id9 = 1L;
+        Long user1 = 1L;
+        Comment comment = new Comment();
+        comment.setUserId(user1);
+
+        when(repository.findById(id9)).thenReturn(Optional.of(comment));
+
+        boolean result = commentService.deleteComment(id9, user1, "GUEST");
+
+        assertFalse(result);
+        verify(repository, never()).deleteById(id9);
+    }
 }
