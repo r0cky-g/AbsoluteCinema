@@ -169,4 +169,64 @@ class ForumServiceTest {
 
         assertNull(found);
     }
+
+    @Test
+    void testGetAllPosts_EmptyList() {
+        when(repository.findAll()).thenReturn(Arrays.asList());
+
+        List<ForumPost> posts = forumService.getAllPosts();
+
+        assertNotNull(posts);
+        assertEquals(0, posts.size());
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testCreatePost_WithNullUserId() {
+        ForumPost post = new ForumPost();
+        post.setTitle("Anonymous Post");
+        post.setContent("Content");
+        post.setUserId(null);
+
+        when(repository.save(post)).thenReturn(post);
+
+        ForumPost created = forumService.createPost(post);
+
+        assertNotNull(created);
+        assertNull(created.getUserId());
+        verify(repository, times(1)).save(post);
+    }
+
+    @Test
+    void testDeletePost_ModeratorCanDeleteAnyPost() {
+        Long id8 = 1L;
+        Long user1 = 1L;
+        Long user2 = 2L;
+        ForumPost post = new ForumPost();
+        post.setId(id8);
+        post.setUserId(user1);
+
+        when(repository.findById(id8)).thenReturn(Optional.of(post));
+
+        boolean result = forumService.deletePost(id8, user2, "MODERATOR");
+
+        assertTrue(result);
+        verify(repository, times(1)).deleteById(id8);
+    }
+
+    @Test
+    void testDeletePost_UnknownRoleCannotDelete() {
+        Long id9 = 1L;
+        Long user1 = 1L;
+        ForumPost post = new ForumPost();
+        post.setId(id9);
+        post.setUserId(user1);
+
+        when(repository.findById(id9)).thenReturn(Optional.of(post));
+
+        boolean result = forumService.deletePost(id9, user1, "GUEST");
+
+        assertFalse(result);
+        verify(repository, never()).deleteById(id9);
+    }
 }
