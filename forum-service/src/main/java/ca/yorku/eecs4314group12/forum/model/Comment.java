@@ -1,17 +1,28 @@
 package ca.yorku.eecs4314group12.forum.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "comments")
 public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private Long postId;
+
     private Long userId;
+
+    @NotBlank(message = "Content cannot be blank")
+    @Size(min = 1, max = 1000, message = "Content must be between 1 and 1000 characters")
+    @Column(nullable = false)
     private String content;
+
     private LocalDateTime createdAt;
 
     public Comment() {

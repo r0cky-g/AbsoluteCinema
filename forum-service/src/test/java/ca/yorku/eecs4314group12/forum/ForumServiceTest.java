@@ -1,6 +1,7 @@
 package ca.yorku.eecs4314group12.forum;
 
 import ca.yorku.eecs4314group12.forum.model.ForumPost;
+import ca.yorku.eecs4314group12.forum.repository.CommentRepository;
 import ca.yorku.eecs4314group12.forum.repository.ForumPostRepository;
 import ca.yorku.eecs4314group12.forum.service.ForumService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,11 +16,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 class ForumServiceTest {
 
     @Mock
     private ForumPostRepository repository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private ForumService forumService;
@@ -195,6 +198,19 @@ class ForumServiceTest {
         assertNotNull(created);
         assertNull(created.getUserId());
         verify(repository, times(1)).save(post);
+    }
+
+    @Test
+    void testCreatePost_SetsTimestamp() {
+        ForumPost post = new ForumPost();
+        post.setTitle("Test");
+        post.setContent("Content");
+
+        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ForumPost created = forumService.createPost(post);
+
+        assertNotNull(created.getCreatedAt());
     }
 
     @Test
