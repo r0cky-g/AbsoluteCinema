@@ -1,0 +1,9 @@
+{
+  "lumoImports": {
+    "sizing": true,
+    "spacing": true,
+    "typography": true,
+    "color": true,
+    "utility": true
+  }
+}

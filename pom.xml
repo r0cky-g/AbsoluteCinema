@@ -15,10 +15,12 @@
 	</parent>
 	
 	<modules>
+		<module>api-service</module>
 		<module>movie-service</module>
 		<module>user-service</module>
 		<module>review-service</module>
 		<module>forum-service</module>
+		<module>ui-service</module>  <!-- Added -->
 	</modules>
 	
 	<properties>
