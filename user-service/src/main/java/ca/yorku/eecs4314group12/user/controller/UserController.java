@@ -13,6 +13,8 @@ import ca.yorku.eecs4314group12.user.service.WatchlistService;
 import ca.yorku.eecs4314group12.user.service.RecommendationService;
 import ca.yorku.eecs4314group12.user.service.WatchHistoryService;
 import ca.yorku.eecs4314group12.user.model.WatchHistory;
+import ca.yorku.eecs4314group12.user.service.FavouriteMovieService;
+import ca.yorku.eecs4314group12.user.model.FavouriteMovie;
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
 import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
 import ca.yorku.eecs4314group12.user.dto.UserUpdateRequest;
@@ -29,14 +31,17 @@ public class UserController {
     private final WatchlistService watchlistService;
     private final RecommendationService recommendationService;
     private final WatchHistoryService watchHistoryService;
+    private final FavouriteMovieService favouriteMovieService;
 
     public UserController(UserService service, WatchlistService watchlistService,
                          RecommendationService recommendationService,
-                         WatchHistoryService watchHistoryService) {
+                         WatchHistoryService watchHistoryService,
+                         FavouriteMovieService favouriteMovieService) {
         this.service = service;
         this.watchlistService = watchlistService;
         this.recommendationService = recommendationService;
         this.watchHistoryService = watchHistoryService;
+        this.favouriteMovieService = favouriteMovieService;
     }
 
     // register
@@ -185,6 +190,30 @@ public class UserController {
             @PathVariable Long userId,
             @PathVariable Integer movieId) {
         watchHistoryService.removeFromHistory(userId, movieId);
+    }
+
+    // Favourite movies endpoints
+    @PostMapping("/{userId}/favourites/{movieId}")
+    public ResponseEntity<FavouriteMovie> addFavourite(
+            @PathVariable Long userId,
+            @PathVariable Integer movieId) {
+        FavouriteMovie entry = favouriteMovieService.addFavourite(userId, movieId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(entry);
+    }
+
+    // Get all favourite movies for a user
+    @GetMapping("/{userId}/favourites")
+    public List<FavouriteMovie> getUserFavourites(@PathVariable Long userId) {
+        return favouriteMovieService.getUserFavourites(userId);
+    }
+
+    // Remove a movie from favourites
+    @DeleteMapping("/{userId}/favourites/{movieId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeFavourite(
+            @PathVariable Long userId,
+            @PathVariable Integer movieId) {
+        favouriteMovieService.removeFavourite(userId, movieId);
     }
 
     // private mapper
