@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doThrow;
 
 // Not tested yet, just adding some cases for now
 
@@ -194,6 +195,10 @@ class ReviewControllerTests {
 //        when(reviewService.deleteReview(1L, 999L, "USER"))
 //                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
 
+        // Can do this instead: (Commented so it doesn't break anything)
+        // doThrow(new IllegalStateException("..."))
+        //.when(reviewService).deleteReview(1L, 999L, "USER");
+        
         // When & Then
         mockMvc.perform(delete("/api/reviews/1")
                 .param("userId", "999")
