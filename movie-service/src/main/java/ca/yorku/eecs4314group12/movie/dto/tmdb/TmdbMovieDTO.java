@@ -160,6 +160,22 @@ public class TmdbMovieDTO {
 	public void setCredits(TmdbCreditsDTO credits) {
 		this.credits = credits;
 	}
+	
+	public TmdbImagesDTO getImages() {
+		return images;
+	}
+
+	public void setImages(TmdbImagesDTO images) {
+		this.images = images;
+	}
+
+	public TmdbVideosDTO getVideos() {
+		return videos;
+	}
+
+	public void setVideos(TmdbVideosDTO videos) {
+		this.videos = videos;
+	}
 
 	public List<TmdbCompanyDTO> getProduction_companies() {
 		return production_companies;
