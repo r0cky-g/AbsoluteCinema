@@ -1,36 +1,47 @@
 package ca.yorku.eecs4314group12.ui.views;
 
-import ca.yorku.eecs4314group12.ui.data.BackendClientService;
-import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
-import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
-import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
-import ca.yorku.eecs4314group12.ui.security.UserSessionService;
+import java.util.List;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.PermitAll;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
+import ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.WatchHistoryDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
+import ca.yorku.eecs4314group12.ui.security.UserSessionService;
+import jakarta.annotation.security.PermitAll;
 
 /**
  * Account / profile page.
  *
- * Shows:
- *   - Profile info (username, email from UserSessionService)
- *   - Watchlist (from user-service GET /user/{id}/watchlist)
- *   - Recommendations (from user-service GET /user/{id}/recommendations)
- *   - Recent reviews (from review-service GET /api/reviews/user/{id})
+ * Sections:
+ *   - Profile card
+ *   - Watchlist (user-service GET /user/{id}/watchlist)
+ *   - Favourites (user-service GET /user/{id}/favourites)
+ *   - Watch History (user-service GET /user/{id}/history)
+ *   - Recommendations (user-service GET /user/{id}/recommendations)
+ *   - My Reviews (review-service GET /api/reviews/user/{id})
  */
 @Route(value = "account", layout = MainLayout.class)
 @PageTitle("My Account | Absolute Cinema")
@@ -58,11 +69,13 @@ public class AccountView extends VerticalLayout {
 
         if (userId != null) {
             add(buildWatchlistSection(userId));
+            add(buildFavouritesSection(userId));
+            add(buildWatchHistorySection(userId));
             add(buildRecommendationsSection(userId));
             add(buildReviewsSection(userId));
         } else {
             Paragraph note = new Paragraph(
-                    "Log out and log back in to see your watchlist and recommendations.");
+                    "Log out and log back in to see your watchlist, favourites, and history.");
             note.getStyle().set("color", "var(--lumo-secondary-text-color)");
             add(note);
         }
@@ -86,8 +99,7 @@ public class AccountView extends VerticalLayout {
         emailSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
-        String role = userSessionService.getRole();
-        Span roleSpan = new Span("Role: " + role);
+        Span roleSpan = new Span("Role: " + userSessionService.getRole());
         roleSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
@@ -102,94 +114,200 @@ public class AccountView extends VerticalLayout {
 
         VerticalLayout card = new VerticalLayout(avatarRow, editBtn);
         card.setPadding(true); card.setSpacing(true);
-        card.getStyle()
-                .set("background", "var(--lumo-base-color)")
-                .set("border", "1px solid var(--lumo-contrast-10pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("box-shadow", "var(--lumo-box-shadow-xs)")
-                .set("margin-bottom", "var(--lumo-space-l)");
+        styleCard(card);
         return card;
     }
 
     // -------------------------------------------------------------------------
-    // Watchlist section
+    // Watchlist
     // -------------------------------------------------------------------------
 
     private VerticalLayout buildWatchlistSection(long userId) {
-        H3 heading = new H3("My Watchlist");
-        heading.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
-
+        H3 heading = sectionHeading("My Watchlist");
         List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);
 
         VerticalLayout section = new VerticalLayout(heading);
         section.setPadding(true); section.setSpacing(true);
-        section.getStyle()
-                .set("background", "var(--lumo-base-color)")
-                .set("border", "1px solid var(--lumo-contrast-10pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("box-shadow", "var(--lumo-box-shadow-xs)")
-                .set("margin-bottom", "var(--lumo-space-l)");
+        styleCard(section);
 
         if (watchlist.isEmpty()) {
-            Paragraph empty = new Paragraph(
-                    "Your watchlist is empty. Add movies from any movie page!");
-            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
-            section.add(empty);
+            section.add(emptyMessage("Your watchlist is empty. Add movies from any movie page!"));
             return section;
         }
 
-        FlexLayout grid = new FlexLayout();
-        grid.getStyle()
-                .set("display", "grid")
-                .set("grid-template-columns", "repeat(auto-fill, minmax(120px, 1fr))")
-                .set("gap", "var(--lumo-space-m)").set("width", "100%");
-
+        FlexLayout grid = movieGrid();
         for (WatchlistDTO item : watchlist) {
-            grid.add(buildWatchlistCard(userId, item));
+            grid.add(buildRemovableMovieCard(
+                    item.getMovieId(),
+                    () -> {
+                        backendClient.removeFromWatchlist(userId, item.getMovieId());
+                        getUI().ifPresent(ui -> ui.navigate(AccountView.class));
+                    }
+            ));
         }
-
         section.add(grid);
         return section;
     }
 
-    private Div buildWatchlistCard(long userId, WatchlistDTO item) {
-        Div card = new Div();
-        card.getStyle().set("cursor", "pointer").set("position", "relative");
+    // -------------------------------------------------------------------------
+    // Favourites
+    // -------------------------------------------------------------------------
 
-        // Try to get poster from movie-service
-        backendClient.getMovieById(item.getMovieId()).ifPresentOrElse(movie -> {
+    private VerticalLayout buildFavouritesSection(long userId) {
+        H3 heading = sectionHeading("My Favourites");
+        List<FavouriteMovieDTO> favourites = backendClient.getFavourites(userId);
+
+        VerticalLayout section = new VerticalLayout(heading);
+        section.setPadding(true); section.setSpacing(true);
+        styleCard(section);
+
+        if (favourites.isEmpty()) {
+            section.add(emptyMessage("No favourites yet. Heart a movie from its detail page!"));
+            return section;
+        }
+
+        FlexLayout grid = movieGrid();
+        for (FavouriteMovieDTO item : favourites) {
+            grid.add(buildRemovableMovieCard(
+                    item.getMovieId(),
+                    () -> {
+                        backendClient.removeFromFavourites(userId, item.getMovieId());
+                        getUI().ifPresent(ui -> ui.navigate(AccountView.class));
+                    }
+            ));
+        }
+        section.add(grid);
+        return section;
+    }
+
+    // -------------------------------------------------------------------------
+    // Watch History
+    // -------------------------------------------------------------------------
+
+    private VerticalLayout buildWatchHistorySection(long userId) {
+        H3 heading = sectionHeading("Watch History");
+        List<WatchHistoryDTO> history = backendClient.getWatchHistory(userId);
+
+        VerticalLayout section = new VerticalLayout(heading);
+        section.setPadding(true); section.setSpacing(true);
+        styleCard(section);
+
+        if (history.isEmpty()) {
+            section.add(emptyMessage("No watch history yet. Mark movies as watched from their detail page!"));
+            return section;
+        }
+
+        FlexLayout grid = movieGrid();
+        for (WatchHistoryDTO item : history) {
+            grid.add(buildRemovableMovieCard(
+                    item.getMovieId(),
+                    () -> {
+                        backendClient.removeFromWatchHistory(userId, item.getMovieId());
+                        getUI().ifPresent(ui -> ui.navigate(AccountView.class));
+                    }
+            ));
+        }
+        section.add(grid);
+        return section;
+    }
+
+    // -------------------------------------------------------------------------
+    // Recommendations
+    // -------------------------------------------------------------------------
+
+    private VerticalLayout buildRecommendationsSection(long userId) {
+        H3 heading = sectionHeading("Recommended for You ✨");
+        List<MovieListItemDTO> recommendations = backendClient.getRecommendations(userId);
+
+        VerticalLayout section = new VerticalLayout(heading);
+        section.setPadding(true); section.setSpacing(true);
+        styleCard(section);
+
+        if (recommendations.isEmpty()) {
+            section.add(emptyMessage(
+                    "Add movies to your watchlist to get personalised recommendations!"));
+            return section;
+        }
+
+        section.add(buildMovieListGrid(recommendations));
+        return section;
+    }
+
+    // -------------------------------------------------------------------------
+    // Reviews
+    // -------------------------------------------------------------------------
+
+    private VerticalLayout buildReviewsSection(long userId) {
+        H3 heading = sectionHeading("My Reviews");
+        List<ReviewDTO> reviews = backendClient.getReviewsForUser(userId);
+
+        VerticalLayout section = new VerticalLayout(heading);
+        section.setPadding(true); section.setSpacing(true);
+        styleCard(section);
+
+        if (reviews.isEmpty()) {
+            section.add(emptyMessage("You haven't written any reviews yet."));
+            return section;
+        }
+
+        for (ReviewDTO review : reviews) {
+            Div card = new Div();
+            card.getStyle()
+                    .set("background", "var(--lumo-contrast-5pct)")
+                    .set("border-radius", "var(--lumo-border-radius-m)")
+                    .set("padding", "var(--lumo-space-m)")
+                    .set("margin-bottom", "var(--lumo-space-s)");
+            H4 title = new H4("★ " + review.getRating() + "/10 — " + review.getTitle());
+            title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
+            Paragraph content = new Paragraph(review.getContent());
+            content.getStyle().set("margin", "0").set("color", "var(--lumo-secondary-text-color)");
+            card.add(title, content);
+            section.add(card);
+        }
+
+        return section;
+    }
+
+    // -------------------------------------------------------------------------
+    // Shared card builder for watchlist/favourites/history
+    // -------------------------------------------------------------------------
+
+    private Div buildRemovableMovieCard(int movieId, Runnable onRemove) {
+        Div wrapper = new Div();
+        wrapper.getStyle().set("position", "relative");
+
+        Div card = new Div();
+        card.getStyle().set("cursor", "pointer");
+        card.addClickListener(e ->
+                getUI().ifPresent(ui -> ui.navigate("movie/" + movieId)));
+
+        backendClient.getMovieById(movieId).ifPresentOrElse(movie -> {
             String posterPath = movie.getPoster_path();
             if (posterPath != null && !posterPath.isBlank()) {
                 String url = posterPath.startsWith("http") ? posterPath : TMDB_IMAGE_BASE + posterPath;
                 Image img = new Image(url, movie.getTitle());
-                img.getStyle().set("width", "100%").set("border-radius", "var(--lumo-border-radius-m)")
+                img.getStyle().set("width", "100%")
+                        .set("border-radius", "var(--lumo-border-radius-m)")
                         .set("display", "block");
                 Span title = new Span(movie.getTitle());
                 title.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                         .set("display", "block").set("margin-top", "4px");
                 card.add(img, title);
             } else {
-                addFallbackCard(card, "Movie #" + item.getMovieId());
+                addFallbackCard(card, "Movie #" + movieId);
             }
-            card.addClickListener(e ->
-                    getUI().ifPresent(ui -> ui.navigate("movie/" + item.getMovieId())));
-        }, () -> addFallbackCard(card, "Movie #" + item.getMovieId()));
+        }, () -> addFallbackCard(card, "Movie #" + movieId));
 
-        // Remove button
         Button removeBtn = new Button(VaadinIcon.CLOSE_SMALL.create());
         removeBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR,
                 ButtonVariant.LUMO_TERTIARY);
         removeBtn.getStyle().set("position", "absolute").set("top", "0").set("right", "0");
         removeBtn.addClickListener(e -> {
-            backendClient.removeFromWatchlist(userId, item.getMovieId());
-            Notification n = Notification.show("Removed from watchlist.", 2000,
-                    Notification.Position.BOTTOM_START);
-            // Refresh page
-            getUI().ifPresent(ui -> ui.navigate(AccountView.class));
+            onRemove.run();
+            Notification.show("Removed.", 2000, Notification.Position.BOTTOM_START);
         });
 
-        Div wrapper = new Div(card, removeBtn);
-        wrapper.getStyle().set("position", "relative");
+        wrapper.add(card, removeBtn);
         return wrapper;
     }
 
@@ -207,107 +325,19 @@ public class AccountView extends VerticalLayout {
         card.add(fallback, title);
     }
 
-    // -------------------------------------------------------------------------
-    // Recommendations section
-    // -------------------------------------------------------------------------
-
-    private VerticalLayout buildRecommendationsSection(long userId) {
-        H3 heading = new H3("Recommended for You");
-        heading.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
-
-        List<MovieListItemDTO> recommendations = backendClient.getRecommendations(userId);
-
-        VerticalLayout section = new VerticalLayout(heading);
-        section.setPadding(true); section.setSpacing(true);
-        section.getStyle()
-                .set("background", "var(--lumo-base-color)")
-                .set("border", "1px solid var(--lumo-contrast-10pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("box-shadow", "var(--lumo-box-shadow-xs)")
-                .set("margin-bottom", "var(--lumo-space-l)");
-
-        if (recommendations.isEmpty()) {
-            Paragraph empty = new Paragraph(
-                    "Add movies to your watchlist to get personalised recommendations!");
-            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
-            section.add(empty);
-            return section;
-        }
-
-        section.add(buildMovieGrid(recommendations));
-        return section;
-    }
-
-    // -------------------------------------------------------------------------
-    // Reviews section
-    // -------------------------------------------------------------------------
-
-    private VerticalLayout buildReviewsSection(long userId) {
-        H3 heading = new H3("My Reviews");
-        heading.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
-
-        List<ReviewDTO> reviews = backendClient.getReviewsForUser(userId);
-
-        VerticalLayout section = new VerticalLayout(heading);
-        section.setPadding(true); section.setSpacing(true);
-        section.getStyle()
-                .set("background", "var(--lumo-base-color)")
-                .set("border", "1px solid var(--lumo-contrast-10pct)")
-                .set("border-radius", "var(--lumo-border-radius-l)")
-                .set("box-shadow", "var(--lumo-box-shadow-xs)")
-                .set("margin-bottom", "var(--lumo-space-l)");
-
-        if (reviews.isEmpty()) {
-            Paragraph empty = new Paragraph("You haven't written any reviews yet.");
-            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
-            section.add(empty);
-            return section;
-        }
-
-        for (ReviewDTO review : reviews) {
-            Div card = new Div();
-            card.getStyle()
-                    .set("background", "var(--lumo-contrast-5pct)")
-                    .set("border-radius", "var(--lumo-border-radius-m)")
-                    .set("padding", "var(--lumo-space-m)")
-                    .set("margin-bottom", "var(--lumo-space-s)");
-
-            H4 title = new H4("★ " + review.getRating() + "/10 — " + review.getTitle());
-            title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
-
-            Paragraph content = new Paragraph(review.getContent());
-            content.getStyle().set("margin", "0").set("color", "var(--lumo-secondary-text-color)");
-
-            card.add(title, content);
-            section.add(card);
-        }
-
-        return section;
-    }
-
-    // -------------------------------------------------------------------------
-    // Shared movie grid (same style as HomeView)
-    // -------------------------------------------------------------------------
-
-    private FlexLayout buildMovieGrid(List<MovieListItemDTO> movies) {
-        FlexLayout grid = new FlexLayout();
-        grid.getStyle()
-                .set("display", "grid")
-                .set("grid-template-columns", "repeat(auto-fill, minmax(140px, 1fr))")
-                .set("gap", "var(--lumo-space-m)").set("width", "100%");
-
+    private FlexLayout buildMovieListGrid(List<MovieListItemDTO> movies) {
+        FlexLayout grid = movieGrid();
         for (MovieListItemDTO movie : movies) {
             Div card = new Div();
             card.getStyle().set("cursor", "pointer");
             card.addClickListener(e ->
                     getUI().ifPresent(ui -> ui.navigate("movie/" + movie.getId())));
-
             String posterPath = movie.getPoster_path();
             if (posterPath != null && !posterPath.isBlank()) {
-                String url = posterPath.startsWith("http")
-                        ? posterPath : "https://image.tmdb.org/t/p/w185" + posterPath;
+                String url = posterPath.startsWith("http") ? posterPath : TMDB_IMAGE_BASE + posterPath;
                 Image img = new Image(url, movie.getTitle());
-                img.getStyle().set("width", "100%").set("border-radius", "var(--lumo-border-radius-m)")
+                img.getStyle().set("width", "100%")
+                        .set("border-radius", "var(--lumo-border-radius-m)")
                         .set("display", "block");
                 Span title = new Span(movie.getTitle());
                 title.getStyle().set("font-size", "var(--lumo-font-size-xs)")
@@ -321,13 +351,46 @@ public class AccountView extends VerticalLayout {
                         .set("border-radius", "var(--lumo-border-radius-m)")
                         .set("display", "flex").set("align-items", "center")
                         .set("justify-content", "center").set("font-size", "2rem");
-                fallback.add(new Span(movie.getTitle().substring(0, 1)));
+                fallback.add(new Span(movie.getTitle() != null && !movie.getTitle().isBlank()
+                        ? movie.getTitle().substring(0, 1) : "?"));
                 card.add(fallback);
             }
-
             grid.add(card);
         }
-
         return grid;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private FlexLayout movieGrid() {
+        FlexLayout grid = new FlexLayout();
+        grid.getStyle()
+                .set("display", "grid")
+                .set("grid-template-columns", "repeat(auto-fill, minmax(120px, 1fr))")
+                .set("gap", "var(--lumo-space-m)").set("width", "100%");
+        return grid;
+    }
+
+    private H3 sectionHeading(String text) {
+        H3 h = new H3(text);
+        h.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
+        return h;
+    }
+
+    private Paragraph emptyMessage(String text) {
+        Paragraph p = new Paragraph(text);
+        p.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        return p;
+    }
+
+    private void styleCard(VerticalLayout card) {
+        card.getStyle()
+                .set("background", "var(--lumo-base-color)")
+                .set("border", "1px solid var(--lumo-contrast-10pct)")
+                .set("border-radius", "var(--lumo-border-radius-l)")
+                .set("box-shadow", "var(--lumo-box-shadow-xs)")
+                .set("margin-bottom", "var(--lumo-space-l)");
     }
 }

@@ -36,15 +36,6 @@ import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 
-/**
- * Dynamic movie detail page — route /movie/{id}
- *
- * Features:
- *   - Movie info, cast, crew, details from movie-service via api-service
- *   - Reviews from review-service
- *   - Write a Review button (logged-in users only)
- *   - Add to Watchlist button (logged-in users only)
- */
 @Route(value = "movie/:movieId", layout = MainLayout.class)
 @PageTitle("Movie | Absolute Cinema")
 @AnonymousAllowed
@@ -70,27 +61,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         String param = event.getRouteParameters().get("movieId").orElse("0");
         int movieId;
-        try {
-            movieId = Integer.parseInt(param);
-        } catch (NumberFormatException e) {
-            showNotFound();
-            return;
-        }
+        try { movieId = Integer.parseInt(param); }
+        catch (NumberFormatException e) { showNotFound(); return; }
 
         Optional<MovieDTO> realMovie = backendClient.getMovieById(movieId);
         if (realMovie.isPresent()) {
             buildPageFromDTO(realMovie.get());
         } else {
             dummyDataService.getMovieById(movieId).ifPresentOrElse(
-                    this::buildPageFromDummy,
-                    this::showNotFound
-            );
+                    this::buildPageFromDummy, this::showNotFound);
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Build from real MovieDTO
-    // -------------------------------------------------------------------------
 
     private void buildPageFromDTO(MovieDTO movie) {
         getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
@@ -99,10 +80,6 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 .map(ReviewStatsDTO::getAverageRating).orElse(0.0);
         add(buildHeroBannerDTO(movie, userScore), buildContentAreaDTO(movie, reviews));
     }
-
-    // -------------------------------------------------------------------------
-    // Build from dummy Movie (fallback)
-    // -------------------------------------------------------------------------
 
     private void buildPageFromDummy(ca.yorku.eecs4314group12.ui.data.Movie movie) {
         getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
@@ -113,7 +90,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     // =========================================================================
-    // Hero banner — real DTO
+    // Hero banners
     // =========================================================================
 
     private Div buildHeroBannerDTO(MovieDTO movie, double userScore) {
@@ -160,14 +137,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         director.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
-        // Watchlist button — only for logged-in users
         HorizontalLayout actionRow = new HorizontalLayout();
         actionRow.setSpacing(true);
         if (isLoggedIn() && userSessionService.getUserId() != null) {
             long userId = userSessionService.getUserId();
             boolean inWatchlist = backendClient.isInWatchlist(userId, movie.getId());
-            Button watchlistBtn = buildWatchlistButton(userId, movie.getId(), inWatchlist);
-            actionRow.add(watchlistBtn);
+            boolean inFavourites = backendClient.isInFavourites(userId, movie.getId());
+            actionRow.add(
+                    buildWatchlistButton(userId, movie.getId(), inWatchlist),
+                    buildFavouriteButton(userId, movie.getId(), inFavourites),
+                    buildWatchedButton(userId, movie.getId())
+            );
         }
 
         List<String> genres = movie.getGenres() != null ? movie.getGenres() : List.of();
@@ -178,10 +158,6 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         return wrapHero(poster, info);
     }
-
-    // =========================================================================
-    // Hero banner — dummy
-    // =========================================================================
 
     private Div buildHeroBannerDummy(ca.yorku.eecs4314group12.ui.data.Movie movie, double userScore) {
         com.vaadin.flow.component.Component poster =
@@ -223,31 +199,46 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     // =========================================================================
-    // Watchlist button
+    // Action buttons
     // =========================================================================
 
     private Button buildWatchlistButton(long userId, int movieId, boolean inWatchlist) {
         Button btn = inWatchlist
                 ? new Button("✓ In Watchlist", VaadinIcon.BOOKMARK.create())
-                : new Button("+ Add to Watchlist", VaadinIcon.BOOKMARK_O.create());
+                : new Button("+ Watchlist", VaadinIcon.BOOKMARK_O.create());
         btn.addThemeVariants(inWatchlist ? ButtonVariant.LUMO_SUCCESS : ButtonVariant.LUMO_PRIMARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
-
         btn.addClickListener(e -> {
-            if (inWatchlist) {
-                backendClient.removeFromWatchlist(userId, movieId);
-                Notification.show("Removed from watchlist.", 2000,
-                        Notification.Position.BOTTOM_START);
-            } else {
-                backendClient.addToWatchlist(userId, movieId);
-                Notification n = Notification.show("Added to watchlist!", 2000,
-                        Notification.Position.BOTTOM_START);
-                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            }
-            // Reload to reflect new watchlist state
+            if (inWatchlist) backendClient.removeFromWatchlist(userId, movieId);
+            else backendClient.addToWatchlist(userId, movieId);
             getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
         });
+        return btn;
+    }
 
+    private Button buildFavouriteButton(long userId, int movieId, boolean inFavourites) {
+        Button btn = inFavourites
+                ? new Button("♥ Favourited", VaadinIcon.HEART.create())
+                : new Button("♡ Favourite", VaadinIcon.HEART_O.create());
+        btn.addThemeVariants(inFavourites ? ButtonVariant.LUMO_ERROR : ButtonVariant.LUMO_TERTIARY);
+        btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        btn.addClickListener(e -> {
+            if (inFavourites) backendClient.removeFromFavourites(userId, movieId);
+            else backendClient.addToFavourites(userId, movieId);
+            getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
+        });
+        return btn;
+    }
+
+    private Button buildWatchedButton(long userId, int movieId) {
+        Button btn = new Button("Mark as Watched", VaadinIcon.CHECK.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+        btn.addClickListener(e -> {
+            backendClient.addToWatchHistory(userId, movieId);
+            Notification n = Notification.show("Marked as watched!", 2000,
+                    Notification.Position.BOTTOM_START);
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        });
         return btn;
     }
 
@@ -266,8 +257,8 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         cast.forEach(c -> castRow.add(buildActorCard(c.getOriginal_name(), c.getProfile_path())));
 
         Div detailsGrid = buildDetailsGrid(
-                movie.getBudget(), movie.getRevenue(),
-                movie.getCompanyNames(), movie.getOriginal_title(),
+                movie.getBudget(), movie.getRevenue(), movie.getCompanyNames(),
+                movie.getOriginal_title(),
                 movie.getOriginal_language() != null ? movie.getOriginal_language().toUpperCase() : "N/A",
                 movie.getRelease_date(), movie.getRuntimeFormatted());
 
@@ -288,9 +279,8 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         movie.getCast().forEach(n -> castRow.add(buildActorCard(n, null)));
 
         Div detailsGrid = buildDetailsGrid(
-                movie.getBudget(), movie.getRevenue(),
-                movie.getProductionCompanies(), movie.getOriginalTitle(),
-                movie.getOriginalLanguage().toUpperCase(),
+                movie.getBudget(), movie.getRevenue(), movie.getProductionCompanies(),
+                movie.getOriginalTitle(), movie.getOriginalLanguage().toUpperCase(),
                 movie.getReleaseDate(), movie.getRuntimeFormatted());
 
         return wrapContent(
@@ -339,9 +329,8 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 dialog.open();
             });
         } else {
-            writeBtn.addClickListener(e ->
-                    Notification.show("Please log in to write a review.",
-                            3000, Notification.Position.MIDDLE));
+            writeBtn.addClickListener(e -> Notification.show("Please log in to write a review.",
+                    3000, Notification.Position.MIDDLE));
         }
 
         HorizontalLayout header = new HorizontalLayout(sectionHeading("Reviews"), writeBtn);
@@ -358,12 +347,12 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
             reviews.stream()
                     .max(java.util.Comparator.comparingInt(
                             r -> r.getHelpfulCount() != null ? r.getHelpfulCount() : 0))
-                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true)));
+                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, loggedIn)));
             reviews.stream()
                     .sorted(java.util.Comparator.comparing(ReviewDTO::getCreatedAt,
                             java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
                     .limit(3)
-                    .forEach(r -> reviewCards.add(buildReviewCard(r, false)));
+                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, loggedIn)));
         }
 
         VerticalLayout section = new VerticalLayout(header, reviewCards);
@@ -377,7 +366,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return section;
     }
 
-    private Div buildReviewCard(ReviewDTO review, boolean isTop) {
+    private Div buildReviewCard(ReviewDTO review, boolean isTop, boolean loggedIn) {
         Div card = new Div();
         card.getStyle()
                 .set("background", isTop ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
@@ -390,17 +379,62 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         H4 reviewTitle = new H4((isTop ? "⭐ " : "") + review.getTitle());
         reviewTitle.getStyle().set("margin", "0");
+
         Span rating = new Span("★ " + review.getRating() + "/10");
         rating.getStyle().set("color", "var(--lumo-primary-color)").set("font-weight", "bold");
+
         Paragraph content = new Paragraph(review.getContent());
         content.getStyle().set("margin", "0").set("line-height", "1.6");
+
         Span meta = new Span("User " + review.getUserId()
                 + (review.getCreatedAt() != null
                         ? "  ·  " + review.getCreatedAt().toString().substring(0, 10) : ""));
         meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-tertiary-text-color)");
-        card.add(reviewTitle, rating, content, meta);
+
+        // Like / dislike row
+        HorizontalLayout voteRow = buildVoteRow(review, loggedIn);
+
+        card.add(reviewTitle, rating, content, meta, voteRow);
         return card;
+    }
+
+    /**
+     * Builds the helpful vote row for a review card.
+     * Wired to POST /api/reviews/{id}/helpful in review-service.
+     */
+    private HorizontalLayout buildVoteRow(ReviewDTO review, boolean loggedIn) {
+        int helpfulCount = review.getHelpfulCount() != null ? review.getHelpfulCount() : 0;
+
+        Span likeCount = new Span(String.valueOf(helpfulCount));
+        likeCount.getStyle().set("font-size", "var(--lumo-font-size-xs)")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        Button likeBtn = new Button("Helpful", VaadinIcon.THUMBS_UP.create());
+        likeBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+        likeBtn.getStyle().set("color", "var(--lumo-success-color)");
+
+        if (loggedIn && review.getId() != null) {
+            likeBtn.addClickListener(e -> {
+                backendClient.markReviewHelpful(review.getId()).ifPresent(updated -> {
+                    int newCount = updated.getHelpfulCount() != null ? updated.getHelpfulCount() : 0;
+                    likeCount.setText(String.valueOf(newCount));
+                    likeBtn.setEnabled(false);
+                    Notification n = Notification.show("Marked as helpful!", 2000,
+                            Notification.Position.BOTTOM_START);
+                    n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                });
+            });
+        } else {
+            likeBtn.setEnabled(false);
+            likeBtn.setTooltipText("Log in to mark reviews as helpful");
+        }
+
+        HorizontalLayout row = new HorizontalLayout(likeBtn, likeCount);
+        row.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        row.setSpacing(false);
+        row.getStyle().set("gap", "4px").set("margin-top", "var(--lumo-space-xs)");
+        return row;
     }
 
     // =========================================================================
