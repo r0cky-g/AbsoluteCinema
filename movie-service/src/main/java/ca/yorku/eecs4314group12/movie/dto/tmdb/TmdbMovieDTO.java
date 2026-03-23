@@ -20,6 +20,8 @@ public class TmdbMovieDTO {
 	private String poster_path;
 	private String status;
 	private TmdbReleaseDatesDTO release_dates;
+	private TmdbImagesDTO images;
+	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
 	private List<TmdbCompanyDTO> production_companies;
 	
