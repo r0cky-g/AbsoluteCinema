@@ -8,8 +8,6 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.mapping.Document;
 import ca.yorku.eecs4314group12.movie.dto.ActorDTO;
 import ca.yorku.eecs4314group12.movie.dto.CrewMemberDTO;
-import ca.yorku.eecs4314group12.movie.dto.ImageDTO;
-import ca.yorku.eecs4314group12.movie.dto.VideoDTO;
 
 @Document("Movie")
 @EnableMongoAuditing
@@ -33,8 +31,8 @@ public class Movie {
 	private String backdrop_path;
 	private String poster_path;
 	private String status;
-	private List<ImageDTO> images;
-	private List<VideoDTO> videos;
+	private List<String> images;
+	private List<String> videos;
 	private List<ActorDTO> cast;
 	private List<CrewMemberDTO> crew;
 	private List<String> production_companies;
@@ -170,19 +168,19 @@ public class Movie {
 		this.status = status;
 	}
 	
-	public List<ImageDTO> getImages() {
+	public List<String> getImages() {
 		return images;
 	}
 
-	public void setImages(List<ImageDTO> images) {
+	public void setImages(List<String> images) {
 		this.images = images;
 	}
 
-	public List<VideoDTO> getVideos() {
+	public List<String> getVideos() {
 		return videos;
 	}
 
-	public void setVideos(List<VideoDTO> videos) {
+	public void setVideos(List<String> videos) {
 		this.videos = videos;
 	}
 
