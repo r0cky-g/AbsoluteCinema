@@ -85,10 +85,12 @@ Edit `.env`:
 ```
 TMDB_TOKEN=your_tmdb_read_access_token_here
 DB_PASSWORD=postgres
-MAIL_PASSWORD=
+MAIL_USERNAME=your_gmail_address@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
 ```
 
 > **Important:** `DB_PASSWORD` is required for PostgreSQL authentication. Use `postgres` as the default password.
+> `MAIL_USERNAME` and `MAIL_PASSWORD` are required for email verification to work. Use a Gmail address and a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password). Each developer needs to set these to their own values locally.
 > `.env` is gitignored and must be created manually on each machine you use.
 
 2. Build and start all services:

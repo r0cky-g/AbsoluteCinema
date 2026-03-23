@@ -48,15 +48,15 @@ public class UserService {
 
         // Email verification disabled for now
         // Generate 4-digit verification code
-        // String code = String.format("%04d", (int) (Math.random() * 10000));
-        // user.setVerificationCode(code);
-        // user.setEmailVerified(false);
+        String code = String.format("%04d", (int) (Math.random() * 10000));
+        user.setVerificationCode(code);
+        user.setEmailVerified(false);
         // Send verification email
-        // emailService.sendVerificationEmail(user.getEmail(), code);
+        emailService.sendVerificationEmail(user.getEmail(), code);
         
         // Set email as verified by default (no verification required)
-        user.setEmailVerified(true);
-        user.setVerificationCode(null);
+        // user.setEmailVerified(true);
+        // user.setVerificationCode(null);
 
         return repo.save(user);
     }
@@ -82,12 +82,12 @@ public class UserService {
                     "Invalid credentials");
         }
 
-        // Email verification check disabled for now
-        // if (!user.isEmailVerified()) {
-        //     throw new ResponseStatusException(
-        //             HttpStatus.UNAUTHORIZED,
-        //             "Email not verified");
-        // }
+        // Email verification check
+        if (!user.isEmailVerified()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Email not verified");
+        }
 
         return user;
     }

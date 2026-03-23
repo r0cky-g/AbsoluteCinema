@@ -26,6 +26,10 @@ public class ForumPost {
     @Column(name = "user_id")
     private Long userId;
 
+    // Category for grouping posts (e.g. "general", "horror", "fight club")
+    @Column(name = "category")
+    private String category;
+
     private LocalDateTime createdAt;
 
     public ForumPost() {
@@ -72,4 +76,10 @@ public class ForumPost {
     public void setCreatedAt(LocalDateTime createdAt) { 
         this.createdAt = createdAt; 
         }
+    public String getCategory() {
+        return category;
+    }
+    public void setCategory(String category) {
+        this.category = category;
+    }
 }

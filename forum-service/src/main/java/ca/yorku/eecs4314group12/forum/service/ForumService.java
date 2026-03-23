@@ -24,6 +24,11 @@ public class ForumService {
         return repository.findAll();
     }
 
+    // Get all posts filtered by category
+    public List<ForumPost> getPostsByCategory(String category) {
+        return repository.findByCategory(category);
+    }
+
     public ForumPost createPost(ForumPost post) {
         post.setCreatedAt(LocalDateTime.now());
         return repository.save(post);
