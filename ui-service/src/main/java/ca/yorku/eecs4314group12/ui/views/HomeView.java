@@ -1,19 +1,13 @@
 package ca.yorku.eecs4314group12.ui.views;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
+import ca.yorku.eecs4314group12.ui.data.BackendClientService;
+import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
+import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -24,11 +18,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import ca.yorku.eecs4314group12.ui.data.BackendClientService;
-import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
-import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
-import ca.yorku.eecs4314group12.ui.security.UserSessionService;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Home / discovery page.
@@ -57,6 +52,8 @@ public class HomeView extends VerticalLayout {
 
     // Watchlist IDs fetched once on load — empty set for anonymous users
     private Set<Integer> watchlistIds = Set.of();
+    // Favourites IDs fetched once on load — empty set for anonymous users
+    private Set<Integer> favouriteIds = Set.of();
 
     public HomeView(BackendClientService backendClient, UserSessionService userSessionService) {
         this.backendClient = backendClient;
@@ -67,12 +64,21 @@ public class HomeView extends VerticalLayout {
         setSpacing(false);
         getStyle().set("max-width", "1200px").set("margin", "0 auto");
 
-        // Pre-fetch watchlist for logged-in users
+        // Pre-fetch watchlist and favourites for logged-in users
         if (isLoggedIn() && userSessionService.getUserId() != null) {
-            List<WatchlistDTO> watchlist = backendClient.getWatchlist(userSessionService.getUserId());
+            long userId = userSessionService.getUserId();
+            List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);
             watchlistIds = watchlist.stream()
                     .map(WatchlistDTO::getMovieId)
                     .collect(Collectors.toSet());
+            watchlistIds = watchlistIds == null ? Set.of() : watchlistIds;
+
+            List<ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO> favourites =
+                    backendClient.getFavourites(userId);
+            favouriteIds = favourites.stream()
+                    .map(ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO::getMovieId)
+                    .collect(Collectors.toSet());
+            favouriteIds = favouriteIds == null ? Set.of() : favouriteIds;
         }
 
         // ---- Search bar ----
@@ -247,8 +253,8 @@ public class HomeView extends VerticalLayout {
                     .set("position", "absolute")
                     .set("top", "0")
                     .set("right", "0")
-                    .set("width", "48px")
-                    .set("height", "48px")
+                    .set("width", "80px")
+                    .set("height", "80px")
                     .set("overflow", "hidden")
                     .set("pointer-events", "none");
 
@@ -256,20 +262,38 @@ public class HomeView extends VerticalLayout {
             strip.setText("W");
             strip.getStyle()
                     .set("position", "absolute")
-                    .set("top", "8px")
-                    .set("right", "-14px")
-                    .set("width", "56px")
+                    .set("top", "20px")
+                    .set("right", "-30px")
+                    .set("width", "120px")
                     .set("background", "#1565C0")
                     .set("color", "white")
                     .set("font-size", "10px")
                     .set("font-weight", "700")
                     .set("text-align", "center")
-                    .set("padding", "2px 0")
+                    .set("padding", "3px 0")
                     .set("transform", "rotate(45deg)")
                     .set("letter-spacing", "0.05em");
 
             badge.add(strip);
             wrapper.add(badge);
+        }
+
+        // Favourite star — top-left corner, logged-in users only
+        // Hollow ☆ for non-favourited, filled yellow ★ for favourited
+        if (isLoggedIn()) {
+            boolean inFavourites = favouriteIds.contains(movie.getId());
+            Div starBadge = new Div();
+            starBadge.setText(inFavourites ? "★" : "☆");
+            starBadge.getStyle()
+                    .set("position", "absolute")
+                    .set("top", "6px")
+                    .set("left", "8px")
+                    .set("font-size", "20px")
+                    .set("color", inFavourites ? "#FFD600" : "rgba(255,255,255,0.7)")
+                    .set("text-shadow", "0 1px 3px rgba(0,0,0,0.6)")
+                    .set("pointer-events", "none")
+                    .set("line-height", "1");
+            wrapper.add(starBadge);
         }
 
         return wrapper;

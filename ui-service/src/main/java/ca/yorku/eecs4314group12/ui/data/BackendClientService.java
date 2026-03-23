@@ -69,6 +69,28 @@ public class BackendClientService {
         }
     }
 
+    /**
+     * Fetches a single movie from movie-service directly (MongoDB cache → TMDB).
+     * Faster than getMovieById() for bulk loads since it skips the api-service hop.
+     * Returns a MovieListItemDTO with poster_path, title, genres etc.
+     */
+    public Optional<MovieListItemDTO> getMovieSummary(int id) {
+        try {
+            MovieListItemDTO movie = movieClient.get()
+                    .uri("/movie/{id}", id)
+                    .retrieve()
+                    .bodyToMono(MovieListItemDTO.class)
+                    .block();
+            return Optional.ofNullable(movie);
+        } catch (WebClientResponseException.NotFound e) {
+            log.warn("Movie {} not found in movie-service", id);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Failed to fetch movie summary {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Movie lists
     // -------------------------------------------------------------------------

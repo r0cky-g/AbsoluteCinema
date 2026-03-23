@@ -1,28 +1,5 @@
 package ca.yorku.eecs4314group12.ui.views;
 
-import java.util.List;
-
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.H4;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-
 import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 import ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
@@ -30,7 +7,23 @@ import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.WatchHistoryDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
 import ca.yorku.eecs4314group12.ui.security.UserSessionService;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
 
 /**
  * Account / profile page.
@@ -281,11 +274,12 @@ public class AccountView extends VerticalLayout {
         card.addClickListener(e ->
                 getUI().ifPresent(ui -> ui.navigate("movie/" + movieId)));
 
-        backendClient.getMovieById(movieId).ifPresentOrElse(movie -> {
+        // Use movie-service directly (cached) instead of api-service to avoid TMDB roundtrips
+        backendClient.getMovieSummary(movieId).ifPresentOrElse(movie -> {
             String posterPath = movie.getPoster_path();
             if (posterPath != null && !posterPath.isBlank()) {
                 String url = posterPath.startsWith("http") ? posterPath : TMDB_IMAGE_BASE + posterPath;
-                Image img = new Image(url, movie.getTitle());
+                Image img = new Image(url, movie.getTitle() != null ? movie.getTitle() : "");
                 img.getStyle().set("width", "100%")
                         .set("border-radius", "var(--lumo-border-radius-m)")
                         .set("display", "block");

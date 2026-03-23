@@ -95,7 +95,7 @@ public class RegisterView extends VerticalLayout {
             }
 
             boolean isModerator = moderatorBox.getValue();
-            boolean serviceSuccess = backendClient.registerUser(username, password, email, isModerator);
+            boolean serviceSuccess = backendClient.registerUser(username, password, email);
             if (serviceSuccess) {
                 userRegistry.register(username, password, email);
                 Notification.show("Account created! You can now log in.",

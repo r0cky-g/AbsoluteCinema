@@ -12,6 +12,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
@@ -250,11 +251,45 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         Paragraph overview = new Paragraph(movie.getOverview());
         overview.getStyle().set("line-height", "1.7").set("margin", "0");
 
-        FlexLayout castRow = new FlexLayout();
-        castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
-        List<MovieDTO.CastMemberDTO> cast = movie.getCast() != null
-                ? movie.getCast().stream().limit(8).toList() : List.of();
-        cast.forEach(c -> castRow.add(buildActorCard(c.getOriginal_name(), c.getProfile_path())));
+        // All cast and crew — no limit, scroll shows 12 at a time
+        List<MovieDTO.CastMemberDTO> cast = movie.getCast() != null ? movie.getCast() : List.of();
+        List<MovieDTO.CrewMemberDTO> crew = movie.getCrew() != null ? movie.getCrew() : List.of();
+
+        VerticalLayout castCrewSection = new VerticalLayout();
+        castCrewSection.setPadding(false); castCrewSection.setSpacing(false);
+        castCrewSection.getStyle().set("gap", "var(--lumo-space-m)");
+
+        if (!cast.isEmpty()) {
+            H3 castHeading = new H3("Cast");
+            castHeading.getStyle().set("margin", "0 0 var(--lumo-space-s) 0")
+                    .set("font-size", "var(--lumo-font-size-m)");
+            Div castScroll = buildScrollRow();
+            cast.forEach(c -> castScroll.add(
+                    buildPersonCard(c.getOriginal_name(), c.getCharacter(), c.getProfile_path())));
+            castCrewSection.add(castHeading, castScroll);
+        }
+
+        if (!crew.isEmpty()) {
+            H3 crewHeading = new H3("Crew");
+            crewHeading.getStyle().set("margin", "var(--lumo-space-m) 0 var(--lumo-space-s) 0")
+                    .set("font-size", "var(--lumo-font-size-m)");
+            Div crewScroll = buildScrollRow();
+
+            // Deduplicate crew by name, combining all jobs into one card
+            java.util.LinkedHashMap<String, java.util.List<String>> crewByName = new java.util.LinkedHashMap<>();
+            crew.forEach(c -> {
+                String crewName = c.getOriginal_name() != null ? c.getOriginal_name() : "";
+                String job = c.getJob() != null ? c.getJob() : "";
+                crewByName.computeIfAbsent(crewName, k -> new java.util.ArrayList<>()).add(job);
+            });
+
+            crewByName.forEach((crewName, jobs) -> {
+                String combinedRoles = String.join(" / ", jobs);
+                crewScroll.add(buildPersonCard(crewName, combinedRoles, null));
+            });
+
+            castCrewSection.add(crewHeading, crewScroll);
+        }
 
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(), movie.getCompanyNames(),
@@ -264,7 +299,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         return wrapContent(
                 sectionCard(sectionHeading("Overview"), overview),
-                sectionCard(sectionHeading("Cast & Crew"), castRow),
+                sectionCard(sectionHeading("Cast & Crew"), castCrewSection),
                 sectionCard(sectionHeading("Film Details"), detailsGrid),
                 buildReviewsSection(reviews, movie.getId(), movie.getTitle()));
     }
@@ -274,9 +309,18 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         Paragraph overview = new Paragraph(movie.getOverview());
         overview.getStyle().set("line-height", "1.7").set("margin", "0");
 
-        FlexLayout castRow = new FlexLayout();
-        castRow.getStyle().set("gap", "var(--lumo-space-m)").set("flex-wrap", "wrap");
-        movie.getCast().forEach(n -> castRow.add(buildActorCard(n, null)));
+        VerticalLayout castCrewSection = new VerticalLayout();
+        castCrewSection.setPadding(false); castCrewSection.setSpacing(false);
+        castCrewSection.getStyle().set("gap", "var(--lumo-space-m)");
+
+        if (!movie.getCast().isEmpty()) {
+            H3 castHeading = new H3("Cast");
+            castHeading.getStyle().set("margin", "0 0 var(--lumo-space-s) 0")
+                    .set("font-size", "var(--lumo-font-size-m)");
+            Div castScroll = buildScrollRow();
+            movie.getCast().forEach(n -> castScroll.add(buildPersonCard(n, null, null)));
+            castCrewSection.add(castHeading, castScroll);
+        }
 
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(), movie.getProductionCompanies(),
@@ -285,7 +329,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         return wrapContent(
                 sectionCard(sectionHeading("Overview"), overview),
-                sectionCard(sectionHeading("Cast & Crew"), castRow),
+                sectionCard(sectionHeading("Cast & Crew"), castCrewSection),
                 sectionCard(sectionHeading("Film Details"), detailsGrid),
                 buildReviewsSection(reviews, movie.getId(), movie.getTitle()));
     }
@@ -498,27 +542,92 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return new Div(badge);
     }
 
-    private VerticalLayout buildActorCard(String name, String profilePath) {
+    /**
+     * Horizontal scrollable row. Cards are 96px wide with 12px gaps.
+     * ~12 visible at once on a 1100px container: (96+12)*12 = 1296px of content visible.
+     */
+    private Div buildScrollRow() {
+        Div row = new Div();
+        row.getStyle()
+                .set("display", "flex")
+                .set("flex-direction", "row")
+                .set("gap", "12px")
+                .set("overflow-x", "auto")
+                .set("overflow-y", "hidden")
+                .set("padding-bottom", "var(--lumo-space-s)")
+                .set("scrollbar-width", "thin")
+                .set("width", "100%")
+                .set("align-items", "flex-start");
+        return row;
+    }
+
+    /**
+     * Card showing photo/avatar → role/character → name (top to bottom).
+     * Text wraps to 2 lines max and truncates with ellipsis beyond that.
+     */
+    private VerticalLayout buildPersonCard(String name, String role, String profilePath) {
         com.vaadin.flow.component.Component avatarComponent;
         if (profilePath != null && !profilePath.isBlank()) {
             String url = profilePath.startsWith("http") ? profilePath : TMDB_IMAGE_BASE + "w92" + profilePath;
             Image img = new Image(url, name);
-            img.getStyle().set("width", "48px").set("height", "48px")
-                    .set("border-radius", "50%").set("object-fit", "cover");
+            img.getStyle()
+                    .set("width", "72px").set("height", "72px")
+                    .set("border-radius", "50%").set("object-fit", "cover")
+                    .set("flex-shrink", "0");
             avatarComponent = img;
         } else {
             Avatar avatar = new Avatar(name);
             avatar.setColorIndex(Math.abs(name.hashCode()) % 7);
-            avatar.getStyle().set("width", "48px").set("height", "48px");
+            avatar.getStyle().set("width", "72px").set("height", "72px").set("flex-shrink", "0");
             avatarComponent = avatar;
         }
-        Span nameSpan = new Span(name);
-        nameSpan.getStyle().set("font-size", "var(--lumo-font-size-s)").set("text-align", "center");
-        VerticalLayout card = new VerticalLayout(avatarComponent, nameSpan);
+
+        VerticalLayout card = new VerticalLayout(avatarComponent);
         card.setPadding(false); card.setSpacing(false);
         card.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.CENTER);
-        card.getStyle().set("gap", "var(--lumo-space-xs)").set("width", "80px");
+        card.getStyle()
+                .set("gap", "4px")
+                .set("width", "96px")
+                .set("min-width", "96px")
+                .set("flex-shrink", "0")
+                .set("text-align", "center");
+
+        if (role != null && !role.isBlank()) {
+            Span roleSpan = new Span(role);
+            roleSpan.getElement().setAttribute("title", role);
+            roleSpan.getStyle()
+                    .set("font-size", "var(--lumo-font-size-xs)")
+                    .set("color", "var(--lumo-primary-color)")
+                    .set("font-style", "italic")
+                    .set("display", "block")
+                    .set("width", "96px")
+                    .set("overflow-wrap", "break-word")
+                    .set("word-break", "break-word")
+                    .set("overflow", "hidden")
+                    .set("text-overflow", "ellipsis")
+                    .set("white-space", "normal");
+            card.add(roleSpan);
+        }
+
+        Span nameSpan = new Span(name != null ? name : "");
+        nameSpan.getStyle()
+                .set("font-size", "var(--lumo-font-size-xs)")
+                .set("font-weight", "600")
+                .set("display", "block")
+                .set("width", "96px")
+                .set("overflow-wrap", "break-word")
+                .set("word-break", "break-word")
+                .set("overflow", "hidden")
+                .set("text-overflow", "ellipsis")
+                .set("white-space", "normal");
+        card.add(nameSpan);
+
         return card;
+    }
+
+    // Legacy overload used by dummy data path
+    private VerticalLayout buildActorCard(String name, String profilePath) {
+        return buildPersonCard(name, null, profilePath);
     }
 
     private Div detailItem(String label, String value) {
