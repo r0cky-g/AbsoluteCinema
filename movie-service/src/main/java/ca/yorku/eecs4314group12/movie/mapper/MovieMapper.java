@@ -14,14 +14,14 @@ import ca.yorku.eecs4314group12.movie.dto.tmdb.*;
 public interface MovieMapper {
 	
 	// Mappings for Objects
-	@Mapping(source = "genres", target = "genres", qualifiedByName = "mapGenres")
-	@Mapping(source = "release_dates", target = "age_rating", qualifiedByName = "extractUSRating")
-	@Mapping(source = "credits.cast", target = "cast")
-	@Mapping(source = "credits.crew", target = "crew")
-	@Mapping(source = "production_companies", target = "production_companies", qualifiedByName = "mapProductionCompanies")
-	Movie toMovie(TmdbMovieDTO tmdbMovieDTO);
+//	@Mapping(source = "genres", target = "genres", qualifiedByName = "mapGenres")
+//	@Mapping(source = "release_dates", target = "age_rating", qualifiedByName = "extractUSRating")
+//	@Mapping(source = "credits.cast", target = "cast")
+//	@Mapping(source = "credits.crew", target = "crew")
+//	@Mapping(source = "production_companies", target = "production_companies", qualifiedByName = "mapProductionCompanies")
+//	Movie toMovie(TmdbMovieDTO tmdbMovieDTO);
 	
-	Movie toMovie(MovieDTO movieDTO);
+	// Movie toMovie(MovieDTO movieDTO);
 	
 	@BeanMapping(ignoreByDefault = true)
 	@Mapping(target = "id")

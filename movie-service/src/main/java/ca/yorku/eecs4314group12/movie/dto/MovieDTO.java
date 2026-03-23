@@ -19,6 +19,8 @@ public class MovieDTO {
 	private int runtime;
 	private String poster_path;
 	private String status;
+	private List<ImageDTO> images;
+	private List<VideoDTO> videos;
 	private List<ActorDTO> cast;
 	private List<CrewMemberDTO> crew;
 	private List<String> production_companies;
@@ -143,6 +145,22 @@ public class MovieDTO {
 		this.status = status;
 	}
 	
+	public List<ImageDTO> getImages() {
+		return images;
+	}
+
+	public void setImages(List<ImageDTO> images) {
+		this.images = images;
+	}
+
+	public List<VideoDTO> getVideos() {
+		return videos;
+	}
+
+	public void setVideos(List<VideoDTO> videos) {
+		this.videos = videos;
+	}
+
 	public List<ActorDTO> getCast() {
 		return cast;
 	}
