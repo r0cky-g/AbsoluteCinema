@@ -79,23 +79,22 @@ public class UserController {
         return toDTO(user);
     }
 
-    // Email verification endpoint disabled for now
     // verify email
-    // @PostMapping("/{id}/verify")
-    // public ResponseEntity<String> verifyEmail(
-    //         @PathVariable Long id,
-    //         @RequestParam String code) {
-    //
-    //     boolean success = service.verifyEmail(id, code);
-    //
-    //     if (success) {
-    //         return ResponseEntity.ok("Email verified successfully");
-    //     } else {
-    //         return ResponseEntity
-    //                 .status(HttpStatus.BAD_REQUEST)
-    //                 .body("Invalid verification code");
-    //     }
-    // }
+    @PostMapping("/{id}/verify")
+    public ResponseEntity<String> verifyEmail(
+            @PathVariable Long id,
+            @RequestParam String code) {
+
+        boolean success = service.verifyEmail(id, code);
+
+        if (success) {
+            return ResponseEntity.ok("Email verified successfully");
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Invalid verification code");
+        }
+    }
 
     // get all users
     @GetMapping
