@@ -5,7 +5,7 @@ public class TmdbVideoDTO {
 	private String name;
 	private String key;
 	private String site;
-	private String official;
+	private boolean official;
 	
 	public String getName() {
 		return name;
@@ -30,12 +30,12 @@ public class TmdbVideoDTO {
 	public void setSite(String site) {
 		this.site = site;
 	}
-	
-	public String getOfficial() {
+
+	public boolean isOfficial() {
 		return official;
 	}
-	
-	public void setOfficial(String official) {
+
+	public void setOfficial(boolean official) {
 		this.official = official;
 	}
 }
