@@ -1,6 +1,6 @@
 package ca.yorku.eecs4314group12.movie.dto.tmdb;
 
-public class TmdbVideosDTO {
+public class TmdbVideoDTO {
 	
 	private String name;
 	private String key;
