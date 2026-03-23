@@ -17,6 +17,7 @@ public class TmdbMovieDTO {
 	private int budget;
 	private int revenue;
 	private int runtime;
+	private String backdrop_path;
 	private String poster_path;
 	private String status;
 	private TmdbReleaseDatesDTO release_dates;
@@ -129,6 +130,14 @@ public class TmdbMovieDTO {
 		this.runtime = runtime;
 	}
 	
+	public String getBackdrop_path() {
+		return backdrop_path;
+	}
+
+	public void setBackdrop_path(String backdrop_path) {
+		this.backdrop_path = backdrop_path;
+	}
+
 	public String getPoster_path() {
 		return poster_path;
 	}
