@@ -128,7 +128,7 @@ public class MovieDTO {
         if (crew == null) return "Unknown";
         List<String> directors = crew.stream()
                 .filter(c -> "Director".equals(c.getJob()))
-                .map(CrewMemberDTO::getOriginal_name)
+                .map(CrewMemberDTO::getName)
                 .toList();
         if (directors.isEmpty()) return "Unknown";
         return String.join(", ", directors);
