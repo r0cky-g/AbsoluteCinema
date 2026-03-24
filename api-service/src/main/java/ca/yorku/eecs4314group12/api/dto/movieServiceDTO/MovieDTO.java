@@ -18,10 +18,13 @@ public class MovieDTO {
 	private int revenue;
 	private int runtime;
 	private String poster_path;
+	private String backdrop_path;
 	private String status;
 	private List<ActorDTO> cast;
 	private List<CrewMemberDTO> crew;
 	private List<String> production_companies;
+	private List<String> images;
+	private List<String> videos;
 	
 	public int getId() {
 		return id;
@@ -135,6 +138,14 @@ public class MovieDTO {
 		this.poster_path = poster_path;
 	}
 
+	public String getBackdrop_path() {
+		return backdrop_path;
+	}
+
+	public void setBackdrop_path(String backdrop_path) {
+		this.backdrop_path = backdrop_path;
+	}
+
 	public String getStatus() {
 		return status;
 	}
@@ -165,5 +176,21 @@ public class MovieDTO {
 	
 	public void setProduction_companies(List<String> production_companies) {
 		this.production_companies = production_companies;
-	}	
+	}
+
+	public List<String> getImages() {
+		return images;
+	}
+
+	public void setImages(List<String> images) {
+		this.images = images;
+	}
+
+	public List<String> getVideos() {
+		return videos;
+	}
+
+	public void setVideos(List<String> videos) {
+		this.videos = videos;
+	}
 }

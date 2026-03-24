@@ -15,6 +15,7 @@ public class MovieDTO {
     private String tagline;
     private String overview;
     private String poster_path;
+    private String backdrop_path;
     private String release_date;
     private String age_rating;
     private String status;
@@ -26,6 +27,8 @@ public class MovieDTO {
     private List<String> production_companies;
     private List<CastMemberDTO> cast;
     private List<CrewMemberDTO> crew;
+    private List<String> images;   // TMDB backdrop file paths e.g. "/abc.jpg"
+    private List<String> videos;   // YouTube video keys e.g. "dQw4w9WgXcQ"
 
     // ---- Nested types ----
 
@@ -77,6 +80,8 @@ public class MovieDTO {
     public void setOverview(String v) { this.overview = v; }
     public String getPoster_path() { return poster_path; }
     public void setPoster_path(String v) { this.poster_path = v; }
+    public String getBackdrop_path() { return backdrop_path; }
+    public void setBackdrop_path(String v) { this.backdrop_path = v; }
     public String getRelease_date() { return release_date; }
     public void setRelease_date(String v) { this.release_date = v; }
     public String getAge_rating() { return age_rating; }
@@ -99,6 +104,10 @@ public class MovieDTO {
     public void setCast(List<CastMemberDTO> v) { this.cast = v; }
     public List<CrewMemberDTO> getCrew() { return crew; }
     public void setCrew(List<CrewMemberDTO> v) { this.crew = v; }
+    public List<String> getImages() { return images; }
+    public void setImages(List<String> v) { this.images = v; }
+    public List<String> getVideos() { return videos; }
+    public void setVideos(List<String> v) { this.videos = v; }
 
     // ---- Convenience helpers ----
 
@@ -114,14 +123,20 @@ public class MovieDTO {
 
     public String getDirector() {
         if (crew == null) return "Unknown";
-        return crew.stream()
+        List<String> directors = crew.stream()
                 .filter(c -> "Director".equals(c.getJob()))
                 .map(CrewMemberDTO::getOriginal_name)
-                .findFirst()
-                .orElse("Unknown");
+                .toList();
+        if (directors.isEmpty()) return "Unknown";
+        return String.join(", ", directors);
     }
 
     public List<String> getCompanyNames() {
         return production_companies != null ? production_companies : List.of();
+    }
+
+    public boolean hasGallery() {
+        return (images != null && !images.isEmpty())
+                || (videos != null && !videos.isEmpty());
     }
 }

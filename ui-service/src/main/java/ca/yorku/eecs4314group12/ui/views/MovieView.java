@@ -75,19 +75,210 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void buildPageFromDTO(MovieDTO movie) {
-        getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
+        getUI().ifPresent(ui -> {
+            ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema");
+            ui.getPage().executeJs("window.scrollTo(0, 0)");
+        });
         List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
         double userScore = backendClient.getReviewStats(movie.getId())
                 .map(ReviewStatsDTO::getAverageRating).orElse(0.0);
-        add(buildHeroBannerDTO(movie, userScore), buildContentAreaDTO(movie, reviews));
+        add(buildHeroBannerDTO(movie, userScore));
+        if (movie.hasGallery()) add(buildGallerySection(movie));
+        add(buildContentAreaDTO(movie, reviews));
     }
 
     private void buildPageFromDummy(ca.yorku.eecs4314group12.ui.data.Movie movie) {
-        getUI().ifPresent(ui -> ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema"));
+        getUI().ifPresent(ui -> {
+            ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema");
+            ui.getPage().executeJs("window.scrollTo(0, 0)");
+        });
         List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
         double userScore = backendClient.getReviewStats(movie.getId())
                 .map(ReviewStatsDTO::getAverageRating).orElse(movie.getUserScore());
         add(buildHeroBannerDummy(movie, userScore), buildContentAreaDummy(movie, reviews));
+    }
+
+    // =========================================================================
+    // Gallery (Steam-style) — trailers first, then backdrop images
+    // =========================================================================
+
+    /**
+     * Steam-style gallery: a large featured viewport above a horizontal
+     * thumbnail strip. Trailers (YouTube embeds) come first, then backdrop
+     * images. Clicking a thumbnail swaps the featured view.
+     */
+    private Div buildGallerySection(MovieDTO movie) {
+        List<String> videos = movie.getVideos() != null ? movie.getVideos() : List.of();
+        List<String> images = movie.getImages() != null ? movie.getImages() : List.of();
+
+        record GalleryItem(String type, String src, String thumb) {}
+        java.util.List<GalleryItem> items = new java.util.ArrayList<>();
+        for (String key : videos) {
+            String embed = "https://www.youtube.com/embed/" + key + "?rel=0";
+            String thumb = "https://img.youtube.com/vi/" + key + "/mqdefault.jpg";
+            items.add(new GalleryItem("video", embed, thumb));
+        }
+        for (String path : images) {
+            String url = "https://image.tmdb.org/t/p/w1280" + path;
+            String thumbUrl = "https://image.tmdb.org/t/p/w300" + path;
+            items.add(new GalleryItem("image", url, thumbUrl));
+        }
+
+        if (items.isEmpty()) return new Div();
+
+        // ---- Featured viewport ----
+        Div featured = new Div();
+        featured.getStyle()
+                .set("width", "100%")
+                .set("aspect-ratio", "16/9")
+                .set("background", "#000")
+                .set("position", "relative")
+                .set("overflow", "hidden");
+
+        GalleryItem first = items.get(0);
+        if ("video".equals(first.type())) {
+            featured.add(makeIframe(first.src()));
+        } else {
+            featured.add(makeFeaturedImage(first.src()));
+        }
+
+        // ---- Thumbnail strip ----
+        Div strip = new Div();
+        strip.getStyle()
+                .set("display", "flex")
+                .set("flex-direction", "row")
+                .set("gap", "6px")
+                .set("overflow-x", "auto")
+                .set("padding", "8px 0 6px 0")
+                .set("background", "#0a0a0a")
+                .set("scrollbar-width", "thin")
+                .set("align-items", "center");
+
+        for (int i = 0; i < items.size(); i++) {
+            GalleryItem item = items.get(i);
+            Div thumb = new Div();
+            thumb.getStyle()
+                    .set("flex-shrink", "0")
+                    .set("width", "80px")
+                    .set("aspect-ratio", "16/9")
+                    .set("cursor", "pointer")
+                    .set("overflow", "hidden")
+                    .set("border-radius", "4px")
+                    .set("border", i == 0
+                            ? "2px solid var(--lumo-primary-color)"
+                            : "2px solid rgba(255,255,255,0.15)")
+                    .set("position", "relative")
+                    .set("background", "#111");
+
+            Image thumbImg = new Image(item.thumb(), "");
+            thumbImg.getStyle()
+                    .set("width", "100%").set("height", "100%")
+                    .set("object-fit", "cover").set("display", "block");
+            thumb.add(thumbImg);
+
+            if ("video".equals(item.type())) {
+                Div playIcon = new Div();
+                playIcon.setText("▶");
+                playIcon.getStyle()
+                        .set("position", "absolute")
+                        .set("top", "50%").set("left", "50%")
+                        .set("transform", "translate(-50%, -50%)")
+                        .set("color", "white").set("font-size", "18px")
+                        .set("text-shadow", "0 1px 4px rgba(0,0,0,0.8)")
+                        .set("pointer-events", "none");
+                thumb.add(playIcon);
+            }
+
+            final String itemSrc = item.src();
+            final String itemType = item.type();
+
+            thumb.addClickListener(e -> {
+                featured.removeAll();
+                if ("video".equals(itemType)) {
+                    featured.add(makeIframe(itemSrc));
+                } else {
+                    featured.add(makeFeaturedImage(itemSrc));
+                }
+                strip.getChildren().forEach(child -> {
+                    if (child instanceof Div t)
+                        t.getStyle().set("border", "2px solid rgba(255,255,255,0.15)");
+                });
+                thumb.getStyle().set("border", "2px solid var(--lumo-primary-color)");
+            });
+
+            strip.add(thumb);
+        }
+
+        // ---- Full wrapper ----
+        Div inner = new Div(featured, strip);
+        inner.getStyle()
+                .set("max-width", "720px")
+                .set("margin", "0 auto")
+                .set("padding", "var(--lumo-space-m) var(--lumo-space-l) var(--lumo-space-m) var(--lumo-space-l)");
+
+        Div wrapper = new Div(inner);
+        wrapper.setWidth("100%");
+        wrapper.getStyle()
+                .set("background", "#0a0a0a")
+                .set("border-bottom", "none")
+                .set("margin-bottom", "0")
+                .set("padding-bottom", "0");
+        return wrapper;
+    }
+
+    private com.vaadin.flow.component.Component makeIframe(String src) {
+        com.vaadin.flow.component.html.IFrame iframe =
+                new com.vaadin.flow.component.html.IFrame(src);
+        iframe.setWidth("100%");
+        iframe.setHeight("100%");
+        iframe.getStyle().set("border", "none")
+                .set("position", "absolute")
+                .set("top", "0").set("left", "0");
+        iframe.getElement().setAttribute("allowfullscreen", true);
+        iframe.getElement().setAttribute("allow",
+                "accelerometer; autoplay; clipboard-write; encrypted-media; " +
+                "gyroscope; picture-in-picture; web-share");
+        return iframe;
+    }
+
+    private Image makeFeaturedImage(String src) {
+        Image img = new Image(src, "");
+        img.getStyle()
+                .set("width", "100%").set("height", "100%")
+                .set("object-fit", "contain")
+                .set("position", "absolute")
+                .set("top", "0").set("left", "0")
+                .set("cursor", "zoom-in");
+
+        img.addClickListener(e -> {
+            // Fullscreen overlay
+            Div overlay = new Div();
+            overlay.getStyle()
+                    .set("position", "fixed")
+                    .set("top", "0").set("left", "0")
+                    .set("width", "100vw").set("height", "100vh")
+                    .set("background", "rgba(0,0,0,0.92)")
+                    .set("display", "flex")
+                    .set("align-items", "center")
+                    .set("justify-content", "center")
+                    .set("z-index", "9999")
+                    .set("cursor", "zoom-out");
+
+            Image full = new Image(src.replace("w1280", "original"), "");
+            full.getStyle()
+                    .set("max-width", "95vw")
+                    .set("max-height", "95vh")
+                    .set("object-fit", "contain")
+                    .set("border-radius", "4px")
+                    .set("box-shadow", "0 8px 40px rgba(0,0,0,0.8)");
+
+            overlay.add(full);
+            overlay.addClickListener(ev -> overlay.removeFromParent());
+            img.getUI().ifPresent(ui ->
+                    ui.getElement().appendChild(overlay.getElement()));
+        });
+
+        return img;
     }
 
     // =========================================================================
@@ -134,7 +325,9 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         HorizontalLayout scores = new HorizontalLayout(buildScoreBadge("👥 Users", userScore, true));
         scores.setSpacing(true);
 
-        Span director = new Span("Directed by  " + movie.getDirector());
+        long directorCount = movie.getCrew() != null
+                ? movie.getCrew().stream().filter(c -> "Director".equals(c.getJob())).count() : 0;
+        Span director = new Span((directorCount > 1 ? "Directors  " : "Directed by  ") + movie.getDirector());
         director.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
@@ -157,7 +350,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         info.setPadding(false); info.setSpacing(false);
         info.getStyle().set("gap", "var(--lumo-space-s)");
 
-        return wrapHero(poster, info);
+        return wrapHero(poster, info, movie.getBackdrop_path());
     }
 
     private Div buildHeroBannerDummy(ca.yorku.eecs4314group12.ui.data.Movie movie, double userScore) {
@@ -196,7 +389,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         info.setPadding(false); info.setSpacing(false);
         info.getStyle().set("gap", "var(--lumo-space-s)");
 
-        return wrapHero(poster, info);
+        return wrapHero(poster, info, null);
     }
 
     // =========================================================================
@@ -642,28 +835,60 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return item;
     }
 
-    private Div wrapHero(com.vaadin.flow.component.Component poster, VerticalLayout info) {
+    private Div wrapHero(com.vaadin.flow.component.Component poster, VerticalLayout info,
+                         String backdropPath) {
         HorizontalLayout heroContent = new HorizontalLayout(poster, info);
         heroContent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
         heroContent.setSpacing(true);
-        heroContent.getStyle().set("max-width", "1100px").set("margin", "0 auto")
-                .set("padding", "var(--lumo-space-xl) var(--lumo-space-l)");
+        heroContent.getStyle()
+                .set("max-width", "1100px").set("margin", "0 auto")
+                .set("padding", "var(--lumo-space-xl) var(--lumo-space-l)")
+                .set("position", "relative").set("z-index", "1");
         heroContent.setWidth("100%");
-        Div hero = new Div(heroContent);
+
+        Div hero = new Div();
         hero.setWidth("100%");
-        hero.getStyle().set("background", "linear-gradient(180deg, #0f3460 0%, #16213e 100%)")
-                .set("border-bottom", "1px solid var(--lumo-contrast-10pct)");
+        hero.getStyle().set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
+                .set("position", "relative");
+
+        if (backdropPath != null && !backdropPath.isBlank()) {
+            String backdropUrl = backdropPath.startsWith("http")
+                    ? backdropPath
+                    : "https://image.tmdb.org/t/p/w1280" + backdropPath;
+            hero.getStyle()
+                    .set("background-image", "url('" + backdropUrl + "')")
+                    .set("background-size", "cover")
+                    .set("background-position", "center center");
+
+            Div dimOverlay = new Div();
+            dimOverlay.getStyle()
+                    .set("position", "absolute")
+                    .set("top", "-1px").set("left", "-1px")
+                    .set("width", "calc(100% + 2px)").set("height", "calc(100% + 2px)")
+                    .set("background", "linear-gradient(to right, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.4) 100%)")
+                    .set("pointer-events", "none")
+                    .set("z-index", "0");
+            hero.add(dimOverlay);
+        } else {
+            hero.getStyle().set("background",
+                    "linear-gradient(180deg, #0f3460 0%, #16213e 100%)");
+        }
+
+        hero.add(heroContent);
         return hero;
     }
 
     private Div wrapContent(com.vaadin.flow.component.Component... sections) {
         VerticalLayout content = new VerticalLayout(sections);
-        content.setPadding(true); content.setSpacing(false);
-        content.getStyle().set("max-width", "1100px").set("margin", "0 auto")
-                .set("gap", "var(--lumo-space-xl)");
+        content.setPadding(false); content.setSpacing(false);
+        content.getStyle()
+                .set("max-width", "1100px").set("margin", "0 auto")
+                .set("gap", "var(--lumo-space-xl)")
+                .set("padding", "0 var(--lumo-space-l) var(--lumo-space-xl) var(--lumo-space-l)");
         content.setWidth("100%");
         Div wrapper = new Div(content);
         wrapper.setWidth("100%");
+        wrapper.getStyle().set("margin-top", "0").set("padding-top", "0");
         return wrapper;
     }
 
