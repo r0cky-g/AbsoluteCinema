@@ -16,6 +16,8 @@ public interface MovieMapper {
 	// Mappings for Objects
 	@Mapping(source = "genres", target = "genres", qualifiedByName = "mapGenres")
 	@Mapping(source = "release_dates", target = "age_rating", qualifiedByName = "extractUSRating")
+	@Mapping(source = "images.backdrops", target = "images", qualifiedByName = "extractImages")
+	@Mapping(source = "videos.results", target = "videos", qualifiedByName = "extractOfficialYouTubeVids")
 	@Mapping(source = "credits.cast", target = "cast")
 	@Mapping(source = "credits.crew", target = "crew")
 	@Mapping(source = "production_companies", target = "production_companies", qualifiedByName = "mapProductionCompanies")
@@ -94,6 +96,21 @@ public interface MovieMapper {
                         .findFirst())
                 .map(TmdbCertificateDTO::getCertification)  
                 .orElse("Unrated");
+    }
+	
+	@Named("extractImages")
+    default List<String> extractImages(List<TmdbImageDTO> images) {
+        return images.stream()
+                .map(TmdbImageDTO::getFile_path)  
+                .collect(Collectors.toList());
+    }
+	
+	@Named("extractOfficialYouTubeVids")
+    default List<String> extractOfficialYouTubeVids(List<TmdbVideoDTO> videos) {
+        return videos.stream()
+        		.filter(v -> "YouTube".equals(v.getSite()) && Boolean.TRUE.equals(v.isOfficial()))
+                .map(TmdbVideoDTO::getKey)  
+                .collect(Collectors.toList());
     }
 	
 	@Named("mapProductionCompanies")

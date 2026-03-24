@@ -17,8 +17,11 @@ public class MovieDTO {
 	private int budget;
 	private int revenue;
 	private int runtime;
+	private String backdrop_path;
 	private String poster_path;
 	private String status;
+	private List<String> images;
+	private List<String> videos;
 	private List<ActorDTO> cast;
 	private List<CrewMemberDTO> crew;
 	private List<String> production_companies;
@@ -127,6 +130,14 @@ public class MovieDTO {
 		this.runtime = runtime;
 	}
 	
+	public String getBackdrop_path() {
+		return backdrop_path;
+	}
+
+	public void setBackdrop_path(String backdrop_path) {
+		this.backdrop_path = backdrop_path;
+	}
+
 	public String getPoster_path() {
 		return poster_path;
 	}
@@ -143,6 +154,22 @@ public class MovieDTO {
 		this.status = status;
 	}
 	
+	public List<String> getImages() {
+		return images;
+	}
+
+	public void setImages(List<String> images) {
+		this.images = images;
+	}
+
+	public List<String> getVideos() {
+		return videos;
+	}
+
+	public void setVideos(List<String> videos) {
+		this.videos = videos;
+	}
+
 	public List<ActorDTO> getCast() {
 		return cast;
 	}

@@ -17,9 +17,12 @@ public class TmdbMovieDTO {
 	private int budget;
 	private int revenue;
 	private int runtime;
+	private String backdrop_path;
 	private String poster_path;
 	private String status;
 	private TmdbReleaseDatesDTO release_dates;
+	private TmdbImagesDTO images;
+	private TmdbVideosDTO videos;
 	private TmdbCreditsDTO credits;
 	private List<TmdbCompanyDTO> production_companies;
 	
@@ -127,6 +130,14 @@ public class TmdbMovieDTO {
 		this.runtime = runtime;
 	}
 	
+	public String getBackdrop_path() {
+		return backdrop_path;
+	}
+
+	public void setBackdrop_path(String backdrop_path) {
+		this.backdrop_path = backdrop_path;
+	}
+
 	public String getPoster_path() {
 		return poster_path;
 	}
@@ -157,6 +168,22 @@ public class TmdbMovieDTO {
 	
 	public void setCredits(TmdbCreditsDTO credits) {
 		this.credits = credits;
+	}
+	
+	public TmdbImagesDTO getImages() {
+		return images;
+	}
+
+	public void setImages(TmdbImagesDTO images) {
+		this.images = images;
+	}
+
+	public TmdbVideosDTO getVideos() {
+		return videos;
+	}
+
+	public void setVideos(TmdbVideosDTO videos) {
+		this.videos = videos;
 	}
 
 	public List<TmdbCompanyDTO> getProduction_companies() {
