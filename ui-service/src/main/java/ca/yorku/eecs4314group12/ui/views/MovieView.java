@@ -210,7 +210,15 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         // ---- Full wrapper ----
-        Div inner = new Div(featured, strip);
+        H3 heading = new H3("Gallery");
+        heading.getStyle()
+                .set("margin", "0 0 12px 0")
+                .set("color", "var(--lumo-body-text-color)")
+                .set("font-size", "1.25rem")
+                .set("font-weight", "600")
+                .set("letter-spacing", "0.02em");
+        
+        Div inner = new Div(heading, featured, strip);
         inner.getStyle()
                 .set("max-width", "720px")
                 .set("margin", "0 auto")
@@ -310,24 +318,21 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         metaSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
         metaLine.add(metaSpan);
-        if (movie.getAge_rating() != null && !movie.getAge_rating().isBlank()
-                && !"Unrated".equals(movie.getAge_rating())) {
-            Span rating = new Span(movie.getAge_rating());
-            rating.getStyle()
-                    .set("border", "1px solid var(--lumo-contrast-30pct)")
-                    .set("border-radius", "var(--lumo-border-radius-s)")
-                    .set("padding", "1px 6px")
-                    .set("font-size", "var(--lumo-font-size-xs)")
-                    .set("color", "var(--lumo-secondary-text-color)");
-            metaLine.add(rating);
-        }
+     
+        Span rating = new Span(movie.getAge_rating());
+        rating.getStyle()
+        	.set("border", "1px solid var(--lumo-contrast-30pct)")
+        	.set("border-radius", "var(--lumo-border-radius-s)")
+        	.set("padding", "1px 6px")
+        	.set("font-size", "var(--lumo-font-size-xs)")
+        	.set("color", "var(--lumo-secondary-text-color)");
+        metaLine.add(rating);
+        
 
         HorizontalLayout scores = new HorizontalLayout(buildScoreBadge("👥 Users", userScore, true));
         scores.setSpacing(true);
 
-        long directorCount = movie.getCrew() != null
-                ? movie.getCrew().stream().filter(c -> "Director".equals(c.getJob())).count() : 0;
-        Span director = new Span((directorCount > 1 ? "Directors  " : "Directed by  ") + movie.getDirector());
+        Span director = new Span("Directed by  " + movie.getDirector());
         director.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
@@ -458,7 +463,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     .set("font-size", "var(--lumo-font-size-m)");
             Div castScroll = buildScrollRow();
             cast.forEach(c -> castScroll.add(
-                    buildPersonCard(c.getOriginal_name(), c.getCharacter(), c.getProfile_path())));
+                    buildPersonCard(c.getName(), c.getCharacter(), c.getProfile_path())));
             castCrewSection.add(castHeading, castScroll);
         }
 
@@ -468,17 +473,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     .set("font-size", "var(--lumo-font-size-m)");
             Div crewScroll = buildScrollRow();
 
-            // Deduplicate crew by name, combining all jobs into one card
+            // Duplicate crew by name, combining all jobs into one card
             java.util.LinkedHashMap<String, java.util.List<String>> crewByName = new java.util.LinkedHashMap<>();
+            java.util.HashMap<String, String> profilePaths = new java.util.HashMap<>();
             crew.forEach(c -> {
-                String crewName = c.getOriginal_name() != null ? c.getOriginal_name() : "";
-                String job = c.getJob() != null ? c.getJob() : "";
-                crewByName.computeIfAbsent(crewName, k -> new java.util.ArrayList<>()).add(job);
+                crewByName.computeIfAbsent(c.getName(), k -> new java.util.ArrayList<>()).add(c.getJob());
+                profilePaths.putIfAbsent(c.getName(), c.getProfile_path());
             });
 
             crewByName.forEach((crewName, jobs) -> {
                 String combinedRoles = String.join(" / ", jobs);
-                crewScroll.add(buildPersonCard(crewName, combinedRoles, null));
+                crewScroll.add(buildPersonCard(crewName, combinedRoles, profilePaths.get(crewName)));
             });
 
             castCrewSection.add(crewHeading, crewScroll);
@@ -487,7 +492,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(), movie.getCompanyNames(),
                 movie.getOriginal_title(),
-                movie.getOriginal_language() != null ? movie.getOriginal_language().toUpperCase() : "N/A",
+                movie.getOriginal_language(),
                 movie.getRelease_date(), movie.getRuntimeFormatted());
 
         return wrapContent(
@@ -854,10 +859,11 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         if (backdropPath != null && !backdropPath.isBlank()) {
             String backdropUrl = backdropPath.startsWith("http")
                     ? backdropPath
-                    : "https://image.tmdb.org/t/p/w1280" + backdropPath;
+                    : "https://image.tmdb.org/t/p/w780" + backdropPath;
             hero.getStyle()
-                    .set("background-image", "url('" + backdropUrl + "')")
-                    .set("background-size", "cover")
+                    .set("background-image", "url('" + backdropUrl + "')")                  
+                    .set("background-size", "auto auto")
+                    .set("background-repeat", "no-repeat")
                     .set("background-position", "center center");
 
             Div dimOverlay = new Div();
