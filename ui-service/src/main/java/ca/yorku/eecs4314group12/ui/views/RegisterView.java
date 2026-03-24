@@ -101,7 +101,7 @@ public class RegisterView extends VerticalLayout {
                 Notification.show("Account created! Please check your email for a verification code.",
                         4000, Notification.Position.TOP_CENTER)
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                getUI().ifPresent(ui -> ui.navigate("verify/" + userId));
+                getUI().ifPresent(ui -> ui.navigate("verify?userId=" + userId));
             } else {
                 showError("Registration failed. Username or email may already be taken.");
             }
