@@ -24,6 +24,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -40,7 +42,7 @@ import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 @Route(value = "movie/:movieId", layout = MainLayout.class)
 @PageTitle("Movie | Absolute Cinema")
 @AnonymousAllowed
-public class MovieView extends VerticalLayout implements BeforeEnterObserver {
+public class MovieView extends VerticalLayout implements BeforeEnterObserver, AfterNavigationObserver {
 
     private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
 
@@ -57,7 +59,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         setPadding(false);
         setSpacing(false);
     }
-
+   
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         String param = event.getRouteParameters().get("movieId").orElse("0");
@@ -77,7 +79,6 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
     private void buildPageFromDTO(MovieDTO movie) {
         getUI().ifPresent(ui -> {
             ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema");
-            ui.getPage().executeJs("window.scrollTo(0, 0)");
         });
         List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
         double userScore = backendClient.getReviewStats(movie.getId())
@@ -96,6 +97,15 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         double userScore = backendClient.getReviewStats(movie.getId())
                 .map(ReviewStatsDTO::getAverageRating).orElse(movie.getUserScore());
         add(buildHeroBannerDummy(movie, userScore), buildContentAreaDummy(movie, reviews));
+    }
+    
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+    	getUI().ifPresent(ui ->
+        	ui.getPage().executeJs(
+        		"document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div')[3].scrollTop = 0;"
+        	)	
+    	);
     }
 
     // =========================================================================
