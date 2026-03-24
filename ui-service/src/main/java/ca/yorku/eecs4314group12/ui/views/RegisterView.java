@@ -1,6 +1,7 @@
 package ca.yorku.eecs4314group12.ui.views;
 
 import ca.yorku.eecs4314group12.ui.data.BackendClientService;
+import ca.yorku.eecs4314group12.ui.data.dto.UserResponseDTO;
 import ca.yorku.eecs4314group12.ui.security.InMemoryUserRegistry;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -18,11 +19,14 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+
+import java.util.Optional;
 
 /**
  * Registration page — creates accounts via user-service POST /user/register.
- * Mirrors the user into InMemoryUserRegistry so Spring Security can log them in.
+ * On success redirects to /verify?userId={id} for email verification.
  */
 @Route("register")
 @PageTitle("Create Account | Absolute Cinema")
@@ -66,8 +70,6 @@ public class RegisterView extends VerticalLayout {
 
         Checkbox over18Box = new Checkbox("I confirm I am 18 or older");
 
-        Checkbox moderatorBox = new Checkbox("Create as moderator");
-
         Button registerBtn = new Button("Create Account");
         registerBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         registerBtn.setWidth("100%"); registerBtn.setMaxWidth("360px");
@@ -94,14 +96,16 @@ public class RegisterView extends VerticalLayout {
                 showError("Passwords do not match."); return;
             }
 
-            boolean isModerator = moderatorBox.getValue();
-            boolean serviceSuccess = backendClient.registerUser(username, password, email);
-            if (serviceSuccess) {
+            Optional<UserResponseDTO> result =
+                    backendClient.registerUserFull(username, password, email);
+
+            if (result.isPresent()) {
+                Long userId = result.get().getId();
+                // Mirror into memory so Spring Security can log them in after verification
                 userRegistry.register(username, password, email);
-                Notification.show("Account created! You can now log in.",
-                        4000, Notification.Position.TOP_CENTER)
-                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+                // Navigate to verification page with userId as query param
+                getUI().ifPresent(ui ->
+                        ui.navigate("verify?userId=" + userId));
             } else {
                 showError("Registration failed. Username or email may already be taken.");
             }
@@ -118,7 +122,8 @@ public class RegisterView extends VerticalLayout {
         loginPrompt.add(loginLink);
 
         VerticalLayout form = new VerticalLayout(
-                usernameField, emailField, passwordField, confirmPasswordField, over18Box, moderatorBox, registerBtn);
+                usernameField, emailField, passwordField, confirmPasswordField,
+                over18Box, registerBtn);
         form.setPadding(true); form.setSpacing(true);
         form.setAlignItems(FlexComponent.Alignment.CENTER);
         form.getStyle()

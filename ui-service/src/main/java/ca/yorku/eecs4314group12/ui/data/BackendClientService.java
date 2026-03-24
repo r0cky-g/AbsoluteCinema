@@ -204,6 +204,38 @@ public class BackendClientService {
         } catch (Exception e) { log.error("Registration failed: {}", e.getMessage()); return false; }
     }
 
+    /**
+     * Registers a new user and returns the full UserResponseDTO (including numeric id)
+     * so the caller can redirect to the verification page.
+     */
+    public Optional<UserResponseDTO> registerUserFull(String username, String password, String email) {
+        try {
+            Map<String, Object> body = Map.of("username", username, "password", password,
+                    "email", email, "over18", true);
+            UserResponseDTO response = userClient.post().uri("/user/register")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return Optional.ofNullable(response);
+        } catch (Exception e) { log.error("Registration failed: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    /**
+     * Verifies a user's email via POST /user/{id}/verify?code={code}.
+     */
+    public boolean verifyEmail(long userId, String code) {
+        try {
+            userClient.post()
+                    .uri(uriBuilder -> uriBuilder.path("/user/{id}/verify")
+                            .queryParam("code", code).build(userId))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (Exception e) { log.error("Email verification failed for user {}: {}", userId, e.getMessage()); return false; }
+    }
+
     // -------------------------------------------------------------------------
     // User profile
     // -------------------------------------------------------------------------
