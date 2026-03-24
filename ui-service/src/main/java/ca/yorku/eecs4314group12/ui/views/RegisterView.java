@@ -95,13 +95,13 @@ public class RegisterView extends VerticalLayout {
             }
 
             boolean isModerator = moderatorBox.getValue();
-            boolean serviceSuccess = backendClient.registerUser(username, password, email, isModerator);
-            if (serviceSuccess) {
+            long userId = backendClient.registerUser(username, password, email, isModerator);
+            if (userId > 0) {
                 userRegistry.register(username, password, email);
-                Notification.show("Account created! You can now log in.",
+                Notification.show("Account created! Please check your email for a verification code.",
                         4000, Notification.Position.TOP_CENTER)
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+                getUI().ifPresent(ui -> ui.navigate("verify/" + userId));
             } else {
                 showError("Registration failed. Username or email may already be taken.");
             }

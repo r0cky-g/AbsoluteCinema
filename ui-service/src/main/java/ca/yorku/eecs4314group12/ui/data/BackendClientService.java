@@ -209,9 +209,9 @@ public class BackendClientService {
 
     /**
      * Registers a new user via user-service POST /user/register.
-     * Returns true on success (HTTP 201).
+     * Returns the user ID on success, or -1 on failure.
      */
-    public boolean registerUser(String username, String password, String email, boolean moderator) {
+    public long registerUser(String username, String password, String email, boolean moderator) {
         try {
             Map<String, Object> body = Map.of(
                     "username", username,
@@ -219,15 +219,33 @@ public class BackendClientService {
                     "email", email,
                     "over18", true,
                     "moderator", moderator);
-            userClient.post()
+            UserResponseDTO response = userClient.post()
                     .uri("/user/register")
                     .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return response != null ? response.getId() : -1L;
+        } catch (Exception e) {
+            log.error("Registration failed for '{}': {}", username, e.getMessage());
+            return -1L;
+        }
+    }
+
+    /**
+     * Verifies email with the 4-digit code via user-service POST /user/{id}/verify.
+     * Returns true on success.
+     */
+    public boolean verifyEmail(long userId, String code) {
+        try {
+            userClient.post()
+                    .uri("/user/{id}/verify?code={code}", userId, code)
                     .retrieve()
                     .toBodilessEntity()
                     .block();
             return true;
         } catch (Exception e) {
-            log.error("Registration failed for '{}': {}", username, e.getMessage());
+            log.error("Email verification failed for user {}: {}", userId, e.getMessage());
             return false;
         }
     }
