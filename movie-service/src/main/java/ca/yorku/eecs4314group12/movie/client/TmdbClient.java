@@ -18,7 +18,7 @@ public class TmdbClient {
 	
 	public TmdbMovieDTO getMovieDetails(int id) {
 		return webClient.get()
-				.uri("/movie/"+id+"?append_to_response=images,videos,release_dates,credits&include_image_langugage=null")
+				.uri("/movie/"+id+"?append_to_response=release_dates,credits,videos,images&include_image_language=null")
 				.header("accept", "application/json")
 				.header("Authorization", "Bearer "+token)
 				.retrieve()
