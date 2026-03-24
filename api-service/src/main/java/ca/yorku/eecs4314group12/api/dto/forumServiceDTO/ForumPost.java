@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.api.dto.forumServiceDTO;
 
+import java.time.LocalDateTime;
 
 public class ForumPost {
 
@@ -7,6 +8,7 @@ public class ForumPost {
     private String title;
     private String content;
     private Long userId;
+    private LocalDateTime createdAt;
 
     public ForumPost() {
     }
@@ -53,5 +55,13 @@ public class ForumPost {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public LocalDateTime getCreatedAt() { 
+        return createdAt; 
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) { 
+        this.createdAt = createdAt; 
     }
 }
