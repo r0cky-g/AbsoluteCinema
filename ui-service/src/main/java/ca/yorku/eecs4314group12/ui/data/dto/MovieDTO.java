@@ -53,6 +53,7 @@ public class MovieDTO {
         private String name;
         private String department;
         private String job;
+        private String profile_path;
 
         public String getOriginal_name() { return original_name; }
         public void setOriginal_name(String v) { this.original_name = v; }
@@ -62,6 +63,8 @@ public class MovieDTO {
         public void setDepartment(String v) { this.department = v; }
         public String getJob() { return job; }
         public void setJob(String v) { this.job = v; }
+		public String getProfile_path() { return profile_path; }
+		public void setProfile_path(String profile_path) { this.profile_path = profile_path; }
     }
 
     // ---- Getters & setters ----
