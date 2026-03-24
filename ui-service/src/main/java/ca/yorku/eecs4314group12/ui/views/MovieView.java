@@ -103,7 +103,9 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
     public void afterNavigation(AfterNavigationEvent event) {
     	getUI().ifPresent(ui ->
         	ui.getPage().executeJs(
-        		"document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div')[3].scrollTop = 0;"
+        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
+        		           "if (div) div.scrollTop = 0;"
         	)	
     	);
     }
