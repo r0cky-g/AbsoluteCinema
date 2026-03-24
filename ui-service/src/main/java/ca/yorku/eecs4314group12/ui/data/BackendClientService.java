@@ -365,14 +365,33 @@ public class BackendClientService {
         } catch (Exception e) { log.error("Failed to fetch forum posts: {}", e.getMessage()); return List.of(); }
     }
 
-    public Optional<ForumPostDTO> createPost(String title, String content, Long userId) {
+    public List<ForumPostDTO> getPostsByCategory(String category) {
         try {
-            Map<String, Object> body = Map.of("title", title, "content", content,
-                    "userId", userId != null ? userId : 0L);
+            List<ForumPostDTO> posts = forumClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/forum/posts")
+                            .queryParam("category", category).build())
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
+            return posts != null ? posts : List.of();
+        } catch (Exception e) { log.error("Failed to fetch posts for category '{}': {}", category, e.getMessage()); return List.of(); }
+    }
+
+    public Optional<ForumPostDTO> createPost(String title, String content, Long userId, String category) {
+        try {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("title", title);
+            body.put("content", content);
+            body.put("userId", userId != null ? userId : 0L);
+            if (category != null && !category.isBlank())
+                body.put("category", category.trim());
             ForumPostDTO post = forumClient.post().uri("/forum/posts").bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to create post: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    // Legacy overload without category — defaults to General
+    public Optional<ForumPostDTO> createPost(String title, String content, Long userId) {
+        return createPost(title, content, userId, "General");
     }
 
     public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
