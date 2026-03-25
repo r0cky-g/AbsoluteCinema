@@ -2,9 +2,9 @@ package ca.yorku.eecs4314group12.ui.views;
 
 import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 import ca.yorku.eecs4314group12.ui.security.InMemoryUserRegistry;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -66,8 +66,6 @@ public class RegisterView extends VerticalLayout {
 
         Checkbox over18Box = new Checkbox("I confirm I am 18 or older");
 
-        Checkbox moderatorBox = new Checkbox("Create as moderator");
-
         Button registerBtn = new Button("Create Account");
         registerBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         registerBtn.setWidth("100%"); registerBtn.setMaxWidth("360px");
@@ -87,6 +85,9 @@ public class RegisterView extends VerticalLayout {
             if (!username.matches("^[a-zA-Z0-9_]+$")) {
                 showError("Username can only contain letters, numbers, and underscores."); return;
             }
+            if ("ADMIN".equalsIgnoreCase(username)) {
+                showError("This username is reserved."); return;
+            }
             if (password.length() < 8 || password.length() > 20) {
                 showError("Password must be 8–20 characters."); return;
             }
@@ -94,8 +95,7 @@ public class RegisterView extends VerticalLayout {
                 showError("Passwords do not match."); return;
             }
 
-            boolean isModerator = moderatorBox.getValue();
-            boolean serviceSuccess = backendClient.registerUser(username, password, email, isModerator);
+            boolean serviceSuccess = backendClient.registerUser(username, password, email);
             if (serviceSuccess) {
                 userRegistry.register(username, password, email);
                 Notification.show("Account created! You can now log in.",
@@ -118,7 +118,7 @@ public class RegisterView extends VerticalLayout {
         loginPrompt.add(loginLink);
 
         VerticalLayout form = new VerticalLayout(
-                usernameField, emailField, passwordField, confirmPasswordField, over18Box, moderatorBox, registerBtn);
+                usernameField, emailField, passwordField, confirmPasswordField, over18Box, registerBtn);
         form.setPadding(true); form.setSpacing(true);
         form.setAlignItems(FlexComponent.Alignment.CENTER);
         form.getStyle()

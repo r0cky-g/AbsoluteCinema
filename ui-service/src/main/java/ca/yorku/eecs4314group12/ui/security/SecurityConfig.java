@@ -81,7 +81,12 @@ public class SecurityConfig {
                     userRegistry.mirror(username, password, dto.getRole());
                     userSessionService.setUser(dto.getId(), dto.getRole(), dto.getEmail());
 
-                    String authority = "ADMIN".equals(dto.getRole()) ? "ROLE_ADMIN" : "ROLE_USER";
+                    String r = dto.getRole() != null ? dto.getRole() : "USER";
+                    String authority = switch (r) {
+                        case "ADMIN" -> "ROLE_ADMIN";
+                        case "MODERATOR" -> "ROLE_MODERATOR";
+                        default -> "ROLE_USER";
+                    };
                     return new UsernamePasswordAuthenticationToken(
                             username, password,
                             List.of(new SimpleGrantedAuthority(authority)));

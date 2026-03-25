@@ -39,7 +39,12 @@ public class InMemoryUserRegistry {
      * Always overwrites — call this after every successful user-service login/register.
      */
     public void mirror(String username, String rawPassword, String role) {
-        String authority = "ADMIN".equals(role) ? "ROLE_ADMIN" : "ROLE_USER";
+        String r = role != null ? role : "USER";
+        String authority = switch (r) {
+            case "ADMIN" -> "ROLE_ADMIN";
+            case "MODERATOR" -> "ROLE_MODERATOR";
+            default -> "ROLE_USER";
+        };
         UserDetails user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(rawPassword))

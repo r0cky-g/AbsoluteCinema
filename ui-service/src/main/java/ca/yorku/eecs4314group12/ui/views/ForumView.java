@@ -29,7 +29,7 @@ import java.util.List;
  * Forum page — lists all posts, lets users create posts and add comments.
  *
  * Uses real userId from UserSessionService when available.
- * Ownership check: Edit/Delete only shown to the post's owner (by userId).
+ * Owners can edit/delete their posts. Moderators and admins can delete any post or comment.
  */
 @Route(value = "forum", layout = MainLayout.class)
 @PageTitle("Forum | Absolute Cinema")
@@ -134,7 +134,9 @@ public class ForumView extends VerticalLayout {
         Details commentsSection = new Details("Comments", commentsLayout);
         commentsSection.getStyle().set("width", "100%");
         commentsSection.addOpenedChangeListener(e -> {
-            if (e.isOpened()) loadComments(post.getId(), commentsLayout);
+            if (e.isOpened()) {
+                loadComments(post.getId(), commentsLayout);
+            }
         });
 
         Button commentBtn = new Button("Add Comment");
@@ -162,6 +164,12 @@ public class ForumView extends VerticalLayout {
             deleteBtn.addClickListener(e -> deletePost(post.getId()));
 
             actions.add(editBtn, deleteBtn);
+        } else if (canModerateContent()) {
+            Button deleteBtn = new Button("Delete (moderator)");
+            deleteBtn.addThemeVariants(
+                    ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClickListener(e -> deletePost(post.getId()));
+            actions.add(deleteBtn);
         }
 
         card.add(title, authorSpan, content, commentsSection, actions);
@@ -198,7 +206,23 @@ public class ForumView extends VerticalLayout {
             meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                     .set("color", "var(--lumo-tertiary-text-color)");
             bubble.add(text, meta);
-            target.add(bubble);
+
+            Long viewerId = currentUserId();
+            boolean commentOwner = viewerId != null && comment.getUserId() != null
+                    && comment.getUserId().equals(viewerId);
+            if (commentOwner || canModerateContent()) {
+                Button delComment = new Button("Delete");
+                delComment.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL,
+                        ButtonVariant.LUMO_ERROR);
+                delComment.addClickListener(ev -> deleteComment(comment.getId(), postId, target));
+                HorizontalLayout row = new HorizontalLayout(bubble, delComment);
+                row.setWidthFull();
+                row.setAlignItems(FlexComponent.Alignment.CENTER);
+                row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+                target.add(row);
+            } else {
+                target.add(bubble);
+            }
         }
     }
 
@@ -356,6 +380,28 @@ public class ForumView extends VerticalLayout {
             Notification.show("Could not delete post.", 3000, Notification.Position.BOTTOM_START)
                     .addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
+    }
+
+    private void deleteComment(long commentId, long postId, VerticalLayout commentsLayout) {
+        Long userId = currentUserId();
+        if (userId == null) {
+            Notification.show("You must be logged in.", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+        String role = userSessionService.getRole();
+        boolean ok = backendClient.deleteComment(commentId, userId, role);
+        if (ok) {
+            loadComments(postId, commentsLayout);
+            Notification.show("Comment deleted.", 2500, Notification.Position.BOTTOM_START);
+        } else {
+            Notification.show("Could not delete comment.", 3000, Notification.Position.BOTTOM_START)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+        }
+    }
+
+    private boolean canModerateContent() {
+        String r = userSessionService.getRole();
+        return "MODERATOR".equals(r) || "ADMIN".equals(r);
     }
 
     // -------------------------------------------------------------------------

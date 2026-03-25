@@ -211,14 +211,13 @@ public class BackendClientService {
      * Registers a new user via user-service POST /user/register.
      * Returns true on success (HTTP 201).
      */
-    public boolean registerUser(String username, String password, String email, boolean moderator) {
+    public boolean registerUser(String username, String password, String email) {
         try {
             Map<String, Object> body = Map.of(
                     "username", username,
                     "password", password,
                     "email", email,
-                    "over18", true,
-                    "moderator", moderator);
+                    "over18", true);
             userClient.post()
                     .uri("/user/register")
                     .bodyValue(body)
@@ -228,6 +227,64 @@ public class BackendClientService {
             return true;
         } catch (Exception e) {
             log.error("Registration failed for '{}': {}", username, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * All registered users (admin UI).
+     */
+    public List<UserResponseDTO> getAllUsers() {
+        try {
+            List<UserResponseDTO> list = userClient.get()
+                    .uri("/user")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<UserResponseDTO>>() {})
+                    .block();
+            return list != null ? list : List.of();
+        } catch (Exception e) {
+            log.error("Failed to list users: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Updates a user's role via PATCH /user/{id}/role.
+     *
+     * @return empty if the request failed
+     */
+    public Optional<UserResponseDTO> updateUserRole(long userId, String role) {
+        try {
+            UserResponseDTO updated = userClient.patch()
+                    .uri("/user/{id}/role", userId)
+                    .bodyValue(Map.of("role", role))
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return Optional.ofNullable(updated);
+        } catch (WebClientResponseException e) {
+            log.warn("updateUserRole failed for user {}: {}", userId, e.getStatusCode());
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("updateUserRole error for user {}: {}", userId, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public boolean deleteReview(long reviewId, long actingUserId, String userRole) {
+        try {
+            reviewClient.delete()
+                    .uri("/api/reviews/{id}?userId={userId}&userRole={userRole}",
+                            reviewId, actingUserId, userRole != null ? userRole : "USER")
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            log.warn("Delete review {} rejected ({})", reviewId, e.getStatusCode());
+            return false;
+        } catch (Exception e) {
+            log.error("Failed to delete review {}: {}", reviewId, e.getMessage());
             return false;
         }
     }
@@ -447,7 +504,7 @@ public class BackendClientService {
 
     public boolean deletePost(long postId, long userId, String userRole) {
         try {
-            userClient.delete()
+            forumClient.delete()
                     .uri("/forum/posts/{id}?userId={userId}&userRole={userRole}",
                             postId, userId, userRole)
                     .retrieve()
@@ -494,6 +551,24 @@ public class BackendClientService {
         } catch (Exception e) {
             log.error("Failed to create comment on post {}: {}", postId, e.getMessage());
             return Optional.empty();
+        }
+    }
+
+    public boolean deleteComment(long commentId, long actingUserId, String userRole) {
+        try {
+            forumClient.delete()
+                    .uri("/forum/comments/{id}?userId={userId}&userRole={userRole}",
+                            commentId, actingUserId, userRole != null ? userRole : "USER")
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            log.warn("Delete comment {} rejected ({})", commentId, e.getStatusCode());
+            return false;
+        } catch (Exception e) {
+            log.error("Failed to delete comment {}: {}", commentId, e.getMessage());
+            return false;
         }
     }
 

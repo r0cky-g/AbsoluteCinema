@@ -136,6 +136,9 @@ public class MainLayout extends AppLayout {
                 new SideNavItem("My Account", AccountView.class, VaadinIcon.USER.create()),
                 new SideNavItem("Edit Profile", EditProfileView.class, VaadinIcon.EDIT.create())
             );
+            if (auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
+                nav.addItem(new SideNavItem("Admin", AdminView.class, VaadinIcon.COG.create()));
+            }
         } else {
             nav.addItem(
                 new SideNavItem("Login", LoginView.class, VaadinIcon.SIGN_IN.create()),

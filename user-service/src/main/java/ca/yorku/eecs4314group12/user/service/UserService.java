@@ -5,6 +5,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import ca.yorku.eecs4314group12.user.config.AdminAccountInitializer;
+import ca.yorku.eecs4314group12.user.model.Role;
 import ca.yorku.eecs4314group12.user.repository.UserRepository;
 import ca.yorku.eecs4314group12.user.model.User;
 
@@ -25,6 +27,12 @@ public class UserService {
 
     // CREATE USER
     public User createUser(User user) {
+
+        if (AdminAccountInitializer.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "This username is reserved");
+        }
 
         if (repo.existsByEmail(user.getEmail())) {
             throw new ResponseStatusException(
@@ -182,5 +190,30 @@ public class UserService {
 
         User existingUser = getUserById(id);
         repo.delete(existingUser);
+    }
+
+    /**
+     * Updates a user's role. The built-in ADMIN account cannot be demoted from ADMIN.
+     */
+    public User updateRole(Long userId, String roleName) {
+        Role newRole;
+        try {
+            newRole = Role.valueOf(roleName.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid role; use USER, MODERATOR, or ADMIN");
+        }
+
+        User user = getUserById(userId);
+        if (AdminAccountInitializer.ADMIN_USERNAME.equalsIgnoreCase(user.getUsername())
+                && newRole != Role.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "The built-in administrator account cannot be demoted");
+        }
+
+        user.setRole(newRole);
+        return repo.save(user);
     }
 }

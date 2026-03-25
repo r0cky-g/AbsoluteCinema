@@ -279,6 +279,25 @@ public class AccountView extends VerticalLayout {
             content.getStyle().set("margin", "0").set("color", "var(--lumo-secondary-text-color)");
 
             card.add(title, content);
+
+            Button deleteReview = new Button("Delete review", VaadinIcon.TRASH.create());
+            deleteReview.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+            deleteReview.addClickListener(ev -> {
+                if (review.getId() == null) {
+                    return;
+                }
+                boolean ok = backendClient.deleteReview(review.getId(), userId, userSessionService.getRole());
+                if (ok) {
+                    Notification.show("Review deleted.", 2500, Notification.Position.BOTTOM_START)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    getUI().ifPresent(ui -> ui.getPage().reload());
+                } else {
+                    Notification.show("Could not delete review.", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+            card.add(deleteReview);
+
             section.add(card);
         }
 

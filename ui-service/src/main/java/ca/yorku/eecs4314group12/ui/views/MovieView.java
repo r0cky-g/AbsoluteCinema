@@ -358,12 +358,12 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
             reviews.stream()
                     .max(java.util.Comparator.comparingInt(
                             r -> r.getHelpfulCount() != null ? r.getHelpfulCount() : 0))
-                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true)));
+                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, movieId)));
             reviews.stream()
                     .sorted(java.util.Comparator.comparing(ReviewDTO::getCreatedAt,
                             java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
                     .limit(3)
-                    .forEach(r -> reviewCards.add(buildReviewCard(r, false)));
+                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, movieId)));
         }
 
         VerticalLayout section = new VerticalLayout(header, reviewCards);
@@ -377,7 +377,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return section;
     }
 
-    private Div buildReviewCard(ReviewDTO review, boolean isTop) {
+    private Div buildReviewCard(ReviewDTO review, boolean isTop, int movieId) {
         Div card = new Div();
         card.getStyle()
                 .set("background", isTop ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
@@ -400,7 +400,51 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-tertiary-text-color)");
         card.add(reviewTitle, rating, content, meta);
+
+        if (canDeleteReview(review)) {
+            Button deleteBtn = new Button("Delete", VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClickListener(e -> {
+                Long uid = userSessionService.getUserId();
+                if (uid == null || review.getId() == null) {
+                    return;
+                }
+                boolean ok = backendClient.deleteReview(review.getId(), uid, userSessionService.getRole());
+                if (ok) {
+                    Notification.show("Review removed.", 2500, Notification.Position.BOTTOM_START);
+                    removeAll();
+                    backendClient.getMovieById(movieId).ifPresent(m -> {
+                        getUI().ifPresent(ui -> ui.getPage().setTitle(m.getTitle() + " | Absolute Cinema"));
+                        List<ReviewDTO> refreshed = backendClient.getReviewsForMovie(m.getId());
+                        double userScore = backendClient.getReviewStats(m.getId())
+                                .map(ReviewStatsDTO::getAverageRating).orElse(0.0);
+                        add(buildHeroBannerDTO(m, userScore), buildContentAreaDTO(m, refreshed));
+                    });
+                } else {
+                    Notification.show("Could not delete review.", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+            card.add(deleteBtn);
+        }
+
         return card;
+    }
+
+    private boolean canModerateReviews() {
+        String r = userSessionService.getRole();
+        return "MODERATOR".equals(r) || "ADMIN".equals(r);
+    }
+
+    private boolean canDeleteReview(ReviewDTO review) {
+        Long uid = userSessionService.getUserId();
+        if (uid == null || review.getId() == null) {
+            return false;
+        }
+        if (canModerateReviews()) {
+            return true;
+        }
+        return review.getUserId() != null && review.getUserId().equals(uid);
     }
 
     // =========================================================================
