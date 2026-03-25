@@ -16,6 +16,7 @@ import ca.yorku.eecs4314group12.user.model.WatchHistory;
 import ca.yorku.eecs4314group12.user.service.FavouriteMovieService;
 import ca.yorku.eecs4314group12.user.model.FavouriteMovie;
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
+import ca.yorku.eecs4314group12.user.dto.AdminCredentialsRequest;
 import ca.yorku.eecs4314group12.user.dto.UserRegisterRequest;
 import ca.yorku.eecs4314group12.user.dto.UserUpdateRequest;
 import ca.yorku.eecs4314group12.user.dto.UserResponseDTO;
@@ -55,11 +56,6 @@ public class UserController {
                 request.getPassword());
 
         user.setOver18(request.isOver18());
-        
-        // Set role to MODERATOR if moderator flag is true, otherwise default to USER
-        if (request.isModerator()) {
-            user.setRole(ca.yorku.eecs4314group12.user.model.Role.MODERATOR);
-        }
 
         User createdUser = service.createUser(user);
 
@@ -131,6 +127,35 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
+    }
+
+    /**
+     * Promote a user to MODERATOR. Only an authenticated {@link ca.yorku.eecs4314group12.user.model.Role#ADMIN} may call this.
+     * Request body supplies that administrator's credentials (same identifier as login: username or email).
+     */
+    @PostMapping("/{userId}/promote-moderator")
+    public ResponseEntity<UserResponseDTO> promoteModerator(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminCredentialsRequest credentials) {
+        User updated = service.promoteToModerator(
+                userId,
+                credentials.getAdminIdentifier(),
+                credentials.getAdminPassword());
+        return ResponseEntity.ok(toDTO(updated));
+    }
+
+    /**
+     * Demote a MODERATOR back to USER. Only an ADMIN may call this.
+     */
+    @PostMapping("/{userId}/demote-moderator")
+    public ResponseEntity<UserResponseDTO> demoteModerator(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminCredentialsRequest credentials) {
+        User updated = service.demoteModeratorToUser(
+                userId,
+                credentials.getAdminIdentifier(),
+                credentials.getAdminPassword());
+        return ResponseEntity.ok(toDTO(updated));
     }
 
     // Watchlist endpoints

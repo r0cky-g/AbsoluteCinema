@@ -156,7 +156,7 @@ public class ReviewController {
         // TODO: After Check-in 1 - Extract userId from JWT token
         // Long userId = jwtTokenProvider.getUserIdFromToken(token);
         // UserRole role = userServiceClient.getUserRole(userId);
-        // Allow if: user is owner OR user is moderator/admin
+        // Allow if: user is owner OR platform admin (moderators handle forum only)
         
         try {
             reviewService.deleteReview(id, userId, userRole);

@@ -183,15 +183,22 @@ class ReviewServiceTests {
     }
 
     @Test
-    void deleteReview_ModeratorCanDeleteAnyReview() {
-        // Given
+    void deleteReview_ModeratorCannotDeleteOthersReview() {
+        when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
+
+        assertThrows(IllegalStateException.class, () ->
+                reviewService.deleteReview(1L, 999L, "MODERATOR"));
+
+        verify(reviewRepository, never()).save(any(Review.class));
+    }
+
+    @Test
+    void deleteReview_ModeratorCanDeleteOwnReview() {
         when(reviewRepository.findById(1L)).thenReturn(Optional.of(testReview));
         when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
 
-        // When - moderator deleting someone else's review
-        reviewService.deleteReview(1L, 999L, "MODERATOR");
+        reviewService.deleteReview(1L, 1L, "MODERATOR");
 
-        // Then
         verify(reviewRepository, times(1)).save(any(Review.class));
     }
 

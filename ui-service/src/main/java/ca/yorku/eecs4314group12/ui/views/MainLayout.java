@@ -19,7 +19,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import ca.yorku.eecs4314group12.ui.data.BackendClientService;
+import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 
 /**
  * Main application shell — AppLayout with top navbar and collapsible drawer.
@@ -33,10 +33,10 @@ import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 @AnonymousAllowed
 public class MainLayout extends AppLayout {
 
-    private final BackendClientService backendClient;
+    private final UserSessionService userSessionService;
 
-    public MainLayout(BackendClientService backendClient) {
-        this.backendClient = backendClient;
+    public MainLayout(UserSessionService userSessionService) {
+        this.userSessionService = userSessionService;
         createHeader();
         createDrawer();
     }
@@ -136,6 +136,9 @@ public class MainLayout extends AppLayout {
                 new SideNavItem("My Account", AccountView.class, VaadinIcon.USER.create()),
                 new SideNavItem("Edit Profile", EditProfileView.class, VaadinIcon.EDIT.create())
             );
+            if ("ADMIN".equals(userSessionService.getRole())) {
+                nav.addItem(new SideNavItem("Admin", AdminView.class, VaadinIcon.SHIELD.create()));
+            }
         } else {
             nav.addItem(
                 new SideNavItem("Login", LoginView.class, VaadinIcon.SIGN_IN.create()),

@@ -18,8 +18,8 @@ public class User {
 
     //username set up
     @NotBlank(message = "Username cannot be blank")
-    @Size(min = 8, max = 16,
-            message = "Username must be between 8 and 16 characters")
+    @Size(min = 5, max = 16,
+            message = "Username must be between 5 and 16 characters")
     @Pattern(
             regexp = "^[a-zA-Z0-9_]+$",
             message = "Username can only contain letters, numbers, and underscores"

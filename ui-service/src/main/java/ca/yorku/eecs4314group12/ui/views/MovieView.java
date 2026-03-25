@@ -601,12 +601,12 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
             reviews.stream()
                     .max(java.util.Comparator.comparingInt(
                             r -> r.getHelpfulCount() != null ? r.getHelpfulCount() : 0))
-                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, loggedIn)));
+                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, loggedIn, movieId)));
             reviews.stream()
                     .sorted(java.util.Comparator.comparing(ReviewDTO::getCreatedAt,
                             java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
                     .limit(3)
-                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, loggedIn)));
+                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, loggedIn, movieId)));
         }
 
         VerticalLayout section = new VerticalLayout(header, reviewCards);
@@ -620,7 +620,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         return section;
     }
 
-    private Div buildReviewCard(ReviewDTO review, boolean isTop, boolean loggedIn) {
+    private Div buildReviewCard(ReviewDTO review, boolean isTop, boolean loggedIn, int movieId) {
         Div card = new Div();
         card.getStyle()
                 .set("background", isTop ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
@@ -646,10 +646,33 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-tertiary-text-color)");
 
-        // Like / dislike row
         HorizontalLayout voteRow = buildVoteRow(review, loggedIn);
 
         card.add(reviewTitle, rating, content, meta, voteRow);
+
+        Long sessionUserId = userSessionService.getUserId();
+        boolean isOwner = sessionUserId != null && review.getUserId() != null
+                && sessionUserId.equals(review.getUserId());
+        boolean isAdmin = "ADMIN".equals(userSessionService.getRole());
+        if (loggedIn && review.getId() != null && sessionUserId != null && (isOwner || isAdmin)) {
+            Button del = new Button("Delete review", VaadinIcon.TRASH.create());
+            del.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+            del.addClickListener(e -> {
+                if (backendClient.deleteReview(review.getId(), sessionUserId, userSessionService.getRole())) {
+                    Notification.show("Review deleted.", 2500, Notification.Position.BOTTOM_START)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    removeAll();
+                    backendClient.getMovieById(movieId).ifPresentOrElse(this::buildPageFromDTO,
+                            () -> dummyDataService.getMovieById(movieId).ifPresentOrElse(
+                                    this::buildPageFromDummy, this::showNotFound));
+                } else {
+                    Notification.show("Could not delete this review.", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+            card.add(del);
+        }
+
         return card;
     }
 

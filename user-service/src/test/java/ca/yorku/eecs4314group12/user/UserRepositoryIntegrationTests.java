@@ -5,6 +5,7 @@ import ca.yorku.eecs4314group12.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@Import(UserServiceTestMailConfig.class)
 @Transactional
 public class UserRepositoryIntegrationTests {
 

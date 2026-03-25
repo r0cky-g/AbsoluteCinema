@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  *
  * Shows:
  *   - Search bar wired to movie-service GET /movie/search/{query}
- *   - Recommended for You (logged-in users with watchlist items only)
+ *   - Recommended for You (logged-in: ranked from watchlist metadata vs trending, else top 5 trending)
  *   - Now Playing  → GET /movie/nowplaying
  *   - Trending     → GET /movie/trending
  *
@@ -115,13 +115,36 @@ public class HomeView extends VerticalLayout implements AfterNavigationObserver 
     
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-    	getUI().ifPresent(ui ->
-        	ui.getPage().executeJs(
-        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
-        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
-        		           "if (div) div.scrollTop = 0;"
-        	)	
-    	);
+        getUI().ifPresent(ui ->
+                ui.getPage().executeJs(
+                        "const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+                                "  .find(d => d.scrollHeight > d.clientHeight);" +
+                                "if (div) div.scrollTop = 0;"
+                )
+        );
+
+        if (isLoggedIn() && userSessionService.getUserId() != null) {
+            reloadWatchlistAndFavouritesFromServer();
+            String q = searchField.getValue();
+            if (q == null || q.isBlank()) {
+                showSections();
+            }
+        }
+    }
+
+    private void reloadWatchlistAndFavouritesFromServer() {
+        long userId = userSessionService.getUserId();
+        List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);
+        watchlistIds = watchlist.stream()
+                .map(WatchlistDTO::getMovieId)
+                .collect(Collectors.toSet());
+        watchlistIds = watchlistIds == null ? Set.of() : watchlistIds;
+
+        List<FavouriteMovieDTO> favourites = backendClient.getFavourites(userId);
+        favouriteIds = favourites.stream()
+                .map(FavouriteMovieDTO::getMovieId)
+                .collect(Collectors.toSet());
+        favouriteIds = favouriteIds == null ? Set.of() : favouriteIds;
     }
 
     // -------------------------------------------------------------------------

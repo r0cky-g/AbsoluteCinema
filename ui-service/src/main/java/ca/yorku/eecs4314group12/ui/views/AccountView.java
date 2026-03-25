@@ -18,6 +18,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
@@ -39,7 +41,7 @@ import java.util.List;
 @Route(value = "account", layout = MainLayout.class)
 @PageTitle("My Account | Absolute Cinema")
 @PermitAll
-public class AccountView extends VerticalLayout {
+public class AccountView extends VerticalLayout implements AfterNavigationObserver {
 
     private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w185";
 
@@ -55,6 +57,16 @@ public class AccountView extends VerticalLayout {
         setSpacing(false);
         getStyle().set("max-width", "900px").set("margin", "0 auto");
 
+        rebuildPage();
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        rebuildPage();
+    }
+
+    private void rebuildPage() {
+        removeAll();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Long userId = userSessionService.getUserId();
 
@@ -218,7 +230,7 @@ public class AccountView extends VerticalLayout {
 
         if (recommendations.isEmpty()) {
             section.add(emptyMessage(
-                    "Add movies to your watchlist to get personalised recommendations!"));
+                    "Recommendations are unavailable right now. Check back after the movie service responds."));
             return section;
         }
 
