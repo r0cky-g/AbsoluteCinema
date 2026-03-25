@@ -75,6 +75,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
                     this::buildPageFromDummy, this::showNotFound);
         }
     }
+    
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+    	getUI().ifPresent(ui ->
+        	ui.getPage().executeJs(
+        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
+        		           "if (div) div.scrollTop = 0;"
+        	)	
+    	);
+    }
 
     private void buildPageFromDTO(MovieDTO movie) {
         getUI().ifPresent(ui -> {
@@ -97,17 +108,6 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         double userScore = backendClient.getReviewStats(movie.getId())
                 .map(ReviewStatsDTO::getAverageRating).orElse(movie.getUserScore());
         add(buildHeroBannerDummy(movie, userScore), buildContentAreaDummy(movie, reviews));
-    }
-    
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-    	getUI().ifPresent(ui ->
-        	ui.getPage().executeJs(
-        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
-        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
-        		           "if (div) div.scrollTop = 0;"
-        	)	
-    	);
     }
 
     // =========================================================================

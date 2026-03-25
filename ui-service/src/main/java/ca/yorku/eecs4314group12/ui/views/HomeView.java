@@ -14,6 +14,8 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -41,7 +43,7 @@ import java.util.stream.Collectors;
 @RouteAlias(value = "", layout = MainLayout.class)
 @PageTitle("Home | Absolute Cinema")
 @AnonymousAllowed
-public class HomeView extends VerticalLayout {
+public class HomeView extends VerticalLayout implements AfterNavigationObserver {
 
     private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 
@@ -109,6 +111,17 @@ public class HomeView extends VerticalLayout {
 
         add(searchRow, contentArea);
         showSections();
+    }
+    
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+    	getUI().ifPresent(ui ->
+        	ui.getPage().executeJs(
+        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
+        		           "if (div) div.scrollTop = 0;"
+        	)	
+    	);
     }
 
     // -------------------------------------------------------------------------
