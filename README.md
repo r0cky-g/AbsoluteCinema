@@ -74,7 +74,7 @@ Docker is the easiest way to run the full stack — no local Java or PostgreSQL 
 - A TMDB Read Access Token — get one free at https://www.themoviedb.org/settings/api
 - MongoDB URI
 
-> **Note:** The MongoDB URI will only be given to the development team.
+> **Important Note:** The MongoDB URI will only be given to the development team.
 
 ### Setup
 
