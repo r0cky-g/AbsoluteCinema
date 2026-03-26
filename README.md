@@ -172,10 +172,12 @@ Open a separate terminal for each service.
 ```bash
 # Windows
 setx TDMB_TOKEN "your_token_here"
+setx MONGODB_URI "your_given_uri_here"
 cd movie-service && .\mvnw.cmd spring-boot:run
 
 # Mac/Linux
 export TDMB_TOKEN=your_token_here
+export MONGODB_URI=your_given_uri_here
 cd movie-service && ./mvnw spring-boot:run
 ```
 
