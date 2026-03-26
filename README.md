@@ -156,6 +156,9 @@ docker compose down -v
 - Java 21
 - PostgreSQL (for review-service and user-service)
 - A TMDB API token
+- MongoDB URI
+
+**Note:** The MongoDB URI will only be given to the development team.
 
 ### Setup
 
