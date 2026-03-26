@@ -84,12 +84,15 @@ cp .env.example .env
 Edit `.env`:
 ```
 TMDB_TOKEN=your_tmdb_read_access_token_here
-DB_PASSWORD=postgres
+MONGODB_URI=your_given_mongodb_uri
+DB_PASSWORD=your_chosen_db_password
 MAIL_USERNAME=your_gmail_address@gmail.com
 MAIL_PASSWORD=your_gmail_app_password
 ```
 
-> **Important:** `DB_PASSWORD` is required for PostgreSQL authentication. Use `postgres` as the default password.
+> **Important:** `MONGODB_URI` will only be given to main developers.
+> `DB_PASSWORD` is required for PostgreSQL authentication. The password can be up to you. Just note that after the initial `docker compose up`, you must use the current password that you have written. In order to change the password, do `docker compose down -v`.
+> You can then change your `DB_PASSSWORD` in the .env, then procced to use `docker compose up`.
 > `MAIL_USERNAME` and `MAIL_PASSWORD` are required for email verification to work. Use a Gmail address and a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password). Each developer needs to set these to their own values locally.
 > `.env` is gitignored and must be created manually on each machine you use.
 
