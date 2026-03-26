@@ -171,7 +171,7 @@ Create three PostgreSQL databases:
 
 Open a separate terminal for each service.
 
-**movie-service** — set your TMDB token first:
+**movie-service:** 
 ```bash
 # Windows
 setx TDMB_TOKEN "your_token_here"
