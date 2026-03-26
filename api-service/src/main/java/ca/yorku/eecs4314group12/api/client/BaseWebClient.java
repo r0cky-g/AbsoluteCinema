@@ -70,6 +70,7 @@ public class BaseWebClient {
     public <T, B> Mono<ResponseEntity<T>> put(String uri, B requestBody, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
     return webClient.put()
             .uri(uri, uriVariables)
+            .bodyValue(requestBody)
             .exchangeToMono(response -> {
                 HttpStatusCode status = response.statusCode();
                 HttpHeaders headers = response.headers().asHttpHeaders();
@@ -94,6 +95,7 @@ public class BaseWebClient {
     public <T, B> Mono<ResponseEntity<T>> post(String uri, B requestBody, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
     return webClient.post()
             .uri(uri, uriVariables)
+            .bodyValue(requestBody)
             .exchangeToMono(response -> {
                 HttpStatusCode status = response.statusCode();
                 HttpHeaders headers = response.headers().asHttpHeaders();

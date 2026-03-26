@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import ca.yorku.eecs4314group12.api.client.ForumClient;
+import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.Comment;
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.CreateCommentRequest;
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.ForumPost;
-import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.*;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -20,8 +20,8 @@ public class ForumService {
         this.forumClient = forumClient;
     }
 
-    public Mono<ResponseEntity<List<ForumPost>>> getPost() {
-        return forumClient.getPost();
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category) {
+        return forumClient.getPost(category);
     }
 
     public Mono<ResponseEntity<ForumPost>> createPost(ForumPost post) {

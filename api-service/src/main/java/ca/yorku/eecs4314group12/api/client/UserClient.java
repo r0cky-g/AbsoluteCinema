@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieDTO;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.WatchHistory;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.Watchlist;
 import reactor.core.publisher.Mono;
 
@@ -33,10 +35,9 @@ public class UserClient {
         return baseWebClient.post("/user/login", request,  new ParameterizedTypeReference<UserResponseDTO>() {});
     }
 
-    // email verification is temporarily desabled
-    // public Mono<ResponseEntity<String>> verifyEmail(Long id, String code) {
-    //     return baseWebClient.post("/user/{id}/verify?code={code}", null,  new ParameterizedTypeReference<String>() {}, id, code);
-    // }
+    public Mono<ResponseEntity<String>> verifyEmail(Long id, String code) {
+        return baseWebClient.post("/user/{id}/verify?code={code}", null,  new ParameterizedTypeReference<String>() {}, id, code);
+    }
 
     public Mono<ResponseEntity<List<UserResponseDTO>>> getUsers() {
         return baseWebClient.get("/user", new ParameterizedTypeReference<List<UserResponseDTO>>() {});
@@ -50,7 +51,6 @@ public class UserClient {
         return baseWebClient.put("/user/{id}", request, new ParameterizedTypeReference<UserResponseDTO>() {}, id);
     }
 
-    // delete should return some message
     public Mono<ResponseEntity<Void>> deleteUser(Long id) {
         return baseWebClient.delete("/user/{id}", null, id);
     }
@@ -73,5 +73,29 @@ public class UserClient {
 
     public Mono<ResponseEntity<List<MovieDTO>>> getRecommendedMovies(Long userId) {
         return baseWebClient.get("/user/{userId}/recommendations", new ParameterizedTypeReference<List<MovieDTO>>() {}, userId);
+    }
+
+    public Mono<ResponseEntity<WatchHistory>> addToHistory(Long userId, Integer movieId) {
+        return baseWebClient.post("/user/{userId}/history/{movieId}", null, new ParameterizedTypeReference<WatchHistory>() {}, userId, movieId);
+    }
+
+    public Mono<ResponseEntity<List<WatchHistory>>> getUserHistory(Long userId) {
+        return baseWebClient.get("/user/{userId}/history", new ParameterizedTypeReference<List<WatchHistory>>() {}, userId);
+    }
+
+    public Mono<ResponseEntity<Void>> removeFromHistory(Long userId, Integer movieId) {
+        return baseWebClient.delete("/user/{userId}/history/{movieId}", null, userId, movieId);
+    }
+
+    public Mono<ResponseEntity<FavouriteMovie>> addFavourite(Long userId, Integer movieId) {
+        return baseWebClient.post("user/{userId}/favourites/{movieId}", null, new ParameterizedTypeReference<FavouriteMovie>() {}, userId, movieId);
+    }
+
+    public Mono<ResponseEntity<List<FavouriteMovie>>> getUserFavourites(Long userId) {
+        return baseWebClient.get("user/{userId}/favourites", new ParameterizedTypeReference<List<FavouriteMovie>>() {}, userId);
+    }
+
+    public Mono<ResponseEntity<Void>> removeFavourite(Long userId, Integer movieId) {
+        return baseWebClient.delete("user/{userId}/favourites/{movieId}", null, userId, movieId);
     }
 }

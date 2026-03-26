@@ -22,8 +22,10 @@ public class ForumClient {
         this.baseWebClient = new BaseWebClient(webClient);
     }
 
-    public Mono<ResponseEntity<List<ForumPost>>> getPost() {
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category) {
+        if (category == null)
         return baseWebClient.get("/forum/posts", new ParameterizedTypeReference<List<ForumPost>> () {});
+        return baseWebClient.get("/forum/posts?category={category}", new ParameterizedTypeReference<List<ForumPost>> () {}, category);
     }
 
     public Mono<ResponseEntity<ForumPost>> createPost(ForumPost post) {
