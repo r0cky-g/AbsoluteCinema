@@ -4,7 +4,7 @@
    ============================================================================= */
 
 /* --- Google Fonts ----------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 /* --- Brand colour overrides ------------------------------------------------- */
 html {
@@ -155,79 +155,11 @@ vaadin-number-field::part(input-field) {
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: var(--lumo-border-radius-m);
     font-family: 'Outfit', sans-serif;
-    transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-vaadin-text-field:focus-within::part(input-field),
-vaadin-email-field:focus-within::part(input-field),
-vaadin-password-field:focus-within::part(input-field) {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(232, 184, 75, 0.5);
-    box-shadow: 0 0 0 2px rgba(232, 184, 75, 0.12);
-}
-
-/* --- Select / ComboBox ------------------------------------------------------ */
-vaadin-select::part(input-field),
-vaadin-combo-box::part(input-field) {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: var(--lumo-border-radius-m);
-    font-family: 'Outfit', sans-serif;
-}
-
-/* --- Login form ------------------------------------------------------------- */
-vaadin-login-form {
-    background: #141414;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: var(--lumo-border-radius-l);
-    box-shadow: var(--lumo-box-shadow-l);
-}
-
-/* --- Notifications ---------------------------------------------------------- */
-vaadin-notification-card {
-    border-radius: var(--lumo-border-radius-m);
-    font-family: 'Outfit', sans-serif;
-}
-
-/* =============================================================================
-   HOME PAGE
-   ============================================================================= */
-
-/* --- Search bar area -------------------------------------------------------- */
-.home-search-wrap {
-    width: 100%;
-}
-
-.home-search-wrap vaadin-text-field {
-    width: 100%;
-}
-
-.home-search-wrap vaadin-text-field::part(input-field) {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    font-size: 1rem;
-    height: 48px;
-    padding: 0 16px;
-}
-
-.home-search-wrap vaadin-text-field:focus-within::part(input-field) {
-    border-color: rgba(232, 184, 75, 0.6);
-    box-shadow: 0 0 0 3px rgba(232, 184, 75, 0.1);
-}
-
-/* --- Filter panel ----------------------------------------------------------- */
-.home-filter-panel {
-    background: #141414;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--lumo-border-radius-l);
-    padding: 20px;
-    margin-top: 8px;
 }
 
 /* --- Section heading -------------------------------------------------------- */
 .section-heading {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cinzel', serif;
     font-size: 1.4rem;
     font-weight: 700;
     color: #ffffff;
@@ -370,7 +302,7 @@ vaadin-notification-card {
    ============================================================================= */
 
 h1, h2, h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cinzel', serif;
 }
 
 h1 {
@@ -388,6 +320,13 @@ h2 {
 h3 {
     font-size: 1.25rem;
     font-weight: 700;
+}
+
+/* --- Logo ------------------------------------------------------------------- */
+vaadin-app-layout::part(navbar) h1 {
+    font-family: 'Cinzel', serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 /* =============================================================================

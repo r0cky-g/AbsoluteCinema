@@ -3,6 +3,7 @@ package ca.yorku.eecs4314group12.ui.data;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import ca.yorku.eecs4314group12.ui.data.dto.FavouriteMovieDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ForumCommentDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ForumPostDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.MovieDTO;
@@ -19,18 +21,9 @@ import ca.yorku.eecs4314group12.ui.data.dto.MovieListItemDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.ReviewStatsDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.UserResponseDTO;
+import ca.yorku.eecs4314group12.ui.data.dto.WatchHistoryDTO;
 import ca.yorku.eecs4314group12.ui.data.dto.WatchlistDTO;
 
-/**
- * Gateway service for all real backend calls from the ui-service.
- *
- * Movie detail  → api-service    (port 8081) GET /api/movie/{id}
- * Movie lists   → movie-service  (port 8083) GET /movie/trending|nowplaying|search
- * Review data   → review-service (port 8084) GET/POST /api/reviews
- * Forum data    → forum-service  (port 8085) GET/POST /forum/posts|comments
- * User data     → user-service   (port 8082) POST /user/login|register, GET/POST /user/{id}/watchlist
- *                                            GET /user/{id}/recommendations
- */
 @Service
 public class BackendClientService {
 
@@ -56,7 +49,7 @@ public class BackendClientService {
     }
 
     // -------------------------------------------------------------------------
-    // Movie detail (via api-service → TMDB shape)
+    // Movie detail
     // -------------------------------------------------------------------------
 
     public Optional<MovieDTO> getMovieById(int id) {
@@ -76,51 +69,55 @@ public class BackendClientService {
         }
     }
 
+    /**
+     * Fetches a single movie from movie-service directly (MongoDB cache → TMDB).
+     * Faster than getMovieById() for bulk loads since it skips the api-service hop.
+     * Returns a MovieListItemDTO with poster_path, title, genres etc.
+     */
+    public Optional<MovieListItemDTO> getMovieSummary(int id) {
+        try {
+            MovieListItemDTO movie = movieClient.get()
+                    .uri("/movie/{id}", id)
+                    .retrieve()
+                    .bodyToMono(MovieListItemDTO.class)
+                    .block();
+            return Optional.ofNullable(movie);
+        } catch (WebClientResponseException.NotFound e) {
+            log.warn("Movie {} not found in movie-service", id);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("Failed to fetch movie summary {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     // -------------------------------------------------------------------------
-    // Movie lists (via movie-service directly)
+    // Movie lists
     // -------------------------------------------------------------------------
 
     public List<MovieListItemDTO> getNowPlaying() {
         try {
-            MovieListResult result = movieClient.get()
-                    .uri("/movie/nowplaying")
-                    .retrieve()
-                    .bodyToMono(MovieListResult.class)
-                    .block();
+            MovieListResult result = movieClient.get().uri("/movie/nowplaying")
+                    .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch now playing: {}", e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to fetch now playing: {}", e.getMessage()); return List.of(); }
     }
 
     public List<MovieListItemDTO> getTrending() {
         try {
-            MovieListResult result = movieClient.get()
-                    .uri("/movie/trending")
-                    .retrieve()
-                    .bodyToMono(MovieListResult.class)
-                    .block();
+            MovieListResult result = movieClient.get().uri("/movie/trending")
+                    .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch trending: {}", e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to fetch trending: {}", e.getMessage()); return List.of(); }
     }
 
     public List<MovieListItemDTO> searchMovies(String query) {
         if (query == null || query.isBlank()) return List.of();
         try {
-            MovieListResult result = movieClient.get()
-                    .uri("/movie/search/{name}", query.trim())
-                    .retrieve()
-                    .bodyToMono(MovieListResult.class)
-                    .block();
+            MovieListResult result = movieClient.get().uri("/movie/search/{name}", query.trim())
+                    .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
-        } catch (Exception e) {
-            log.error("Failed to search movies '{}': {}", query, e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to search movies: {}", e.getMessage()); return List.of(); }
     }
 
     // -------------------------------------------------------------------------
@@ -129,51 +126,56 @@ public class BackendClientService {
 
     public List<ReviewDTO> getReviewsForMovie(long movieId) {
         try {
-            ApiResponse<List<ReviewDTO>> response = reviewClient.get()
-                    .uri("/api/reviews/movie/{movieId}", movieId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {})
-                    .block();
-            if (response != null && response.isSuccess() && response.getData() != null)
-                return response.getData();
-            return List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch reviews for movie {}: {}", movieId, e.getMessage());
-            return List.of();
-        }
+            ApiResponse<List<ReviewDTO>> r = reviewClient.get()
+                    .uri("/api/reviews/movie/{movieId}", movieId).retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {}).block();
+            return r != null && r.isSuccess() && r.getData() != null ? r.getData() : List.of();
+        } catch (Exception e) { log.error("Failed to fetch reviews for movie {}: {}", movieId, e.getMessage()); return List.of(); }
     }
 
     public Optional<ReviewStatsDTO> getReviewStats(long movieId) {
         try {
-            ApiResponse<ReviewStatsDTO> response = reviewClient.get()
-                    .uri("/api/reviews/movie/{movieId}/stats", movieId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewStatsDTO>>() {})
-                    .block();
-            if (response != null && response.isSuccess())
-                return Optional.ofNullable(response.getData());
-            return Optional.empty();
-        } catch (Exception e) {
-            log.error("Failed to fetch review stats for movie {}: {}", movieId, e.getMessage());
-            return Optional.empty();
-        }
+            ApiResponse<ReviewStatsDTO> r = reviewClient.get()
+                    .uri("/api/reviews/movie/{movieId}/stats", movieId).retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewStatsDTO>>() {}).block();
+            return r != null && r.isSuccess() ? Optional.ofNullable(r.getData()) : Optional.empty();
+        } catch (Exception e) { log.error("Failed to fetch review stats: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    public List<ReviewDTO> getReviewsForUser(long userId) {
+        try {
+            ApiResponse<List<ReviewDTO>> r = reviewClient.get()
+                    .uri("/api/reviews/user/{userId}", userId).retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {}).block();
+            return r != null && r.isSuccess() && r.getData() != null ? r.getData() : List.of();
+        } catch (Exception e) { log.error("Failed to fetch reviews for user {}: {}", userId, e.getMessage()); return List.of(); }
     }
 
     public boolean createReview(ReviewDTO review) {
         try {
-            ApiResponse<ReviewDTO> response = reviewClient.post()
-                    .uri("/api/reviews")
-                    .bodyValue(review)
+            ApiResponse<ReviewDTO> r = reviewClient.post().uri("/api/reviews")
+                    .bodyValue(review).retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewDTO>>() {}).block();
+            return r != null && r.isSuccess();
+        } catch (WebClientResponseException.Conflict e) { return false; }
+        catch (Exception e) { log.error("Failed to submit review: {}", e.getMessage()); return false; }
+    }
+
+    /**
+     * Marks a review as helpful via POST /api/reviews/{id}/helpful.
+     * Wired to review-service — increments helpfulCount.
+     */
+    public Optional<ReviewDTO> markReviewHelpful(long reviewId) {
+        try {
+            ApiResponse<ReviewDTO> r = reviewClient.post()
+                    .uri("/api/reviews/{id}/helpful", reviewId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewDTO>>() {})
                     .block();
-            return response != null && response.isSuccess();
-        } catch (WebClientResponseException.Conflict e) {
-            log.warn("Duplicate review rejected: {}", e.getMessage());
-            return false;
+            return r != null && r.isSuccess() ? Optional.ofNullable(r.getData()) : Optional.empty();
         } catch (Exception e) {
-            log.error("Failed to submit review: {}", e.getMessage());
-            return false;
+            log.error("Failed to mark review {} as helpful: {}", reviewId, e.getMessage());
+            return Optional.empty();
         }
     }
 
@@ -181,55 +183,93 @@ public class BackendClientService {
     // User auth
     // -------------------------------------------------------------------------
 
-    /**
-     * Authenticates a user via user-service POST /user/login.
-     * Returns the UserResponseDTO (with id, role, email) on success.
-     */
     public Optional<UserResponseDTO> loginUser(String identifier, String password) {
         try {
             Map<String, String> body = Map.of("identifier", identifier, "password", password);
-            UserResponseDTO response = userClient.post()
-                    .uri("/user/login")
+            UserResponseDTO r = userClient.post().uri("/user/login").bodyValue(body)
+                    .retrieve().bodyToMono(UserResponseDTO.class).block();
+            return Optional.ofNullable(r);
+        } catch (WebClientResponseException.Unauthorized e) { return Optional.empty(); }
+        catch (WebClientResponseException.BadRequest e) { return Optional.empty(); }
+        catch (Exception e) { log.error("Login error: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    public boolean registerUser(String username, String password, String email) {
+        try {
+            Map<String, Object> body = Map.of("username", username, "password", password,
+                    "email", email, "over18", true);
+            userClient.post().uri("/user/register").bodyValue(body)
+                    .retrieve().toBodilessEntity().block();
+            return true;
+        } catch (Exception e) { log.error("Registration failed: {}", e.getMessage()); return false; }
+    }
+
+    /**
+     * Registers a new user and returns the full UserResponseDTO (including numeric id)
+     * so the caller can redirect to the verification page.
+     */
+    public Optional<UserResponseDTO> registerUserFull(String username, String password, String email) {
+        try {
+            Map<String, Object> body = Map.of("username", username, "password", password,
+                    "email", email, "over18", true);
+            UserResponseDTO response = userClient.post().uri("/user/register")
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(UserResponseDTO.class)
                     .block();
             return Optional.ofNullable(response);
-        } catch (WebClientResponseException.Unauthorized e) {
-            log.warn("Login failed for '{}': invalid credentials", identifier);
-            return Optional.empty();
-        } catch (WebClientResponseException.BadRequest e) {
-            log.warn("Login failed for '{}': bad request", identifier);
-            return Optional.empty();
-        } catch (Exception e) {
-            log.error("Login error for '{}': {}", identifier, e.getMessage());
-            return Optional.empty();
-        }
+        } catch (Exception e) { log.error("Registration failed: {}", e.getMessage()); return Optional.empty(); }
     }
 
     /**
-     * Registers a new user via user-service POST /user/register.
-     * Returns true on success (HTTP 201).
+     * Verifies a user's email via POST /user/{id}/verify?code={code}.
      */
-    public boolean registerUser(String username, String password, String email, boolean moderator) {
+    public boolean verifyEmail(long userId, String code) {
         try {
-            Map<String, Object> body = Map.of(
-                    "username", username,
-                    "password", password,
-                    "email", email,
-                    "over18", true,
-                    "moderator", moderator);
             userClient.post()
-                    .uri("/user/register")
-                    .bodyValue(body)
+                    .uri(uriBuilder -> uriBuilder.path("/user/{id}/verify")
+                            .queryParam("code", code).build(userId))
                     .retrieve()
                     .toBodilessEntity()
                     .block();
             return true;
-        } catch (Exception e) {
-            log.error("Registration failed for '{}': {}", username, e.getMessage());
-            return false;
-        }
+        } catch (Exception e) { log.error("Email verification failed for user {}: {}", userId, e.getMessage()); return false; }
+    }
+
+    // -------------------------------------------------------------------------
+    // User profile
+    // -------------------------------------------------------------------------
+
+    public Optional<UserResponseDTO> getUserData(long userId) {
+        try {
+            UserResponseDTO r = userClient.get().uri("/user/{id}", userId)
+                    .retrieve().bodyToMono(UserResponseDTO.class).block();
+            return Optional.ofNullable(r);
+        } catch (Exception e) { log.error("Failed to fetch user data: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    public boolean updateUser(long userId, String username, String email,
+                              String newPassword, java.time.LocalDate dob,
+                              Boolean over18, Set<String> likedGenres) {
+        try {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("username", username);
+            body.put("email", email);
+            if (newPassword != null && !newPassword.isBlank()) body.put("password", newPassword);
+            if (dob != null) body.put("dob", dob.toString());
+            if (over18 != null) body.put("over18", over18);
+            if (likedGenres != null) body.put("likedGenres", likedGenres);
+            userClient.put().uri("/user/{id}", userId).bodyValue(body)
+                    .retrieve().toBodilessEntity().block();
+            return true;
+        } catch (Exception e) { log.error("Failed to update user {}: {}", userId, e.getMessage()); return false; }
+    }
+
+    public boolean updateUserPreferences(long userId, Set<String> likedGenres) {
+        Optional<UserResponseDTO> existing = getUserData(userId);
+        if (existing.isEmpty()) return false;
+        return updateUser(userId, existing.get().getUsername(), existing.get().getEmail(),
+                null, null, null, likedGenres);
     }
 
     // -------------------------------------------------------------------------
@@ -238,117 +278,99 @@ public class BackendClientService {
 
     public List<WatchlistDTO> getWatchlist(long userId) {
         try {
-            List<WatchlistDTO> list = userClient.get()
-                    .uri("/user/{userId}/watchlist", userId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<WatchlistDTO>>() {})
-                    .block();
+            List<WatchlistDTO> list = userClient.get().uri("/user/{userId}/watchlist", userId)
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<WatchlistDTO>>() {}).block();
             return list != null ? list : List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch watchlist for user {}: {}", userId, e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to fetch watchlist: {}", e.getMessage()); return List.of(); }
     }
 
     public boolean addToWatchlist(long userId, int movieId) {
         try {
-            userClient.post()
-                    .uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            userClient.post().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
             return true;
-        } catch (WebClientResponseException.Conflict e) {
-            log.warn("Movie {} already in watchlist for user {}", movieId, userId);
-            return false;
-        } catch (Exception e) {
-            log.error("Failed to add movie {} to watchlist: {}", movieId, e.getMessage());
-            return false;
-        }
+        } catch (WebClientResponseException.Conflict e) { return false; }
+        catch (Exception e) { log.error("Failed to add to watchlist: {}", e.getMessage()); return false; }
     }
 
     public boolean removeFromWatchlist(long userId, int movieId) {
         try {
-            userClient.delete()
-                    .uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            userClient.delete().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
             return true;
-        } catch (Exception e) {
-            log.error("Failed to remove movie {} from watchlist: {}", movieId, e.getMessage());
-            return false;
-        }
+        } catch (Exception e) { log.error("Failed to remove from watchlist: {}", e.getMessage()); return false; }
     }
 
     public boolean isInWatchlist(long userId, int movieId) {
         try {
-            Boolean result = userClient.get()
-                    .uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-            return Boolean.TRUE.equals(result);
-        } catch (Exception e) {
-            return false;
-        }
+            Boolean r = userClient.get().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+                    .retrieve().bodyToMono(Boolean.class).block();
+            return Boolean.TRUE.equals(r);
+        } catch (Exception e) { return false; }
     }
 
     // -------------------------------------------------------------------------
-    // User preferences
+    // Watch History
     // -------------------------------------------------------------------------
 
-    /**
-     * Gets user data including preferences (liked genres) via user-service GET /user/{id}.
-     */
-    public Optional<UserResponseDTO> getUserData(long userId) {
+    public List<WatchHistoryDTO> getWatchHistory(long userId) {
         try {
-            UserResponseDTO userData = userClient.get()
-                    .uri("/user/{id}", userId)
-                    .retrieve()
-                    .bodyToMono(UserResponseDTO.class)
-                    .block();
-            return Optional.ofNullable(userData);
-        } catch (Exception e) {
-            log.error("Failed to fetch user data for user {}: {}", userId, e.getMessage());
-            return Optional.empty();
-        }
+            List<WatchHistoryDTO> list = userClient.get().uri("/user/{userId}/history", userId)
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<WatchHistoryDTO>>() {}).block();
+            return list != null ? list : List.of();
+        } catch (Exception e) { log.error("Failed to fetch watch history: {}", e.getMessage()); return List.of(); }
     }
 
-    /**
-     * Updates user preferences (liked genres) via user-service PUT /user/{id}.
-     */
-    public boolean updateUserPreferences(long userId, java.util.Set<String> likedGenres) {
+    public boolean addToWatchHistory(long userId, int movieId) {
         try {
-            // Get existing user data first
-            Optional<UserResponseDTO> existingUserOpt = getUserData(userId);
-            if (existingUserOpt.isEmpty()) {
-                log.error("User {} not found", userId);
-                return false;
-            }
-
-            UserResponseDTO existingUser = existingUserOpt.get();
-            
-            // Create update payload with required fields and likedGenres
-            // Note: We need to include all required fields (username, email) and preserve other fields
-            Map<String, Object> updatePayload = new java.util.HashMap<>();
-            updatePayload.put("username", existingUser.getUsername());
-            updatePayload.put("email", existingUser.getEmail());
-            updatePayload.put("likedGenres", likedGenres);
-            // Note: over18 and other fields will use defaults if not provided
-            // The service will preserve existing values for fields not in the request
-            
-            userClient.put()
-                    .uri("/user/{id}", userId)
-                    .bodyValue(updatePayload)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            userClient.post().uri("/user/{userId}/history/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
             return true;
-        } catch (Exception e) {
-            log.error("Failed to update preferences for user {}: {}", userId, e.getMessage());
-            return false;
-        }
+        } catch (Exception e) { log.error("Failed to add to watch history: {}", e.getMessage()); return false; }
+    }
+
+    public boolean removeFromWatchHistory(long userId, int movieId) {
+        try {
+            userClient.delete().uri("/user/{userId}/history/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
+            return true;
+        } catch (Exception e) { log.error("Failed to remove from watch history: {}", e.getMessage()); return false; }
+    }
+
+    // -------------------------------------------------------------------------
+    // Favourites
+    // -------------------------------------------------------------------------
+
+    public List<FavouriteMovieDTO> getFavourites(long userId) {
+        try {
+            List<FavouriteMovieDTO> list = userClient.get().uri("/user/{userId}/favourites", userId)
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<FavouriteMovieDTO>>() {}).block();
+            return list != null ? list : List.of();
+        } catch (Exception e) { log.error("Failed to fetch favourites: {}", e.getMessage()); return List.of(); }
+    }
+
+    public boolean addToFavourites(long userId, int movieId) {
+        try {
+            userClient.post().uri("/user/{userId}/favourites/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
+            return true;
+        } catch (WebClientResponseException.Conflict e) { return false; }
+        catch (Exception e) { log.error("Failed to add to favourites: {}", e.getMessage()); return false; }
+    }
+
+    public boolean removeFromFavourites(long userId, int movieId) {
+        try {
+            userClient.delete().uri("/user/{userId}/favourites/{movieId}", userId, movieId)
+                    .retrieve().toBodilessEntity().block();
+            return true;
+        } catch (Exception e) { log.error("Failed to remove from favourites: {}", e.getMessage()); return false; }
+    }
+
+    public boolean isInFavourites(long userId, int movieId) {
+        try {
+            return getFavourites(userId).stream()
+                    .anyMatch(f -> f.getMovieId() != null && f.getMovieId() == movieId);
+        } catch (Exception e) { return false; }
     }
 
     // -------------------------------------------------------------------------
@@ -357,40 +379,10 @@ public class BackendClientService {
 
     public List<MovieListItemDTO> getRecommendations(long userId) {
         try {
-            // Note: user-service returns List<MovieDTO>, but we need MovieListItemDTO
-            // Spring will map common fields automatically
-            List<MovieListItemDTO> list = userClient.get()
-                    .uri("/user/{userId}/recommendations", userId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<MovieListItemDTO>>() {})
-                    .block();
-            if (list != null) {
-                log.debug("Fetched {} recommendations for user {}", list.size(), userId);
-                return list;
-            } else {
-                log.warn("Recommendations endpoint returned null for user {}", userId);
-                return List.of();
-            }
-        } catch (Exception e) {
-            log.error("Failed to fetch recommendations for user {}: {}", userId, e.getMessage(), e);
-            return List.of();
-        }
-    }
-
-    public List<ReviewDTO> getReviewsForUser(long userId) {
-        try {
-            ApiResponse<List<ReviewDTO>> response = reviewClient.get()
-                    .uri("/api/reviews/user/{userId}", userId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {})
-                    .block();
-            if (response != null && response.isSuccess() && response.getData() != null)
-                return response.getData();
-            return List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch reviews for user {}: {}", userId, e.getMessage());
-            return List.of();
-        }
+            List<MovieListItemDTO> list = userClient.get().uri("/user/{userId}/recommendations", userId)
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<MovieListItemDTO>>() {}).block();
+            return list != null ? list : List.of();
+        } catch (Exception e) { log.error("Failed to fetch recommendations: {}", e.getMessage()); return List.of(); }
     }
 
     // -------------------------------------------------------------------------
@@ -399,68 +391,58 @@ public class BackendClientService {
 
     public List<ForumPostDTO> getAllPosts() {
         try {
-            List<ForumPostDTO> posts = forumClient.get()
-                    .uri("/forum/posts")
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {})
-                    .block();
+            List<ForumPostDTO> posts = forumClient.get().uri("/forum/posts")
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
             return posts != null ? posts : List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch forum posts: {}", e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to fetch forum posts: {}", e.getMessage()); return List.of(); }
     }
 
-    public Optional<ForumPostDTO> createPost(String title, String content, Long userId) {
+    public List<ForumPostDTO> getPostsByCategory(String category) {
         try {
-            Map<String, Object> body = Map.of(
-                    "title", title, "content", content,
-                    "userId", userId != null ? userId : 0L);
-            ForumPostDTO post = forumClient.post()
-                    .uri("/forum/posts")
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(ForumPostDTO.class)
-                    .block();
+            List<ForumPostDTO> posts = forumClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/forum/posts")
+                            .queryParam("category", category).build())
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
+            return posts != null ? posts : List.of();
+        } catch (Exception e) { log.error("Failed to fetch posts for category '{}': {}", category, e.getMessage()); return List.of(); }
+    }
+
+    public Optional<ForumPostDTO> createPost(String title, String content, Long userId, String category) {
+        try {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("title", title);
+            body.put("content", content);
+            body.put("userId", userId != null ? userId : 0L);
+            if (category != null && !category.isBlank())
+                body.put("category", category.trim());
+            ForumPostDTO post = forumClient.post().uri("/forum/posts").bodyValue(body)
+                    .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
-        } catch (Exception e) {
-            log.error("Failed to create forum post: {}", e.getMessage());
-            return Optional.empty();
-        }
+        } catch (Exception e) { log.error("Failed to create post: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    // Legacy overload without category — defaults to General
+    public Optional<ForumPostDTO> createPost(String title, String content, Long userId) {
+        return createPost(title, content, userId, "General");
     }
 
     public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
         try {
             Map<String, String> body = Map.of("title", title, "content", content);
-            ForumPostDTO post = forumClient.put()
-                    .uri("/forum/posts/{id}", postId)
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(ForumPostDTO.class)
-                    .block();
+            ForumPostDTO post = forumClient.put().uri("/forum/posts/{id}", postId).bodyValue(body)
+                    .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
-        } catch (Exception e) {
-            log.error("Failed to update forum post {}: {}", postId, e.getMessage());
-            return Optional.empty();
-        }
+        } catch (Exception e) { log.error("Failed to update post: {}", e.getMessage()); return Optional.empty(); }
     }
 
     public boolean deletePost(long postId, long userId, String userRole) {
         try {
-            userClient.delete()
-                    .uri("/forum/posts/{id}?userId={userId}&userRole={userRole}",
-                            postId, userId, userRole)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
+            forumClient.delete()
+                    .uri("/forum/posts/{id}?userId={userId}&userRole={userRole}", postId, userId, userRole)
+                    .retrieve().toBodilessEntity().block();
             return true;
-        } catch (WebClientResponseException e) {
-            log.warn("Delete post {} rejected ({})", postId, e.getStatusCode());
-            return false;
-        } catch (Exception e) {
-            log.error("Failed to delete forum post {}: {}", postId, e.getMessage());
-            return false;
-        }
+        } catch (WebClientResponseException e) { return false; }
+        catch (Exception e) { log.error("Failed to delete post: {}", e.getMessage()); return false; }
     }
 
     // -------------------------------------------------------------------------
@@ -469,32 +451,19 @@ public class BackendClientService {
 
     public List<ForumCommentDTO> getCommentsForPost(long postId) {
         try {
-            List<ForumCommentDTO> comments = forumClient.get()
-                    .uri("/forum/comments/{postId}", postId)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<ForumCommentDTO>>() {})
-                    .block();
+            List<ForumCommentDTO> comments = forumClient.get().uri("/forum/comments/{postId}", postId)
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumCommentDTO>>() {}).block();
             return comments != null ? comments : List.of();
-        } catch (Exception e) {
-            log.error("Failed to fetch comments for post {}: {}", postId, e.getMessage());
-            return List.of();
-        }
+        } catch (Exception e) { log.error("Failed to fetch comments: {}", e.getMessage()); return List.of(); }
     }
 
     public Optional<ForumCommentDTO> createComment(long postId, long userId, String content) {
         try {
             Map<String, Object> body = Map.of("postId", postId, "userId", userId, "content", content);
-            ForumCommentDTO comment = forumClient.post()
-                    .uri("/forum/comments")
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(ForumCommentDTO.class)
-                    .block();
+            ForumCommentDTO comment = forumClient.post().uri("/forum/comments").bodyValue(body)
+                    .retrieve().bodyToMono(ForumCommentDTO.class).block();
             return Optional.ofNullable(comment);
-        } catch (Exception e) {
-            log.error("Failed to create comment on post {}: {}", postId, e.getMessage());
-            return Optional.empty();
-        }
+        } catch (Exception e) { log.error("Failed to create comment: {}", e.getMessage()); return Optional.empty(); }
     }
 
     // -------------------------------------------------------------------------
@@ -504,7 +473,7 @@ public class BackendClientService {
     public static class MovieListResult {
         private List<MovieListItemDTO> results;
         public List<MovieListItemDTO> getResults() { return results; }
-        public void setResults(List<MovieListItemDTO> results) { this.results = results; }
+        public void setResults(List<MovieListItemDTO> r) { this.results = r; }
     }
 
     public static class ApiResponse<T> {
@@ -512,10 +481,10 @@ public class BackendClientService {
         private T data;
         private String error;
         public boolean isSuccess() { return success; }
-        public void setSuccess(boolean success) { this.success = success; }
+        public void setSuccess(boolean s) { this.success = s; }
         public T getData() { return data; }
-        public void setData(T data) { this.data = data; }
+        public void setData(T d) { this.data = d; }
         public String getError() { return error; }
-        public void setError(String error) { this.error = error; }
+        public void setError(String e) { this.error = e; }
     }
 }
