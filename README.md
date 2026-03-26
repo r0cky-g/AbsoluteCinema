@@ -160,7 +160,7 @@ docker compose down -v
 - A TMDB API token
 - MongoDB URI
 
-> **Note:** The MongoDB URI will only be given to the development team.
+> **Important Note:** The MongoDB URI will only be given to the development team.
 
 ### Setup
 
