@@ -245,4 +245,76 @@ class ForumServiceTest {
         assertFalse(result);
         verify(repository, never()).deleteById(id9);
     }
+
+    @Test
+    void testGetPostsByCategory() {
+        ForumPost post1 = new ForumPost();
+        post1.setTitle("Action Movie Discussion");
+        post1.setCategory("action");
+
+        ForumPost post2 = new ForumPost();
+        post2.setTitle("Best Action Films");
+        post2.setCategory("action");
+
+        when(repository.findByCategory("action")).thenReturn(Arrays.asList(post1, post2));
+
+        List<ForumPost> posts = forumService.getPostsByCategory("action");
+
+        assertEquals(2, posts.size());
+        verify(repository, times(1)).findByCategory("action");
+    }
+
+    @Test
+    void testGetPostsByCategory_NoResults() {
+        when(repository.findByCategory("nonexistent")).thenReturn(Arrays.asList());
+
+        List<ForumPost> posts = forumService.getPostsByCategory("nonexistent");
+
+        assertNotNull(posts);
+        assertEquals(0, posts.size());
+        verify(repository, times(1)).findByCategory("nonexistent");
+    }
+
+    @Test
+    void testSearchPostsByTitle() {
+        ForumPost post1 = new ForumPost();
+        post1.setTitle("Avengers Review");
+
+        ForumPost post2 = new ForumPost();
+        post2.setTitle("avengers endgame discussion");
+
+        when(repository.findByTitleContainingIgnoreCase("avengers"))
+                .thenReturn(Arrays.asList(post1, post2));
+
+        List<ForumPost> posts = forumService.searchPostsByTitle("avengers");
+
+        assertEquals(2, posts.size());
+        verify(repository, times(1)).findByTitleContainingIgnoreCase("avengers");
+    }
+
+    @Test
+    void testSearchPostsByTitle_NoResults() {
+        when(repository.findByTitleContainingIgnoreCase("xyz123"))
+                .thenReturn(Arrays.asList());
+
+        List<ForumPost> posts = forumService.searchPostsByTitle("xyz123");
+
+        assertNotNull(posts);
+        assertEquals(0, posts.size());
+        verify(repository, times(1)).findByTitleContainingIgnoreCase("xyz123");
+    }
+
+    @Test
+    void testSearchPostsByTitle_CaseInsensitive() {
+        ForumPost post = new ForumPost();
+        post.setTitle("Batman Begins");
+
+        when(repository.findByTitleContainingIgnoreCase("BATMAN"))
+                .thenReturn(Arrays.asList(post));
+
+        List<ForumPost> posts = forumService.searchPostsByTitle("BATMAN");
+
+        assertEquals(1, posts.size());
+        assertEquals("Batman Begins", posts.get(0).getTitle());
+    }
 }

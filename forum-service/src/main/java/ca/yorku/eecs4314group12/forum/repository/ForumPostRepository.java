@@ -8,4 +8,7 @@ import java.util.List;
 public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
     // Find all posts belonging to a specific category
     List<ForumPost> findByCategory(String category);
+
+    // Search posts by title (case-insensitive)
+    List<ForumPost> findByTitleContainingIgnoreCase(String keyword);
 }

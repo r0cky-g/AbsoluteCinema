@@ -18,9 +18,13 @@ public class ForumController {
         this.forumService = forumService;
     }
 
-    // get all posts, optionally filtered by category
+    // get all posts, optionally filtered by category or search keyword
     @GetMapping
-    public List<ForumPost> getPosts(@RequestParam(required = false) String category) {
+    public List<ForumPost> getPosts(@RequestParam(required = false) String category,
+                                    @RequestParam(required = false) String search) {
+        if (search != null && !search.isBlank()) {
+            return forumService.searchPostsByTitle(search);
+        }
         if (category != null && !category.isBlank()) {
             return forumService.getPostsByCategory(category);
         }

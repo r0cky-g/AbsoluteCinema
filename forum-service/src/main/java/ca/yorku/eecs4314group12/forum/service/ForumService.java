@@ -29,6 +29,11 @@ public class ForumService {
         return repository.findByCategory(category);
     }
 
+    // Search posts by title keyword
+    public List<ForumPost> searchPostsByTitle(String keyword) {
+        return repository.findByTitleContainingIgnoreCase(keyword);
+    }
+
     public ForumPost createPost(ForumPost post) {
         post.setCreatedAt(LocalDateTime.now());
         return repository.save(post);
