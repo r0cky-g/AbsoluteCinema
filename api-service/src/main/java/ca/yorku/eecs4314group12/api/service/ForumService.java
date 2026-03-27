@@ -20,8 +20,8 @@ public class ForumService {
         this.forumClient = forumClient;
     }
 
-    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category) {
-        return forumClient.getPost(category);
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category, String search) {
+        return forumClient.getPost(category, search);
     }
 
     public Mono<ResponseEntity<ForumPost>> createPost(ForumPost post) {

@@ -67,8 +67,9 @@ public class APIController {
 
 
     @GetMapping("/forum/posts")
-    public Mono<ResponseEntity<List<ForumPost>>> getPost(@RequestParam(required = false) String category) {
-        return forumService.getPost(category);
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(@RequestParam(required = false) String category, 
+                                                        @RequestParam(required = false) String search) {
+        return forumService.getPost(category, search);
     }
 
     @PostMapping("/forum/posts")
