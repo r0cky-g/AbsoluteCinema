@@ -102,7 +102,29 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
         headerRow.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
         headerRow.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
-        add(backBtn, headerRow, postsContainer);
+        // Search bar — searches by title, filtered to this category
+        com.vaadin.flow.component.textfield.TextField searchField =
+                new com.vaadin.flow.component.textfield.TextField();
+        searchField.setPlaceholder("Search posts in " + categoryDisplay + "…");
+        searchField.setPrefixComponent(com.vaadin.flow.component.icon.VaadinIcon.SEARCH.create());
+        searchField.setClearButtonVisible(true);
+        searchField.setWidth("100%");
+
+        Runnable doSearch = () -> {
+            String q = searchField.getValue();
+            if (q == null || q.isBlank()) {
+                loadPosts();
+            } else {
+                loadSearchResults(q.trim());
+            }
+        };
+
+        searchField.addKeyPressListener(com.vaadin.flow.component.Key.ENTER, e -> doSearch.run());
+        searchField.addValueChangeListener(e -> {
+            if (e.getValue() == null || e.getValue().isBlank()) loadPosts();
+        });
+
+        add(backBtn, headerRow, searchField, postsContainer);
         loadPosts();
     }
 
@@ -137,6 +159,27 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
         }
 
         for (ForumPostDTO post : posts) {
+            postsContainer.add(buildPostCard(post));
+        }
+    }
+
+    private void loadSearchResults(String keyword) {
+        postsContainer.removeAll();
+        // Search globally then filter to this category
+        List<ForumPostDTO> results = backendClient.searchPosts(keyword).stream()
+                .filter(p -> p.getCategoryKey().equals(categoryKey))
+                .toList();
+
+        if (results.isEmpty()) {
+            Paragraph empty = new Paragraph(
+                    "No posts found matching \"" + keyword + "\" in " + categoryDisplay + ".");
+            empty.getStyle().set("color", "var(--lumo-secondary-text-color)")
+                    .set("padding", "var(--lumo-space-l)");
+            postsContainer.add(empty);
+            return;
+        }
+
+        for (ForumPostDTO post : results) {
             postsContainer.add(buildPostCard(post));
         }
     }

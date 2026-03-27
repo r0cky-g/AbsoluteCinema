@@ -873,23 +873,25 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
                     ? backdropPath
                     : "https://image.tmdb.org/t/p/w780" + backdropPath;
             hero.getStyle()
-                    .set("background-image", "url('" + backdropUrl + "')")                  
+            		.set("background-image", "url('" + backdropUrl + "')")                  
                     .set("background-size", "auto auto")
                     .set("background-repeat", "no-repeat")
                     .set("background-position", "center center");
 
             Div dimOverlay = new Div();
             dimOverlay.getStyle()
-                    .set("position", "absolute")
-                    .set("top", "-1px").set("left", "-1px")
-                    .set("width", "calc(100% + 2px)").set("height", "calc(100% + 2px)")
-                    .set("background", "linear-gradient(to right, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.4) 100%)")
-                    .set("pointer-events", "none")
-                    .set("z-index", "0");
+            		.set("position", "absolute")
+            		.set("top", "-1px").set("left", "-1px")
+            		.set("width", "calc(100% + 2px)").set("height", "calc(100% + 2px)")
+            		.set("background",
+            				"radial-gradient(circle at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.95) 100%), " +
+            				"linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.9) 100%)")
+            		.set("pointer-events", "none")
+            		.set("z-index", "0");
             hero.add(dimOverlay);
         } else {
             hero.getStyle().set("background",
-                    "linear-gradient(180deg, #0f3460 0%, #16213e 100%)");
+                    "linear-gradient(180deg, #0a0a0f 0%, #000000 100%)");
         }
 
         hero.add(heroContent);
