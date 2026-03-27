@@ -2,10 +2,16 @@ package ca.yorku.eecs4314group12.ui.views;
 
 import ca.yorku.eecs4314group12.ui.data.BackendClientService;
 import ca.yorku.eecs4314group12.ui.data.dto.ForumPostDTO;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -16,8 +22,7 @@ import java.util.Map;
 
 /**
  * Forum directory — lists all categories as clickable tiles.
- * "General" is always shown first. Categories are grouped
- * case-insensitively (trimmed + lowercased key).
+ * Includes a search bar that searches across all posts by title.
  */
 @Route(value = "forum", layout = MainLayout.class)
 @PageTitle("Forum | Absolute Cinema")
@@ -25,6 +30,7 @@ import java.util.Map;
 public class ForumView extends VerticalLayout {
 
     private final BackendClientService backendClient;
+    private final VerticalLayout contentArea;
 
     public ForumView(BackendClientService backendClient) {
         this.backendClient = backendClient;
@@ -41,16 +47,54 @@ public class ForumView extends VerticalLayout {
                 "Browse discussions by category, or start a new conversation.");
         subtitle.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)")
-                .set("margin", "0 0 var(--lumo-space-l) 0");
+                .set("margin", "0 0 var(--lumo-space-m) 0");
 
-        add(heading, subtitle, buildDirectoryGrid());
+        TextField searchField = new TextField();
+        searchField.setPlaceholder("Search posts by title…");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setClearButtonVisible(true);
+        searchField.setWidth("100%");
+
+        Button searchBtn = new Button("Search");
+        searchBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        HorizontalLayout searchRow = new HorizontalLayout(searchField, searchBtn);
+        searchRow.setWidthFull();
+        searchRow.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        searchRow.getStyle().set("margin-bottom", "var(--lumo-space-l)");
+
+        contentArea = new VerticalLayout();
+        contentArea.setPadding(false); contentArea.setSpacing(false);
+        contentArea.setWidthFull();
+
+        Runnable doSearch = () -> {
+            String q = searchField.getValue();
+            if (q == null || q.isBlank()) showDirectory();
+            else showSearchResults(q.trim());
+        };
+
+        searchBtn.addClickListener(e -> doSearch.run());
+        searchField.addKeyPressListener(Key.ENTER, e -> doSearch.run());
+        searchField.addValueChangeListener(e -> {
+            if (e.getValue() == null || e.getValue().isBlank()) showDirectory();
+        });
+
+        add(heading, subtitle, searchRow, contentArea);
+        showDirectory();
+    }
+
+    // -------------------------------------------------------------------------
+    // Directory
+    // -------------------------------------------------------------------------
+
+    private void showDirectory() {
+        contentArea.removeAll();
+        contentArea.add(buildDirectoryGrid());
     }
 
     private FlexLayout buildDirectoryGrid() {
         List<ForumPostDTO> allPosts = backendClient.getAllPosts();
 
-        // Group by normalised category key, preserving display name
-        // General always first
         LinkedHashMap<String, CategoryInfo> categories = new LinkedHashMap<>();
         categories.put("general", new CategoryInfo("General", 0));
 
@@ -59,9 +103,6 @@ public class ForumView extends VerticalLayout {
             String display = post.getCategoryDisplay();
             categories.computeIfAbsent(key, k -> new CategoryInfo(display, 0)).increment();
         }
-
-        // Posts with null/blank category count toward General
-        // (already handled above since getCategoryKey() defaults to "general")
 
         FlexLayout grid = new FlexLayout();
         grid.getStyle()
@@ -74,7 +115,6 @@ public class ForumView extends VerticalLayout {
             grid.add(buildCategoryTile(entry.getValue().displayName, entry.getKey(),
                     entry.getValue().count));
         }
-
         return grid;
     }
 
@@ -115,6 +155,64 @@ public class ForumView extends VerticalLayout {
         return tile;
     }
 
+    // -------------------------------------------------------------------------
+    // Search results
+    // -------------------------------------------------------------------------
+
+    private void showSearchResults(String keyword) {
+        contentArea.removeAll();
+
+        List<ForumPostDTO> results = backendClient.searchPosts(keyword);
+
+        H3 resultsHeading = new H3("Results for \"" + keyword + "\"");
+        resultsHeading.getStyle().set("margin", "0 0 var(--lumo-space-m) 0");
+        contentArea.add(resultsHeading);
+
+        if (results.isEmpty()) {
+            Paragraph empty = new Paragraph("No posts found matching \"" + keyword + "\".");
+            empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
+            contentArea.add(empty);
+            return;
+        }
+
+        for (ForumPostDTO post : results) {
+            Div card = new Div();
+            card.getStyle()
+                    .set("background", "var(--lumo-base-color)")
+                    .set("border", "1px solid var(--lumo-contrast-10pct)")
+                    .set("border-radius", "var(--lumo-border-radius-l)")
+                    .set("padding", "var(--lumo-space-m) var(--lumo-space-l)")
+                    .set("margin-bottom", "var(--lumo-space-s)")
+                    .set("cursor", "pointer");
+
+            card.getElement().addEventListener("mouseover", e ->
+                    card.getStyle().set("border-color", "var(--lumo-primary-color)"));
+            card.getElement().addEventListener("mouseout", e ->
+                    card.getStyle().set("border-color", "var(--lumo-contrast-10pct)"));
+
+            H3 title = new H3(post.getTitle());
+            title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
+
+            Span meta = new Span(post.getCategoryDisplay() + "  ·  User " + post.getUserId());
+            meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
+                    .set("color", "var(--lumo-tertiary-text-color)");
+
+            Paragraph preview = new Paragraph(post.getContent());
+            preview.getStyle().set("margin", "var(--lumo-space-xs) 0 0 0")
+                    .set("color", "var(--lumo-secondary-text-color)")
+                    .set("font-size", "var(--lumo-font-size-s)");
+
+            card.add(title, meta, preview);
+            card.addClickListener(e ->
+                    getUI().ifPresent(ui -> ui.navigate("forum/" + post.getCategoryKey())));
+            contentArea.add(card);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
     private String getCategoryIcon(String categoryKey) {
         return switch (categoryKey) {
             case "general" -> "💬";
@@ -131,19 +229,13 @@ public class ForumView extends VerticalLayout {
         };
     }
 
-    // -------------------------------------------------------------------------
-    // Helper
-    // -------------------------------------------------------------------------
-
     private static class CategoryInfo {
         String displayName;
         int count;
-
         CategoryInfo(String displayName, int count) {
             this.displayName = displayName;
             this.count = count;
         }
-
         void increment() { count++; }
     }
 }

@@ -397,6 +397,16 @@ public class BackendClientService {
         } catch (Exception e) { log.error("Failed to fetch forum posts: {}", e.getMessage()); return List.of(); }
     }
 
+    public List<ForumPostDTO> searchPosts(String keyword) {
+        try {
+            List<ForumPostDTO> posts = forumClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/forum/posts")
+                            .queryParam("search", keyword).build())
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
+            return posts != null ? posts : List.of();
+        } catch (Exception e) { log.error("Failed to search forum posts: {}", e.getMessage()); return List.of(); }
+    }
+
     public List<ForumPostDTO> getPostsByCategory(String category) {
         try {
             List<ForumPostDTO> posts = forumClient.get()
