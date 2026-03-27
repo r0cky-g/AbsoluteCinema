@@ -3,10 +3,17 @@ package ca.yorku.eecs4314group12.api.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.Comment;
 import ca.yorku.eecs4314group12.api.dto.forumServiceDTO.CreateCommentRequest;
@@ -16,10 +23,12 @@ import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieSearchDTO;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesNowPlayingDTO;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.api.dto.reviewServiceDTO.ReviewDTO;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.WatchHistory;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.Watchlist;
 import ca.yorku.eecs4314group12.api.service.ForumService;
 import ca.yorku.eecs4314group12.api.service.MovieService;
@@ -58,8 +67,9 @@ public class APIController {
 
 
     @GetMapping("/forum/posts")
-    public Mono<ResponseEntity<List<ForumPost>>> getPost() {
-        return forumService.getPost();
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(@RequestParam(required = false) String category, 
+                                                        @RequestParam(required = false) String search) {
+        return forumService.getPost(category, search);
     }
 
     @PostMapping("/forum/posts")
@@ -181,12 +191,11 @@ public class APIController {
         return userService.login(request);
     }
 
-    // email verification is temporarily desabled
-    // @PostMapping("/user/{id}/verify")
-    // public Mono<ResponseEntity<String>> verifyEmail(@PathVariable Long id, 
-    //                                                 @RequestParam String code) {
-    //     return userService.verifyEmail(id, code);
-    // }
+    @PostMapping("/user/{id}/verify")
+    public Mono<ResponseEntity<String>> verifyEmail(@PathVariable Long id, 
+                                                    @RequestParam String code) {
+        return userService.verifyEmail(id, code);
+    }
 
     @GetMapping("/user")
     public Mono<ResponseEntity<List<UserResponseDTO>>> getUsers() {
@@ -204,7 +213,6 @@ public class APIController {
         return userService.updateUser(id, request);
     }
 
-    // delete should return some message
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
         return userService.deleteUser(id);
@@ -236,6 +244,40 @@ public class APIController {
     @GetMapping("/user/{userId}/recommendations")
     public Mono<ResponseEntity<List<MovieDTO>>> getRecommendedMovies(@PathVariable Long userId) {
         return userService.getRecommendedMovies(userId);
+    }
+
+    @PostMapping("/user/{userId}/history/{movieId}")
+    public Mono<ResponseEntity<WatchHistory>> addToHistory(@PathVariable Long userId, 
+                                                        @PathVariable Integer movieId) {
+        return userService.addToHistory(userId, movieId);
+    }
+
+    @GetMapping("/user/{userId}/history")
+    public Mono<ResponseEntity<List<WatchHistory>>> getUserHistory(@PathVariable Long userId) {
+        return userService.getUserHistory(userId);
+    }
+
+    @DeleteMapping("/user/{userId}/history/{movieId}")
+    public Mono<ResponseEntity<Void>> removeFromHistory(@PathVariable Long userId, 
+                                                        @PathVariable Integer movieId) {
+        return userService.removeFromHistory(userId, movieId);
+    }
+
+    @PostMapping("user/{userId}/favourites/{movieId}")
+    public Mono<ResponseEntity<FavouriteMovie>> addFavourite(@PathVariable Long userId, 
+                                                            @PathVariable Integer movieId) {
+        return userService.addFavourite(userId, movieId);
+    }
+
+    @GetMapping("user/{userId}/favourites")
+    public Mono<ResponseEntity<List<FavouriteMovie>>> getUserFavourites(@PathVariable Long userId) {
+        return userService.getUserFavourites(userId);
+    }
+
+    @DeleteMapping("user/{userId}/favourites/{movieId}")
+    public Mono<ResponseEntity<Void>> removeFavourite(@PathVariable Long userId, 
+                                                    @PathVariable Integer movieId) {
+        return userService.removeFavourite(userId, movieId);
     }
 
 }
