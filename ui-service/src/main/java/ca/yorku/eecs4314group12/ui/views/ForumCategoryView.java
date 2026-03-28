@@ -239,13 +239,15 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             Button editBtn = new Button("Edit");
             editBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
             editBtn.addClickListener(e -> openEditPostDialog(post));
+            actions.add(editBtn);
+        }
 
+        if (isOwner || canModerateForum()) {
             Button deleteBtn = new Button("Delete");
             deleteBtn.addThemeVariants(ButtonVariant.LUMO_SMALL,
                     ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
             deleteBtn.addClickListener(e -> deletePost(post.getId()));
-
-            actions.add(editBtn, deleteBtn);
+            actions.add(deleteBtn);
         }
 
         card.add(title, authorSpan, content, commentsSection, actions);
@@ -268,6 +270,9 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             return;
         }
 
+        Long actingUserId = currentUserId();
+        String actingRole = userSessionService.getRole();
+
         for (ForumCommentDTO comment : comments) {
             Div bubble = new Div();
             bubble.getStyle()
@@ -281,9 +286,42 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             Span meta = new Span("User " + comment.getUserId() + " · " + dateStr);
             meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                     .set("color", "var(--lumo-tertiary-text-color)");
-            bubble.add(text, meta);
+
+            HorizontalLayout row = new HorizontalLayout(meta);
+            row.setWidthFull();
+            row.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+            row.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+
+            boolean commentOwner = actingUserId != null && comment.getUserId() != null
+                    && comment.getUserId().equals(actingUserId);
+            if (comment.getId() != null && actingUserId != null
+                    && (commentOwner || canModerateForum())) {
+                Button delComment = new Button("Delete", VaadinIcon.TRASH.create());
+                delComment.addThemeVariants(ButtonVariant.LUMO_SMALL,
+                        ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+                long cid = comment.getId();
+                delComment.addClickListener(e -> {
+                    boolean ok = backendClient.deleteForumComment(cid,
+                            actingUserId != null ? actingUserId : FALLBACK_USER_ID, actingRole);
+                    if (ok) {
+                        loadComments(postId, target);
+                        Notification.show("Comment deleted.", 2500, Notification.Position.BOTTOM_START);
+                    } else {
+                        Notification.show("Could not delete comment.", 3000, Notification.Position.BOTTOM_START)
+                                .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    }
+                });
+                row.add(delComment);
+            }
+
+            bubble.add(text, row);
             target.add(bubble);
         }
+    }
+
+    private boolean canModerateForum() {
+        String r = userSessionService.getRole();
+        return "MODERATOR".equals(r) || "ADMIN".equals(r);
     }
 
     // -------------------------------------------------------------------------

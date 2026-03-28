@@ -1,16 +1,23 @@
 package ca.yorku.eecs4314group12.user;
 
 import ca.yorku.eecs4314group12.user.dto.LoginRequest;
-import ca.yorku.eecs4314group12.user.dto.UserResponseDTO;
+import ca.yorku.eecs4314group12.user.model.Role;
+import ca.yorku.eecs4314group12.user.model.User;
 import ca.yorku.eecs4314group12.user.model.Watchlist;
+import ca.yorku.eecs4314group12.user.repository.UserRepository;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,7 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(UserServiceTestMailConfig.class)
+@Transactional
 public class WatchlistIntegrationTest {
+
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     @Autowired
     private MockMvc mockMvc;
@@ -29,12 +40,26 @@ public class WatchlistIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void seedVerifiedUser() {
+        String username = "wltestuser";
+        if (userRepository.existsByUsername(username)) {
+            return;
+        }
+        User u = new User(username, "wltestuser@example.com", PASSWORD_ENCODER.encode("Wltestpass1"));
+        u.setEmailVerified(true);
+        u.setRole(Role.USER);
+        userRepository.save(u);
+    }
+
     @Test
     public void testLoginAndGetWatchlist() throws Exception {
-        // Step 1: Login with username "absolutecinema" and password "absoluteciname"
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setIdentifier("absolutecinema");
-        loginRequest.setPassword("absoluteciname");
+        loginRequest.setIdentifier("wltestuser");
+        loginRequest.setPassword("Wltestpass1");
 
         MvcResult loginResult = mockMvc.perform(post("/user/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -43,18 +68,17 @@ public class WatchlistIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andReturn();
 
-        // Parse login response to get user ID
         String loginResponseJson = loginResult.getResponse().getContentAsString();
-        UserResponseDTO loginResponse = objectMapper.readValue(loginResponseJson, UserResponseDTO.class);
-        Long userId = loginResponse.getId();
+        JsonNode loginNode = objectMapper.readTree(loginResponseJson);
+        Long userId = loginNode.get("id").asLong();
 
         assertNotNull(userId, "User ID should not be null after login");
         System.out.println("=== LOGIN SUCCESS ===");
         System.out.println("User ID: " + userId);
-        System.out.println("Username: " + loginResponse.getUsername());
-        System.out.println("Email: " + loginResponse.getEmail());
-        System.out.println("Role: " + loginResponse.getRole());
-        System.out.println("Email Verified: " + loginResponse.isEmailVerified());
+        System.out.println("Username: " + loginNode.get("username").asText());
+        System.out.println("Email: " + loginNode.get("email").asText());
+        System.out.println("Role: " + loginNode.get("role").asText());
+        System.out.println("Email Verified: " + loginNode.get("emailVerified").asBoolean());
 
         // Step 2: Get watchlist for the user
         MvcResult watchlistResult = mockMvc.perform(get("/user/{userId}/watchlist", userId)

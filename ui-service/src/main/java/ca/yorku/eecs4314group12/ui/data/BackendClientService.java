@@ -179,6 +179,26 @@ public class BackendClientService {
         }
     }
 
+    public boolean deleteReview(long reviewId, long userId, String userRole) {
+        try {
+            reviewClient.delete()
+                    .uri(uriBuilder -> uriBuilder.path("/api/reviews/{id}")
+                            .queryParam("userId", userId)
+                            .queryParam("userRole", userRole)
+                            .build(reviewId))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            log.warn("Delete review {} failed: {}", reviewId, e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Delete review {} error: {}", reviewId, e.getMessage());
+            return false;
+        }
+    }
+
     // -------------------------------------------------------------------------
     // User auth
     // -------------------------------------------------------------------------
@@ -270,6 +290,57 @@ public class BackendClientService {
         if (existing.isEmpty()) return false;
         return updateUser(userId, existing.get().getUsername(), existing.get().getEmail(),
                 null, null, null, likedGenres);
+    }
+
+    public List<UserResponseDTO> listAllUsers() {
+        try {
+            List<UserResponseDTO> list = userClient.get().uri("/user")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<UserResponseDTO>>() {})
+                    .block();
+            return list != null ? list : List.of();
+        } catch (Exception e) {
+            log.error("Failed to list users: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    public Optional<UserResponseDTO> promoteToModerator(long targetUserId,
+            String adminIdentifier, String adminPassword) {
+        try {
+            Map<String, String> body = Map.of(
+                    "adminIdentifier", adminIdentifier,
+                    "adminPassword", adminPassword);
+            UserResponseDTO r = userClient.post()
+                    .uri("/user/{userId}/promote-moderator", targetUserId)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return Optional.ofNullable(r);
+        } catch (Exception e) {
+            log.warn("Promote moderator failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<UserResponseDTO> demoteModerator(long targetUserId,
+            String adminIdentifier, String adminPassword) {
+        try {
+            Map<String, String> body = Map.of(
+                    "adminIdentifier", adminIdentifier,
+                    "adminPassword", adminPassword);
+            UserResponseDTO r = userClient.post()
+                    .uri("/user/{userId}/demote-moderator", targetUserId)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(UserResponseDTO.class)
+                    .block();
+            return Optional.ofNullable(r);
+        } catch (Exception e) {
+            log.warn("Demote moderator failed: {}", e.getMessage());
+            return Optional.empty();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -474,6 +545,21 @@ public class BackendClientService {
                     .retrieve().bodyToMono(ForumCommentDTO.class).block();
             return Optional.ofNullable(comment);
         } catch (Exception e) { log.error("Failed to create comment: {}", e.getMessage()); return Optional.empty(); }
+    }
+
+    public boolean deleteForumComment(long commentId, long userId, String userRole) {
+        try {
+            forumClient.delete()
+                    .uri(uriBuilder -> uriBuilder.path("/forum/comments/{id}")
+                            .queryParam("userId", userId)
+                            .queryParam("userRole", userRole)
+                            .build(commentId))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) { return false; }
+        catch (Exception e) { log.error("Failed to delete comment: {}", e.getMessage()); return false; }
     }
 
     // -------------------------------------------------------------------------

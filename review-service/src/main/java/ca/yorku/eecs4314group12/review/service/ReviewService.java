@@ -202,12 +202,13 @@ public class ReviewService {
         //     throw new ForbiddenException("Not authorized to delete this review");
         // }
         
-        // Check if user is owner OR has moderator/admin role
         boolean isOwner = review.getUserId().equals(userId);
-        boolean isModeratorOrAdmin = "MODERATOR".equals(userRole) || "ADMIN".equals(userRole);
-        
-        if (!isOwner && !isModeratorOrAdmin) {
-            throw new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin");
+        // Moderators remove forum content only; only the review owner or an ADMIN may delete reviews.
+        boolean isAdmin = "ADMIN".equals(userRole);
+
+        if (!isOwner && !isAdmin) {
+            throw new IllegalStateException(
+                    "You can only delete your own reviews; platform admins may remove any review.");
         }
         
         review.softDelete();

@@ -6,6 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import ca.yorku.eecs4314group12.user.repository.UserRepository;
+import ca.yorku.eecs4314group12.user.model.Role;
 import ca.yorku.eecs4314group12.user.model.User;
 
 import java.util.List;
@@ -182,5 +183,44 @@ public class UserService {
 
         User existingUser = getUserById(id);
         repo.delete(existingUser);
+    }
+
+    public User promoteToModerator(Long targetUserId, String adminIdentifier, String adminPassword) {
+        requireAdmin(adminIdentifier, adminPassword);
+        User target = getUserById(targetUserId);
+        if (target.getRole() == Role.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot change the platform administrator role");
+        }
+        target.setRole(Role.MODERATOR);
+        return repo.save(target);
+    }
+
+    public User demoteModeratorToUser(Long targetUserId, String adminIdentifier, String adminPassword) {
+        requireAdmin(adminIdentifier, adminPassword);
+        User target = getUserById(targetUserId);
+        if (target.getRole() == Role.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot change the platform administrator role");
+        }
+        if (target.getRole() != Role.MODERATOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "User is not a moderator");
+        }
+        target.setRole(Role.USER);
+        return repo.save(target);
+    }
+
+    private User requireAdmin(String adminIdentifier, String adminPassword) {
+        User actor = authenticate(adminIdentifier, adminPassword);
+        if (actor.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only administrators may manage moderator roles");
+        }
+        return actor;
     }
 }

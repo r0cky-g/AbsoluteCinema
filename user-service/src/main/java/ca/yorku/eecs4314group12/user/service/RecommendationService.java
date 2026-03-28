@@ -29,45 +29,41 @@ public class RecommendationService {
     public List<MovieDTO> getRecommendedMovies(Long userId) {
         logger.info("Getting recommendations for user {}", userId);
 
-        // Step 1: Get user's watchlist (movie IDs)
         List<Watchlist> watchlist = watchlistRepository.findByUserId(userId);
-        
+        Set<Integer> watchlistMovieIds = watchlist.stream()
+                .map(Watchlist::getMovieId)
+                .collect(Collectors.toSet());
+
         if (watchlist.isEmpty()) {
-            logger.info("User {} has no movies in watchlist, returning empty recommendations", userId);
-            return Collections.emptyList();
+            logger.info("User {} has no watchlist titles; returning top {} trending", userId, MAX_RECOMMENDATIONS);
+            return topTrendingExcluding(Collections.emptySet());
         }
 
-        // Step 2: Fetch movie details for each watchlist movie
         List<MovieDTO> watchlistMovies = new ArrayList<>();
-        Set<Integer> watchlistMovieIds = new HashSet<>();
-        
         for (Watchlist item : watchlist) {
-            watchlistMovieIds.add(item.getMovieId());
             movieClient.getMovieById(item.getMovieId())
                     .ifPresent(watchlistMovies::add);
         }
 
         if (watchlistMovies.isEmpty()) {
-            logger.warn("Could not fetch metadata for any watchlist movies for user {} (watchlist had {} items)", 
+            logger.warn("Could not fetch metadata for any watchlist movie for user {} ({} ids); using trending fallback",
                     userId, watchlist.size());
-            return Collections.emptyList();
+            return topTrendingExcluding(watchlistMovieIds);
         }
 
         logger.info("Successfully fetched {} watchlist movies for user {}", watchlistMovies.size(), userId);
 
-        // Step 3: Extract information from watchlist movies
         Set<String> preferredGenres = extractGenres(watchlistMovies);
         Set<String> preferredActors = extractActors(watchlistMovies);
         Set<String> preferredDirectors = extractDirectors(watchlistMovies);
 
-        logger.info("User {} preferences from watchlist - Genres: {}, Actors: {}, Directors: {}", 
+        logger.info("User {} preferences from watchlist - Genres: {}, Actors: {}, Directors: {}",
                 userId, preferredGenres.size(), preferredActors.size(), preferredDirectors.size());
 
-        // Step 4: Get trending movies as recommendation pool
         Optional<MoviesTrendingDTO> trendingOpt = movieClient.getTrendingMovies();
         if (trendingOpt.isEmpty() || trendingOpt.get().getResults() == null) {
-            logger.warn("Could not fetch trending movies for recommendations");
-            return Collections.emptyList();
+            logger.warn("Trending unavailable for scoring user {}; using trending fallback", userId);
+            return topTrendingExcluding(watchlistMovieIds);
         }
 
         List<MovieDTO> trendingMovies = trendingOpt.get().getResults();
@@ -105,10 +101,27 @@ public class RecommendationService {
                 recommendations.size(), userId, preferredGenres.size(), preferredActors.size(), preferredDirectors.size());
         
         if (recommendations.isEmpty()) {
-            logger.warn("No recommendations generated for user {} - check if trending movies match watchlist preferences", userId);
+            logger.warn("Personalised pool empty for user {}; using top trending", userId);
+            return topTrendingExcluding(watchlistMovieIds);
         }
-        
+
         return recommendations;
+    }
+
+    /**
+     * Up to {@link #MAX_RECOMMENDATIONS} trending movies, preserving TMDB order, excluding watchlist IDs.
+     */
+    private List<MovieDTO> topTrendingExcluding(Set<Integer> excludeIds) {
+        Set<Integer> exclude = excludeIds != null ? excludeIds : Collections.emptySet();
+        Optional<MoviesTrendingDTO> trendingOpt = movieClient.getTrendingMovies();
+        if (trendingOpt.isEmpty() || trendingOpt.get().getResults() == null) {
+            logger.warn("Could not load trending movies for default recommendations");
+            return Collections.emptyList();
+        }
+        return trendingOpt.get().getResults().stream()
+                .filter(movie -> movie != null && !exclude.contains(movie.getId()))
+                .limit(MAX_RECOMMENDATIONS)
+                .collect(Collectors.toList());
     }
 
     private Set<String> extractGenres(List<MovieDTO> movies) {
