@@ -30,22 +30,9 @@ public class BackendClientService {
     private static final Logger log = LoggerFactory.getLogger(BackendClientService.class);
 
     private final WebClient apiClient;
-    private final WebClient reviewClient;
-    private final WebClient movieClient;
-    private final WebClient forumClient;
-    private final WebClient userClient;
 
-    public BackendClientService(
-            @Qualifier("uiApiClient") WebClient apiClient,
-            @Qualifier("uiReviewClient") WebClient reviewClient,
-            @Qualifier("uiMovieClient") WebClient movieClient,
-            @Qualifier("uiForumClient") WebClient forumClient,
-            @Qualifier("uiUserClient") WebClient userClient) {
+    public BackendClientService(@Qualifier("uiApiClient") WebClient apiClient){
         this.apiClient = apiClient;
-        this.reviewClient = reviewClient;
-        this.movieClient = movieClient;
-        this.forumClient = forumClient;
-        this.userClient = userClient;
     }
 
     // -------------------------------------------------------------------------
@@ -76,8 +63,8 @@ public class BackendClientService {
      */
     public Optional<MovieListItemDTO> getMovieSummary(int id) {
         try {
-            MovieListItemDTO movie = movieClient.get()
-                    .uri("/movie/{id}", id)
+            MovieListItemDTO movie = apiClient.get()
+                    .uri("/api/movie/{id}", id)
                     .retrieve()
                     .bodyToMono(MovieListItemDTO.class)
                     .block();
@@ -97,7 +84,7 @@ public class BackendClientService {
 
     public List<MovieListItemDTO> getNowPlaying() {
         try {
-            MovieListResult result = movieClient.get().uri("/movie/nowplaying")
+            MovieListResult result = apiClient.get().uri("/api/movie/nowplaying")
                     .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
         } catch (Exception e) { log.error("Failed to fetch now playing: {}", e.getMessage()); return List.of(); }
@@ -105,7 +92,7 @@ public class BackendClientService {
 
     public List<MovieListItemDTO> getTrending() {
         try {
-            MovieListResult result = movieClient.get().uri("/movie/trending")
+            MovieListResult result = apiClient.get().uri("/api/movie/trending")
                     .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
         } catch (Exception e) { log.error("Failed to fetch trending: {}", e.getMessage()); return List.of(); }
@@ -114,7 +101,7 @@ public class BackendClientService {
     public List<MovieListItemDTO> searchMovies(String query) {
         if (query == null || query.isBlank()) return List.of();
         try {
-            MovieListResult result = movieClient.get().uri("/movie/search/{name}", query.trim())
+            MovieListResult result = apiClient.get().uri("/api/movie/search/{name}", query.trim())
                     .retrieve().bodyToMono(MovieListResult.class).block();
             return result != null && result.getResults() != null ? result.getResults() : List.of();
         } catch (Exception e) { log.error("Failed to search movies: {}", e.getMessage()); return List.of(); }
@@ -126,7 +113,7 @@ public class BackendClientService {
 
     public List<ReviewDTO> getReviewsForMovie(long movieId) {
         try {
-            ApiResponse<List<ReviewDTO>> r = reviewClient.get()
+            ApiResponse<List<ReviewDTO>> r = apiClient.get()
                     .uri("/api/reviews/movie/{movieId}", movieId).retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {}).block();
             return r != null && r.isSuccess() && r.getData() != null ? r.getData() : List.of();
@@ -135,7 +122,7 @@ public class BackendClientService {
 
     public Optional<ReviewStatsDTO> getReviewStats(long movieId) {
         try {
-            ApiResponse<ReviewStatsDTO> r = reviewClient.get()
+            ApiResponse<ReviewStatsDTO> r = apiClient.get()
                     .uri("/api/reviews/movie/{movieId}/stats", movieId).retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewStatsDTO>>() {}).block();
             return r != null && r.isSuccess() ? Optional.ofNullable(r.getData()) : Optional.empty();
@@ -144,7 +131,7 @@ public class BackendClientService {
 
     public List<ReviewDTO> getReviewsForUser(long userId) {
         try {
-            ApiResponse<List<ReviewDTO>> r = reviewClient.get()
+            ApiResponse<List<ReviewDTO>> r = apiClient.get()
                     .uri("/api/reviews/user/{userId}", userId).retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ReviewDTO>>>() {}).block();
             return r != null && r.isSuccess() && r.getData() != null ? r.getData() : List.of();
@@ -153,7 +140,7 @@ public class BackendClientService {
 
     public boolean createReview(ReviewDTO review) {
         try {
-            ApiResponse<ReviewDTO> r = reviewClient.post().uri("/api/reviews")
+            ApiResponse<ReviewDTO> r = apiClient.post().uri("/api/reviews")
                     .bodyValue(review).retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewDTO>>() {}).block();
             return r != null && r.isSuccess();
@@ -167,7 +154,7 @@ public class BackendClientService {
      */
     public Optional<ReviewDTO> markReviewHelpful(long reviewId) {
         try {
-            ApiResponse<ReviewDTO> r = reviewClient.post()
+            ApiResponse<ReviewDTO> r = apiClient.post()
                     .uri("/api/reviews/{id}/helpful", reviewId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<ReviewDTO>>() {})
@@ -181,7 +168,7 @@ public class BackendClientService {
 
     public boolean deleteReview(long reviewId, long userId, String userRole) {
         try {
-            reviewClient.delete()
+            apiClient.delete()
                     .uri(uriBuilder -> uriBuilder.path("/api/reviews/{id}")
                             .queryParam("userId", userId)
                             .queryParam("userRole", userRole)
@@ -206,7 +193,7 @@ public class BackendClientService {
     public Optional<UserResponseDTO> loginUser(String identifier, String password) {
         try {
             Map<String, String> body = Map.of("identifier", identifier, "password", password);
-            UserResponseDTO r = userClient.post().uri("/user/login").bodyValue(body)
+            UserResponseDTO r = apiClient.post().uri("/api/user/login").bodyValue(body)
                     .retrieve().bodyToMono(UserResponseDTO.class).block();
             return Optional.ofNullable(r);
         } catch (WebClientResponseException.Unauthorized e) { return Optional.empty(); }
@@ -218,7 +205,7 @@ public class BackendClientService {
         try {
             Map<String, Object> body = Map.of("username", username, "password", password,
                     "email", email, "over18", true);
-            userClient.post().uri("/user/register").bodyValue(body)
+            apiClient.post().uri("/api/user/register").bodyValue(body)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Registration failed: {}", e.getMessage()); return false; }
@@ -232,7 +219,7 @@ public class BackendClientService {
         try {
             Map<String, Object> body = Map.of("username", username, "password", password,
                     "email", email, "over18", true);
-            UserResponseDTO response = userClient.post().uri("/user/register")
+            UserResponseDTO response = apiClient.post().uri("/api/user/register")
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(UserResponseDTO.class)
@@ -246,8 +233,8 @@ public class BackendClientService {
      */
     public boolean verifyEmail(long userId, String code) {
         try {
-            userClient.post()
-                    .uri(uriBuilder -> uriBuilder.path("/user/{id}/verify")
+            apiClient.post()
+                    .uri(uriBuilder -> uriBuilder.path("/api/user/{id}/verify")
                             .queryParam("code", code).build(userId))
                     .retrieve()
                     .toBodilessEntity()
@@ -262,7 +249,7 @@ public class BackendClientService {
 
     public Optional<UserResponseDTO> getUserData(long userId) {
         try {
-            UserResponseDTO r = userClient.get().uri("/user/{id}", userId)
+            UserResponseDTO r = apiClient.get().uri("/api/user/{id}", userId)
                     .retrieve().bodyToMono(UserResponseDTO.class).block();
             return Optional.ofNullable(r);
         } catch (Exception e) { log.error("Failed to fetch user data: {}", e.getMessage()); return Optional.empty(); }
@@ -279,7 +266,7 @@ public class BackendClientService {
             if (dob != null) body.put("dob", dob.toString());
             if (over18 != null) body.put("over18", over18);
             if (likedGenres != null) body.put("likedGenres", likedGenres);
-            userClient.put().uri("/user/{id}", userId).bodyValue(body)
+            apiClient.put().uri("/api/user/{id}", userId).bodyValue(body)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Failed to update user {}: {}", userId, e.getMessage()); return false; }
@@ -294,7 +281,7 @@ public class BackendClientService {
 
     public List<UserResponseDTO> listAllUsers() {
         try {
-            List<UserResponseDTO> list = userClient.get().uri("/user")
+            List<UserResponseDTO> list = apiClient.get().uri("/api/user")
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<UserResponseDTO>>() {})
                     .block();
@@ -311,8 +298,8 @@ public class BackendClientService {
             Map<String, String> body = Map.of(
                     "adminIdentifier", adminIdentifier,
                     "adminPassword", adminPassword);
-            UserResponseDTO r = userClient.post()
-                    .uri("/user/{userId}/promote-moderator", targetUserId)
+            UserResponseDTO r = apiClient.post()
+                    .uri("/api/user/{userId}/promote-moderator", targetUserId)
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(UserResponseDTO.class)
@@ -330,8 +317,8 @@ public class BackendClientService {
             Map<String, String> body = Map.of(
                     "adminIdentifier", adminIdentifier,
                     "adminPassword", adminPassword);
-            UserResponseDTO r = userClient.post()
-                    .uri("/user/{userId}/demote-moderator", targetUserId)
+            UserResponseDTO r = apiClient.post()
+                    .uri("/api/user/{userId}/demote-moderator", targetUserId)
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(UserResponseDTO.class)
@@ -349,7 +336,7 @@ public class BackendClientService {
 
     public List<WatchlistDTO> getWatchlist(long userId) {
         try {
-            List<WatchlistDTO> list = userClient.get().uri("/user/{userId}/watchlist", userId)
+            List<WatchlistDTO> list = apiClient.get().uri("/api/user/{userId}/watchlist", userId)
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<WatchlistDTO>>() {}).block();
             return list != null ? list : List.of();
         } catch (Exception e) { log.error("Failed to fetch watchlist: {}", e.getMessage()); return List.of(); }
@@ -357,7 +344,7 @@ public class BackendClientService {
 
     public boolean addToWatchlist(long userId, int movieId) {
         try {
-            userClient.post().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+            apiClient.post().uri("/api/user/{userId}/watchlist/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (WebClientResponseException.Conflict e) { return false; }
@@ -366,7 +353,7 @@ public class BackendClientService {
 
     public boolean removeFromWatchlist(long userId, int movieId) {
         try {
-            userClient.delete().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+            apiClient.delete().uri("/api/user/{userId}/watchlist/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Failed to remove from watchlist: {}", e.getMessage()); return false; }
@@ -374,7 +361,7 @@ public class BackendClientService {
 
     public boolean isInWatchlist(long userId, int movieId) {
         try {
-            Boolean r = userClient.get().uri("/user/{userId}/watchlist/{movieId}", userId, movieId)
+            Boolean r = apiClient.get().uri("/api/user/{userId}/watchlist/{movieId}", userId, movieId)
                     .retrieve().bodyToMono(Boolean.class).block();
             return Boolean.TRUE.equals(r);
         } catch (Exception e) { return false; }
@@ -386,7 +373,7 @@ public class BackendClientService {
 
     public List<WatchHistoryDTO> getWatchHistory(long userId) {
         try {
-            List<WatchHistoryDTO> list = userClient.get().uri("/user/{userId}/history", userId)
+            List<WatchHistoryDTO> list = apiClient.get().uri("/api/user/{userId}/history", userId)
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<WatchHistoryDTO>>() {}).block();
             return list != null ? list : List.of();
         } catch (Exception e) { log.error("Failed to fetch watch history: {}", e.getMessage()); return List.of(); }
@@ -394,7 +381,7 @@ public class BackendClientService {
 
     public boolean addToWatchHistory(long userId, int movieId) {
         try {
-            userClient.post().uri("/user/{userId}/history/{movieId}", userId, movieId)
+            apiClient.post().uri("/api/user/{userId}/history/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Failed to add to watch history: {}", e.getMessage()); return false; }
@@ -402,7 +389,7 @@ public class BackendClientService {
 
     public boolean removeFromWatchHistory(long userId, int movieId) {
         try {
-            userClient.delete().uri("/user/{userId}/history/{movieId}", userId, movieId)
+            apiClient.delete().uri("/api/user/{userId}/history/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Failed to remove from watch history: {}", e.getMessage()); return false; }
@@ -414,7 +401,7 @@ public class BackendClientService {
 
     public List<FavouriteMovieDTO> getFavourites(long userId) {
         try {
-            List<FavouriteMovieDTO> list = userClient.get().uri("/user/{userId}/favourites", userId)
+            List<FavouriteMovieDTO> list = apiClient.get().uri("/api/user/{userId}/favourites", userId)
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<FavouriteMovieDTO>>() {}).block();
             return list != null ? list : List.of();
         } catch (Exception e) { log.error("Failed to fetch favourites: {}", e.getMessage()); return List.of(); }
@@ -422,7 +409,7 @@ public class BackendClientService {
 
     public boolean addToFavourites(long userId, int movieId) {
         try {
-            userClient.post().uri("/user/{userId}/favourites/{movieId}", userId, movieId)
+            apiClient.post().uri("/api/user/{userId}/favourites/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (WebClientResponseException.Conflict e) { return false; }
@@ -431,7 +418,7 @@ public class BackendClientService {
 
     public boolean removeFromFavourites(long userId, int movieId) {
         try {
-            userClient.delete().uri("/user/{userId}/favourites/{movieId}", userId, movieId)
+            apiClient.delete().uri("/api/user/{userId}/favourites/{movieId}", userId, movieId)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (Exception e) { log.error("Failed to remove from favourites: {}", e.getMessage()); return false; }
@@ -450,7 +437,7 @@ public class BackendClientService {
 
     public List<MovieListItemDTO> getRecommendations(long userId) {
         try {
-            List<MovieListItemDTO> list = userClient.get().uri("/user/{userId}/recommendations", userId)
+            List<MovieListItemDTO> list = apiClient.get().uri("/api/user/{userId}/recommendations", userId)
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<MovieListItemDTO>>() {}).block();
             return list != null ? list : List.of();
         } catch (Exception e) { log.error("Failed to fetch recommendations: {}", e.getMessage()); return List.of(); }
@@ -462,7 +449,7 @@ public class BackendClientService {
 
     public List<ForumPostDTO> getAllPosts() {
         try {
-            List<ForumPostDTO> posts = forumClient.get().uri("/forum/posts")
+            List<ForumPostDTO> posts = apiClient.get().uri("/api/forum/posts")
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
             return posts != null ? posts : List.of();
         } catch (Exception e) { log.error("Failed to fetch forum posts: {}", e.getMessage()); return List.of(); }
@@ -470,8 +457,8 @@ public class BackendClientService {
 
     public List<ForumPostDTO> searchPosts(String keyword) {
         try {
-            List<ForumPostDTO> posts = forumClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/forum/posts")
+            List<ForumPostDTO> posts = apiClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/api/forum/posts")
                             .queryParam("search", keyword).build())
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
             return posts != null ? posts : List.of();
@@ -480,8 +467,8 @@ public class BackendClientService {
 
     public List<ForumPostDTO> getPostsByCategory(String category) {
         try {
-            List<ForumPostDTO> posts = forumClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/forum/posts")
+            List<ForumPostDTO> posts = apiClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/api/forum/posts")
                             .queryParam("category", category).build())
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumPostDTO>>() {}).block();
             return posts != null ? posts : List.of();
@@ -496,7 +483,7 @@ public class BackendClientService {
             body.put("userId", userId != null ? userId : 0L);
             if (category != null && !category.isBlank())
                 body.put("category", category.trim());
-            ForumPostDTO post = forumClient.post().uri("/forum/posts").bodyValue(body)
+            ForumPostDTO post = apiClient.post().uri("/api/forum/posts").bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to create post: {}", e.getMessage()); return Optional.empty(); }
@@ -510,7 +497,7 @@ public class BackendClientService {
     public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
         try {
             Map<String, String> body = Map.of("title", title, "content", content);
-            ForumPostDTO post = forumClient.put().uri("/forum/posts/{id}", postId).bodyValue(body)
+            ForumPostDTO post = apiClient.put().uri("/api/forum/posts/{id}", postId).bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to update post: {}", e.getMessage()); return Optional.empty(); }
@@ -518,8 +505,8 @@ public class BackendClientService {
 
     public boolean deletePost(long postId, long userId, String userRole) {
         try {
-            forumClient.delete()
-                    .uri("/forum/posts/{id}?userId={userId}&userRole={userRole}", postId, userId, userRole)
+            apiClient.delete()
+                    .uri("/api/forum/posts/{id}?userId={userId}&userRole={userRole}", postId, userId, userRole)
                     .retrieve().toBodilessEntity().block();
             return true;
         } catch (WebClientResponseException e) { return false; }
@@ -532,7 +519,7 @@ public class BackendClientService {
 
     public List<ForumCommentDTO> getCommentsForPost(long postId) {
         try {
-            List<ForumCommentDTO> comments = forumClient.get().uri("/forum/comments/{postId}", postId)
+            List<ForumCommentDTO> comments = apiClient.get().uri("/api/forum/comments/{postId}", postId)
                     .retrieve().bodyToMono(new ParameterizedTypeReference<List<ForumCommentDTO>>() {}).block();
             return comments != null ? comments : List.of();
         } catch (Exception e) { log.error("Failed to fetch comments: {}", e.getMessage()); return List.of(); }
@@ -541,7 +528,7 @@ public class BackendClientService {
     public Optional<ForumCommentDTO> createComment(long postId, long userId, String content) {
         try {
             Map<String, Object> body = Map.of("postId", postId, "userId", userId, "content", content);
-            ForumCommentDTO comment = forumClient.post().uri("/forum/comments").bodyValue(body)
+            ForumCommentDTO comment = apiClient.post().uri("/api/forum/comments").bodyValue(body)
                     .retrieve().bodyToMono(ForumCommentDTO.class).block();
             return Optional.ofNullable(comment);
         } catch (Exception e) { log.error("Failed to create comment: {}", e.getMessage()); return Optional.empty(); }
@@ -549,8 +536,8 @@ public class BackendClientService {
 
     public boolean deleteForumComment(long commentId, long userId, String userRole) {
         try {
-            forumClient.delete()
-                    .uri(uriBuilder -> uriBuilder.path("/forum/comments/{id}")
+            apiClient.delete()
+                    .uri(uriBuilder -> uriBuilder.path("/api/forum/comments/{id}")
                             .queryParam("userId", userId)
                             .queryParam("userRole", userRole)
                             .build(commentId))

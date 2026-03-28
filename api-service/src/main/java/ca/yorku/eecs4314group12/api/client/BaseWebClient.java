@@ -1,5 +1,7 @@
 package ca.yorku.eecs4314group12.api.client;
 
+import java.util.Collections;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.http.HttpHeaders;

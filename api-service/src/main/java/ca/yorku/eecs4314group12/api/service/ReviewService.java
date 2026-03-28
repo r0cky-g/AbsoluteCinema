@@ -1,6 +1,5 @@
 package ca.yorku.eecs4314group12.api.service;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -19,37 +18,35 @@ public class ReviewService {
         this.reviewClient = reviewClient;
     }
 
-    public Mono<ResponseEntity<ReviewDTO>> createReview(ReviewDTO reviewDTO) {
+    public Mono<ResponseEntity<Map<String, Object>>> createReview(ReviewDTO reviewDTO) {
         return reviewClient.createReview(reviewDTO);
     }
 
-    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByMovie(Long movieId) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewsByMovie(Long movieId) {
         return reviewClient.getReviewsByMovie(movieId);
     }
 
-    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByUser(long userId) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewsByUser(long userId) {
         return reviewClient.getReviewsByUser(userId);
     }
 
-    public Mono<ResponseEntity<ReviewDTO>> getReviewByID(long id) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewByID(long id) {
         return reviewClient.getReviewByID(id);
     }
 
-    public Mono<ResponseEntity<ReviewDTO>> updateReview(Long id, ReviewDTO reviewDTO) {
+    public Mono<ResponseEntity<Map<String, Object>>> updateReview(Long id, ReviewDTO reviewDTO) {
         return reviewClient.updateReview(id, reviewDTO);
     }
 
-    // should include role
-    public Mono<ResponseEntity<Void>> deleteReview(Long id, Long userId) {
+    public Mono<ResponseEntity<Map<String, Object>>> deleteReview(Long id, Long userId) {
         return reviewClient.deleteReview(id, userId);
     }
 
-    // would really like to get <String, DTO> not just generic
     public Mono<ResponseEntity<Map<String, Object>>> getMovieStats(Long movieId) {
         return reviewClient.getMovieStats(movieId);
     }
 
-    public Mono<ResponseEntity<ReviewDTO>> markAsHelpful(Long id) {
+    public Mono<ResponseEntity<Map<String, Object>>> markAsHelpful(Long id) {
         return reviewClient.markAsHelpful(id);
     }
 }
