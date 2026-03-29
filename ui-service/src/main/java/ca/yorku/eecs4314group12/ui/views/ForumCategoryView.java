@@ -79,7 +79,7 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
                 + categoryKey.substring(1);
 
         // Back link
-        Button backBtn = new Button("← All Categories", VaadinIcon.ARROW_LEFT.create());
+        Button backBtn = new Button("All Categories", VaadinIcon.ARROW_LEFT.create());
         backBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         backBtn.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate(ForumView.class)));
 
