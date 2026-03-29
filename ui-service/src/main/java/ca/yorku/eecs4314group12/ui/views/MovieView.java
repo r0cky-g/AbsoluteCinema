@@ -420,9 +420,14 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addThemeVariants(inWatchlist ? ButtonVariant.LUMO_SUCCESS : ButtonVariant.LUMO_PRIMARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            if (inWatchlist) backendClient.removeFromWatchlist(userId, movieId);
-            else backendClient.addToWatchlist(userId, movieId);
-            getUI().ifPresent(ui -> ui.getPage().reload());
+            if (inWatchlist) {
+            	backendClient.removeFromWatchlist(userId, movieId);
+            	btn.setText("+ In Watchlist");
+            }
+            else { 
+            	backendClient.addToWatchlist(userId, movieId);
+            	btn.setText("✓ Watchlist");
+            };
         });
         return btn;
     }
@@ -434,9 +439,14 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addThemeVariants(inFavourites ? ButtonVariant.LUMO_ERROR : ButtonVariant.LUMO_TERTIARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            if (inFavourites) backendClient.removeFromFavourites(userId, movieId);
-            else backendClient.addToFavourites(userId, movieId);
-            getUI().ifPresent(ui -> ui.getPage().reload());
+            if (inFavourites) {
+            	backendClient.removeFromFavourites(userId, movieId);
+            	btn.setText("♡ Favourite");
+            }
+            else {
+            	backendClient.addToFavourites(userId, movieId);
+            	btn.setText("♥ Favourited");
+            }
         });
         return btn;
     }
