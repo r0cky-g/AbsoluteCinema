@@ -415,18 +415,20 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
 
     private Button buildWatchlistButton(long userId, int movieId, boolean inWatchlist) {
         Button btn = inWatchlist
-                ? new Button("✓ In Watchlist", VaadinIcon.BOOKMARK.create())
-                : new Button("+ Watchlist", VaadinIcon.BOOKMARK_O.create());
+                ? new Button("In Watchlist", VaadinIcon.BOOKMARK.create())
+                : new Button("Watchlist", VaadinIcon.BOOKMARK_O.create());
         btn.addThemeVariants(inWatchlist ? ButtonVariant.LUMO_SUCCESS : ButtonVariant.LUMO_PRIMARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
             if (inWatchlist) {
             	backendClient.removeFromWatchlist(userId, movieId);
-            	btn.setText("+ In Watchlist");
+            	btn.setText("Watchlist");
+            	btn.setIcon(VaadinIcon.BOOKMARK_O.create());
             }
             else { 
             	backendClient.addToWatchlist(userId, movieId);
-            	btn.setText("✓ Watchlist");
+            	btn.setText("In Watchlist");
+            	btn.setIcon(VaadinIcon.BOOKMARK.create());
             }
         });
         return btn;
@@ -441,11 +443,14 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addClickListener(e -> {
             if (inFavourites) {
             	backendClient.removeFromFavourites(userId, movieId);
-            	btn.setText("♡ Favourite");
+            	btn.setText("Favourite");
+            	btn.setIcon(VaadinIcon.HEART_O.create());
             }
             else {
             	backendClient.addToFavourites(userId, movieId);
-            	btn.setText("♥ Favourited");
+            	btn.setText("Favourited");
+            	btn.setIcon(VaadinIcon.HEART.create());
+            	
             }
         });
         return btn;
