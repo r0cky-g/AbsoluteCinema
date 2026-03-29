@@ -10,6 +10,9 @@ public class UserResponseDTO {
     private String role;
     private Set<String> likedGenres;
 
+    /** For JSON deserialization from user-service via WebClient. */
+    public UserResponseDTO() {}
+
     public UserResponseDTO(Long id,
             String username,
             String email,
@@ -40,20 +43,40 @@ public class UserResponseDTO {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getUsername() {
         return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
         return email;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public boolean isEmailVerified() {
         return emailVerified;
     }
 
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
     public String getRole() {
         return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public Set<String> getLikedGenres() {
