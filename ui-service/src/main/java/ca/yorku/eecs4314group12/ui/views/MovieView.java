@@ -422,7 +422,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addClickListener(e -> {
             if (inWatchlist) backendClient.removeFromWatchlist(userId, movieId);
             else backendClient.addToWatchlist(userId, movieId);
-            getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
+            getUI().ifPresent(ui -> ui.getPage().reload());
         });
         return btn;
     }
@@ -436,7 +436,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addClickListener(e -> {
             if (inFavourites) backendClient.removeFromFavourites(userId, movieId);
             else backendClient.addToFavourites(userId, movieId);
-            getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
+            getUI().ifPresent(ui -> ui.getPage().reload());
         });
         return btn;
     }
