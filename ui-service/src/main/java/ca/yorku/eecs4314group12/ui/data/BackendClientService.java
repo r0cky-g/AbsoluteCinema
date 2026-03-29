@@ -495,16 +495,16 @@ public class BackendClientService {
             body.put("content", content);
             body.put("userId", userId != null ? userId : 0L);
             if (category != null && !category.isBlank())
-                body.put("category", category.trim());
+                body.put("category", category.trim().toLowerCase());
             ForumPostDTO post = forumClient.post().uri("/forum/posts").bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to create post: {}", e.getMessage()); return Optional.empty(); }
     }
 
-    // Legacy overload without category — defaults to General
+    // Legacy overload without category — defaults to general
     public Optional<ForumPostDTO> createPost(String title, String content, Long userId) {
-        return createPost(title, content, userId, "General");
+        return createPost(title, content, userId, "general");
     }
 
     public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
