@@ -235,7 +235,7 @@ public class APIController {
         return userService.getUserWatchlist(userId);
     }
 
-    @GetMapping("/{userId}/watchlist/{movieId}")
+    @GetMapping("/user/{userId}/watchlist/{movieId}")
     public Mono<ResponseEntity<Boolean>> isInWatchlist(@PathVariable Long userId,  
                                                     @PathVariable Integer movieId) {
         return userService.isInWatchlist(userId, movieId);
