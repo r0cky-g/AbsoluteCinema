@@ -436,8 +436,8 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
 
     private Button buildFavouriteButton(long userId, int movieId, boolean inFavourites) {
         Button btn = inFavourites
-                ? new Button("♥ Favourited", VaadinIcon.HEART.create())
-                : new Button("♡ Favourite", VaadinIcon.HEART_O.create());
+                ? new Button("Favourited", VaadinIcon.HEART.create())
+                : new Button("Favourite", VaadinIcon.HEART_O.create());
         btn.addThemeVariants(inFavourites ? ButtonVariant.LUMO_ERROR : ButtonVariant.LUMO_TERTIARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
