@@ -427,7 +427,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
             else { 
             	backendClient.addToWatchlist(userId, movieId);
             	btn.setText("✓ Watchlist");
-            };
+            }
         });
         return btn;
     }
