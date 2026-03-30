@@ -485,7 +485,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
             }
             else {
             	backendClient.addToWatchHistory(userId, movieId);
-                Notification n = Notification.show("Marked as watched!", 2000,
+                Notification n = Notification.show("Marked as Watched!", 2000,
                         Notification.Position.BOTTOM_START);
                 n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             	btn.setText("Watched");
