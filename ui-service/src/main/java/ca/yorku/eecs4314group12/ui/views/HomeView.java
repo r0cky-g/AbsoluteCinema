@@ -14,11 +14,12 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.router.AfterNavigationEvent;
-import com.vaadin.flow.router.AfterNavigationObserver;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
  *
  * Shows:
  *   - Search bar wired to movie-service GET /movie/search/{query}
- *   - Recommended for You (logged-in: ranked from watchlist metadata vs trending, else top 5 trending)
+ *   - Recommended for You (logged-in users with watchlist items only)
  *   - Now Playing  → GET /movie/nowplaying
  *   - Trending     → GET /movie/trending
  *
@@ -112,40 +113,6 @@ public class HomeView extends VerticalLayout implements AfterNavigationObserver 
         add(searchRow, contentArea);
         showSections();
     }
-    
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-        getUI().ifPresent(ui ->
-                ui.getPage().executeJs(
-                        "const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
-                                "  .find(d => d.scrollHeight > d.clientHeight);" +
-                                "if (div) div.scrollTop = 0;"
-                )
-        );
-
-        if (isLoggedIn() && userSessionService.getUserId() != null) {
-            reloadWatchlistAndFavouritesFromServer();
-            String q = searchField.getValue();
-            if (q == null || q.isBlank()) {
-                showSections();
-            }
-        }
-    }
-
-    private void reloadWatchlistAndFavouritesFromServer() {
-        long userId = userSessionService.getUserId();
-        List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);
-        watchlistIds = watchlist.stream()
-                .map(WatchlistDTO::getMovieId)
-                .collect(Collectors.toSet());
-        watchlistIds = watchlistIds == null ? Set.of() : watchlistIds;
-
-        List<FavouriteMovieDTO> favourites = backendClient.getFavourites(userId);
-        favouriteIds = favourites.stream()
-                .map(FavouriteMovieDTO::getMovieId)
-                .collect(Collectors.toSet());
-        favouriteIds = favouriteIds == null ? Set.of() : favouriteIds;
-    }
 
     // -------------------------------------------------------------------------
     // Sections
@@ -184,9 +151,46 @@ public class HomeView extends VerticalLayout implements AfterNavigationObserver 
             Paragraph empty = new Paragraph("No movies found for \"" + query + "\".");
             empty.getStyle().set("color", "var(--lumo-secondary-text-color)");
             contentArea.add(heading, empty);
-        } else {
-            contentArea.add(heading, buildGrid(results));
+            return;
         }
+
+        // Collect all unique genres from results for the filter dropdown
+        java.util.List<String> allGenres = results.stream()
+                .filter(m -> m.getGenres() != null)
+                .flatMap(m -> m.getGenres().stream())
+                .filter(g -> g != null && !g.isBlank())
+                .distinct()
+                .sorted()
+                .collect(java.util.stream.Collectors.toList());
+
+        com.vaadin.flow.component.select.Select<String> genreFilter =
+                new com.vaadin.flow.component.select.Select<>();
+        genreFilter.setLabel("Filter by genre");
+        java.util.List<String> genreOptions = new java.util.ArrayList<>();
+        genreOptions.add("All genres");
+        genreOptions.addAll(allGenres);
+        genreFilter.setItems(genreOptions);
+        genreFilter.setValue("All genres");
+        genreFilter.getStyle().set("min-width", "180px");
+
+        FlexLayout grid = buildGrid(results);
+
+        genreFilter.addValueChangeListener(e -> {
+            String selected = e.getValue();
+            grid.removeAll();
+            List<MovieListItemDTO> filtered = "All genres".equals(selected) ? results
+                    : results.stream()
+                            .filter(m -> m.getGenres() != null && m.getGenres().contains(selected))
+                            .collect(java.util.stream.Collectors.toList());
+            filtered.forEach(m -> grid.add(buildCard(m)));
+        });
+
+        HorizontalLayout resultsHeader = new HorizontalLayout(heading, genreFilter);
+        resultsHeader.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        resultsHeader.setWidthFull();
+        resultsHeader.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        contentArea.add(resultsHeader, grid);
     }
 
     // -------------------------------------------------------------------------
@@ -333,6 +337,28 @@ public class HomeView extends VerticalLayout implements AfterNavigationObserver 
         }
 
         return wrapper;
+    }
+
+    // -------------------------------------------------------------------------
+    // After navigation — reload badges when returning to home page
+    // -------------------------------------------------------------------------
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        if (isLoggedIn() && userSessionService.getUserId() != null) {
+            long userId = userSessionService.getUserId();
+            List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);
+            watchlistIds = watchlist.stream()
+                    .map(WatchlistDTO::getMovieId)
+                    .collect(Collectors.toSet());
+
+            List<FavouriteMovieDTO> favourites = backendClient.getFavourites(userId);
+            favouriteIds = favourites.stream()
+                    .map(FavouriteMovieDTO::getMovieId)
+                    .collect(Collectors.toSet());
+
+            showSections();
+        }
     }
 
     // -------------------------------------------------------------------------

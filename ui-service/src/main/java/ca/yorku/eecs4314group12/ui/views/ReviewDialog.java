@@ -22,7 +22,6 @@ import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 
 /**
  * Modal dialog for writing a review.
- * Uses real userId from UserSessionService if available, falls back to 1L.
  */
 public class ReviewDialog extends Dialog {
 
@@ -45,7 +44,8 @@ public class ReviewDialog extends Dialog {
         this.userSessionService = userSessionService;
         this.movieId = movieId;
 
-        setWidth("560px");
+        setWidth("520px");
+        setMaxWidth("95vw");
         setCloseOnOutsideClick(true);
         setCloseOnEsc(true);
 
@@ -74,12 +74,15 @@ public class ReviewDialog extends Dialog {
 
         HorizontalLayout ratingRow = new HorizontalLayout(ratingField, starPreview);
         ratingRow.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
+        ratingRow.setWidthFull();
 
         titleField = new TextField("Review Title");
         titleField.setWidthFull(); titleField.setRequired(true); titleField.setMaxLength(200);
 
         contentField = new TextArea("Your Review");
-        contentField.setWidthFull(); contentField.setRequired(true); contentField.setMinHeight("120px");
+        contentField.setWidthFull(); contentField.setRequired(true);
+        contentField.setMinHeight("120px");
+        contentField.setMaxHeight("240px");
         contentField.setHelperText("10–5000 characters");
 
         spoilerCheck = new Checkbox("Contains spoilers");
@@ -97,14 +100,19 @@ public class ReviewDialog extends Dialog {
         cancelBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         HorizontalLayout buttons = new HorizontalLayout(submitBtn, cancelBtn);
+        buttons.setWidthFull();
 
         VerticalLayout layout = new VerticalLayout(
-                heading, subtitle, ratingRow, titleField, contentField, spoilerCheck, errorMsg, buttons);
-        layout.setPadding(false); layout.setSpacing(true);
+                heading, subtitle, ratingRow, titleField, contentField,
+                spoilerCheck, errorMsg, buttons);
+        layout.setPadding(false);
+        layout.setSpacing(true);
+        layout.setWidth("100%");
+        layout.getStyle().set("box-sizing", "border-box");
+
         add(layout);
     }
 
-    /** Legacy constructor without UserSessionService — uses fallback ID. */
     public ReviewDialog(BackendClientService backendClient, long movieId, String movieTitle) {
         this(backendClient, null, movieId, movieTitle);
     }

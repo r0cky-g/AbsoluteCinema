@@ -13,9 +13,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-/**
- * Login page — entry point for unauthenticated users.
- */
 @Route("login")
 @PageTitle("Login | Absolute Cinema")
 @AnonymousAllowed
@@ -43,6 +40,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 .set("margin-bottom", "var(--lumo-space-l)");
 
         loginForm.setAction("login");
+        loginForm.setForgotPasswordButtonVisible(false);
 
         Paragraph registerPrompt = new Paragraph();
         registerPrompt.getStyle()
