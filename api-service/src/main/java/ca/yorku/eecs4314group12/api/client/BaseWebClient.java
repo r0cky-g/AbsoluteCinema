@@ -93,9 +93,8 @@ public class BaseWebClient {
     }
 
     public <T, B> Mono<ResponseEntity<T>> post(String uri, B requestBody, ParameterizedTypeReference<T> typeRef, Object... uriVariables) {
-    return webClient.post()
-            .uri(uri, uriVariables)
-            .bodyValue(requestBody)
+    var spec = webClient.post().uri(uri, uriVariables);
+    return (requestBody != null ? spec.bodyValue(requestBody) : spec.body(reactor.core.publisher.Mono.empty(), Object.class))
             .exchangeToMono(response -> {
                 HttpStatusCode status = response.statusCode();
                 HttpHeaders headers = response.headers().asHttpHeaders();
