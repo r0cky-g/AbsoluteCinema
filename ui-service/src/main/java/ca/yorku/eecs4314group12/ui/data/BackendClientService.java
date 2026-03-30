@@ -490,7 +490,7 @@ public class BackendClientService {
             body.put("userId", userId != null ? userId : 0L);
             if (category != null && !category.isBlank())
                 body.put("category", category.trim().toLowerCase());
-            ForumPostDTO post = forumClient.post().uri("/forum/posts").bodyValue(body)
+            ForumPostDTO post = apiClient.post().uri("/forum/posts").bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to create post: {}", e.getMessage()); return Optional.empty(); }
