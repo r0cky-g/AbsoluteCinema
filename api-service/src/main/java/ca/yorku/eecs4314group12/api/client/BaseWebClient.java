@@ -31,7 +31,7 @@ public class BaseWebClient {
                     return response.bodyToMono(typeRef)
                         .map(body -> ResponseEntity.status(status).headers(headers).body(body))
                         .onErrorResume(DecodingException.class, e ->
-                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Internal Server Error", headers)))
+                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
                         .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
                 } else {
                     // non-2xx → parse body as String for exception
@@ -55,7 +55,7 @@ public class BaseWebClient {
                     return response.bodyToMono(typeRef)
                         .map(body -> ResponseEntity.status(status).headers(headers).body(body))
                         .onErrorResume(DecodingException.class, e ->
-                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Internal Server Error", headers)))
+                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
                         .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
                 } else {
                     // non-2xx → parse body as String for exception
@@ -80,7 +80,7 @@ public class BaseWebClient {
                     return response.bodyToMono(typeRef)
                         .map(body -> ResponseEntity.status(status).headers(headers).body(body))
                         .onErrorResume(DecodingException.class, e ->
-                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Internal Server Error", headers)))
+                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
                         .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
                 } else {
                     // non-2xx → parse body as String for exception
@@ -105,7 +105,7 @@ public class BaseWebClient {
                     return response.bodyToMono(typeRef)
                         .map(body -> ResponseEntity.status(status).headers(headers).body(body))
                         .onErrorResume(DecodingException.class, e ->
-                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Internal Server Error", headers)))
+                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
                         .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
                 } else {
                     // non-2xx → parse body as String for exception

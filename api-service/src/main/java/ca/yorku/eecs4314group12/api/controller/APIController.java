@@ -132,49 +132,48 @@ public class APIController {
 
 
     // review service calls
+    // does not enforce DTO, The Review Service ApiResponse was not fun to work with.
 
 
     @PostMapping("/reviews")
-    public Mono<ResponseEntity<ReviewDTO>> createReview(@RequestBody ReviewDTO reviewDTO) {
+    public Mono<ResponseEntity<Map<String, Object>>> createReview(@RequestBody ReviewDTO reviewDTO) {
         return reviewService.createReview(reviewDTO);
     }
 
-    @GetMapping("/reviews/{movieId}")
-    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByMovie(@PathVariable Long movieId) {
+    @GetMapping("/reviews/movie/{movieId}")
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewsByMovie(@PathVariable Long movieId) {
         return reviewService.getReviewsByMovie(movieId);
     }
 
     @GetMapping("/reviews/user/{userId}")
-    public Mono<ResponseEntity<List<ReviewDTO>>> getReviewsByUser(@PathVariable long userId) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewsByUser(@PathVariable long userId) {
         return reviewService.getReviewsByUser(userId);
     }
 
     @GetMapping("/reviews/{id}")
-    public Mono<ResponseEntity<ReviewDTO>> getReviewByID(@PathVariable long id) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewByID(@PathVariable long id) {
         return reviewService.getReviewByID(id);
     }
 
     @PutMapping("/reviews/{id}")
-    public Mono<ResponseEntity<ReviewDTO>> updateReview(@PathVariable Long id, 
+    public Mono<ResponseEntity<Map<String, Object>>> updateReview(@PathVariable Long id, 
                                                         @RequestBody ReviewDTO reviewDTO) {
         return reviewService.updateReview(id, reviewDTO);
     }
 
-    // should include role
     @DeleteMapping("/reviews/{id}")
-    public Mono<ResponseEntity<Void>> deleteReview(@PathVariable Long id, 
+    public Mono<ResponseEntity<Map<String, Object>>> deleteReview(@PathVariable Long id, 
                                                 @RequestParam Long userId) {
         return reviewService.deleteReview(id, userId);
     }
 
-    // would really like to get <String, DTO> not just generic
     @GetMapping("/reviews/movie/{movieId}/stats")
     public Mono<ResponseEntity<Map<String, Object>>> getMovieStats(@PathVariable Long movieId) {
         return reviewService.getMovieStats(movieId);
     }
 
     @PostMapping("/reviews/{id}/helpful")
-    public Mono<ResponseEntity<ReviewDTO>> markAsHelpful(@PathVariable Long id) {
+    public Mono<ResponseEntity<Map<String, Object>>> markAsHelpful(@PathVariable Long id) {
         return reviewService.markAsHelpful(id);
     }
 
