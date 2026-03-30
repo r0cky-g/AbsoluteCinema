@@ -354,10 +354,11 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
             long userId = userSessionService.getUserId();
             boolean inWatchlist = backendClient.isInWatchlist(userId, movie.getId());
             boolean inFavourites = backendClient.isInFavourites(userId, movie.getId());
+            boolean inWatchHistory = backendClient.isInWatchHistory(userId, movie.getId());
             actionRow.add(
                     buildWatchlistButton(userId, movie.getId(), inWatchlist),
                     buildFavouriteButton(userId, movie.getId(), inFavourites),
-                    buildWatchedButton(userId, movie.getId())
+                    buildWatchedButton(userId, movie.getId(), inWatchHistory)
             );
         }
 
@@ -416,17 +417,23 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
     private Button buildWatchlistButton(long userId, int movieId, boolean inWatchlist) {
         Button btn = inWatchlist
                 ? new Button("In Watchlist", VaadinIcon.BOOKMARK.create())
-                : new Button("Watchlist", VaadinIcon.BOOKMARK_O.create());
+                : new Button("Add to Watchlist", VaadinIcon.BOOKMARK_O.create());
         btn.addThemeVariants(inWatchlist ? ButtonVariant.LUMO_SUCCESS : ButtonVariant.LUMO_PRIMARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
             if (inWatchlist) {
             	backendClient.removeFromWatchlist(userId, movieId);
-            	btn.setText("Watchlist");
+            	Notification n = Notification.show("Removed from WatchList!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Add to Watchlist");
             	btn.setIcon(VaadinIcon.BOOKMARK_O.create());
             }
             else { 
             	backendClient.addToWatchlist(userId, movieId);
+            	Notification n = Notification.show("Added to WatchList!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             	btn.setText("In Watchlist");
             	btn.setIcon(VaadinIcon.BOOKMARK.create());
             }
@@ -443,11 +450,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         btn.addClickListener(e -> {
             if (inFavourites) {
             	backendClient.removeFromFavourites(userId, movieId);
+            	Notification n = Notification.show("Removed from Favourites!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             	btn.setText("Favourite");
             	btn.setIcon(VaadinIcon.HEART_O.create());
             }
             else {
             	backendClient.addToFavourites(userId, movieId);
+            	Notification n = Notification.show("Added to Favourites!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             	btn.setText("Favourited");
             	btn.setIcon(VaadinIcon.HEART.create());
             	
@@ -456,14 +469,28 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
         return btn;
     }
 
-    private Button buildWatchedButton(long userId, int movieId) {
-        Button btn = new Button("Mark as Watched", VaadinIcon.CHECK.create());
+    private Button buildWatchedButton(long userId, int movieId, boolean inWatchHistory) {
+        Button btn = inWatchHistory
+        		? new Button("Watched", VaadinIcon.CHECK.create())
+        		: new Button("Mark as Watched");
         btn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            backendClient.addToWatchHistory(userId, movieId);
-            Notification n = Notification.show("Marked as watched!", 2000,
-                    Notification.Position.BOTTOM_START);
-            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        	if (inWatchHistory) {
+            	backendClient.removeFromWatchHistory(userId, movieId);
+            	Notification n = Notification.show("Unmarked as Watched!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Mark as Watched");
+            	btn.setIcon(null);
+            }
+            else {
+            	backendClient.addToWatchHistory(userId, movieId);
+                Notification n = Notification.show("Marked as watched!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Watched");
+            	btn.setIcon(VaadinIcon.CHECK.create());
+            }
         });
         return btn;
     }

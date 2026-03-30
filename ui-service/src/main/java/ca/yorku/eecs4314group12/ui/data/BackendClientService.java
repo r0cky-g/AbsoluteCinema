@@ -407,6 +407,13 @@ public class BackendClientService {
             return true;
         } catch (Exception e) { log.error("Failed to remove from watch history: {}", e.getMessage()); return false; }
     }
+    
+    public boolean isInWatchHistory(long userId, int movieId) {
+        try {
+            return getWatchHistory(userId).stream()
+                    .anyMatch(f -> f.getMovieId() != null && f.getMovieId() == movieId);
+        } catch (Exception e) { return false; }
+    }
 
     // -------------------------------------------------------------------------
     // Favourites
