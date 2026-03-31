@@ -34,7 +34,7 @@ public class ReviewClient {
         return baseWebClient.get("/api/reviews/user/{userId}", new ParameterizedTypeReference<Map<String, Object>>() {}, userId);
     }
 
-    public Mono<ResponseEntity<Map<String, Object>>> getReviewByID(long id) {
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewById(long id) {
         return baseWebClient.get("/api/reviews/{id}", new ParameterizedTypeReference<Map<String, Object>>() {}, id);
     }
 
@@ -43,7 +43,7 @@ public class ReviewClient {
     }
 
     public Mono<ResponseEntity<Map<String, Object>>> deleteReview(Long id, Long userId) {
-        return baseWebClient.delete("/api/reviews/{id}", new ParameterizedTypeReference<Map<String, Object>>() {}, id, userId);
+        return baseWebClient.delete("/api/reviews/{id}?userId={userId}", new ParameterizedTypeReference<Map<String, Object>>() {}, id, userId);
     }
 
     public Mono<ResponseEntity<Map<String, Object>>> getMovieStats(Long movieId) {

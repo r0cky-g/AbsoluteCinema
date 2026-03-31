@@ -1,5 +1,7 @@
 package ca.yorku.eecs4314group12.api.client;
 
+import java.util.Map;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.http.HttpHeaders;
@@ -9,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.yorku.eecs4314group12.api.exception.ApiException;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectMapper;
 
 public class BaseWebClient {
 
@@ -37,8 +40,19 @@ public class BaseWebClient {
                     // non-2xx → parse body as String for exception
                     return response.bodyToMono(String.class)
                         .defaultIfEmpty("")
-                        .flatMap(body -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), body, headers)))
-                        .onErrorResume(err -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), "", headers)));
+                        .flatMap(body -> {
+                            try {
+                                return Mono.error(new ApiException(status.value(), body, headers));
+                            } catch (Exception e) {
+                                try {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    Map<String, Object> map = mapper.readValue(body, Map.class);
+                                    return Mono.error(new ApiException(status.value(), map.toString(), headers));
+                                } catch (Exception ex) {
+                                    return Mono.error(new ApiException(status.value(), "", headers));
+                                }
+                            }
+                        });
                 }
             });
     }
@@ -61,8 +75,19 @@ public class BaseWebClient {
                     // non-2xx → parse body as String for exception
                     return response.bodyToMono(String.class)
                         .defaultIfEmpty("")
-                        .flatMap(body -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), body, headers)))
-                        .onErrorResume(err -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), "", headers)));
+                        .flatMap(body -> {
+                            try {
+                                return Mono.error(new ApiException(status.value(), body, headers));
+                            } catch (Exception e) {
+                                try {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    Map<String, Object> map = mapper.readValue(body, Map.class);
+                                    return Mono.error(new ApiException(status.value(), map.toString(), headers));
+                                } catch (Exception ex) {
+                                    return Mono.error(new ApiException(status.value(), "", headers));
+                                }
+                            }
+                        });
                 }
             });
     }
@@ -86,8 +111,19 @@ public class BaseWebClient {
                     // non-2xx → parse body as String for exception
                     return response.bodyToMono(String.class)
                         .defaultIfEmpty("")
-                        .flatMap(body -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), body, headers)))
-                        .onErrorResume(err -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), "", headers)));
+                        .flatMap(body -> {
+                            try {
+                                return Mono.error(new ApiException(status.value(), body, headers));
+                            } catch (Exception e) {
+                                try {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    Map<String, Object> map = mapper.readValue(body, Map.class);
+                                    return Mono.error(new ApiException(status.value(), map.toString(), headers));
+                                } catch (Exception ex) {
+                                    return Mono.error(new ApiException(status.value(), "", headers));
+                                }
+                            }
+                        });
                 }
             });
     }
@@ -110,8 +146,19 @@ public class BaseWebClient {
                     // non-2xx → parse body as String for exception
                     return response.bodyToMono(String.class)
                         .defaultIfEmpty("")
-                        .flatMap(body -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), body, headers)))
-                        .onErrorResume(err -> Mono.<ResponseEntity<T>>error(new ApiException(status.value(), "", headers)));
+                        .flatMap(body -> {
+                            try {
+                                return Mono.error(new ApiException(status.value(), body, headers));
+                            } catch (Exception e) {
+                                try {
+                                    ObjectMapper mapper = new ObjectMapper();
+                                    Map<String, Object> map = mapper.readValue(body, Map.class);
+                                    return Mono.error(new ApiException(status.value(), map.toString(), headers));
+                                } catch (Exception ex) {
+                                    return Mono.error(new ApiException(status.value(), "", headers));
+                                }
+                            }
+                        });
                 }
             });
     }
