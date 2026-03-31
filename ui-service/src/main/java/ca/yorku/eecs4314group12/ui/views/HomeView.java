@@ -345,6 +345,15 @@ public class HomeView extends VerticalLayout implements AfterNavigationObserver 
 
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
+    	// Needed for the scroll window to reset properly
+    	getUI().ifPresent(ui ->
+    		ui.getPage().executeJs(
+    			"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+    					"  .find(d => d.scrollHeight > d.clientHeight);" +
+    					"if (div) div.scrollTop = 0;"
+    			)	
+    	);
+    	
         if (isLoggedIn() && userSessionService.getUserId() != null) {
             long userId = userSessionService.getUserId();
             List<WatchlistDTO> watchlist = backendClient.getWatchlist(userId);

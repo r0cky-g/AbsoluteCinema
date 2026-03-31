@@ -24,6 +24,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -40,7 +42,7 @@ import ca.yorku.eecs4314group12.ui.security.UserSessionService;
 @Route(value = "movie/:movieId", layout = MainLayout.class)
 @PageTitle("Movie | Absolute Cinema")
 @AnonymousAllowed
-public class MovieView extends VerticalLayout implements BeforeEnterObserver {
+public class MovieView extends VerticalLayout implements BeforeEnterObserver, AfterNavigationObserver {
 
     private static final String TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/";
 
@@ -57,7 +59,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         setPadding(false);
         setSpacing(false);
     }
-
+   
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         String param = event.getRouteParameters().get("movieId").orElse("0");
@@ -73,11 +75,22 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     this::buildPageFromDummy, this::showNotFound);
         }
     }
+    
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+    	// Needed for the scroll window to reset properly 
+    	getUI().ifPresent(ui ->
+        	ui.getPage().executeJs(
+        		"const div = Array.from(document.querySelector('vaadin-app-layout').shadowRoot.querySelectorAll('div'))" +
+        		           "  .find(d => d.scrollHeight > d.clientHeight);" +
+        		           "if (div) div.scrollTop = 0;"
+        	)	
+    	);
+    }
 
     private void buildPageFromDTO(MovieDTO movie) {
         getUI().ifPresent(ui -> {
             ui.getPage().setTitle(movie.getTitle() + " | Absolute Cinema");
-            ui.getPage().executeJs("window.scrollTo(0, 0)");
         });
         List<ReviewDTO> reviews = backendClient.getReviewsForMovie(movie.getId());
         double userScore = backendClient.getReviewStats(movie.getId())
@@ -210,7 +223,15 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         // ---- Full wrapper ----
-        Div inner = new Div(featured, strip);
+        H3 heading = new H3("Gallery");
+        heading.getStyle()
+                .set("margin", "0 0 12px 0")
+                .set("color", "var(--lumo-body-text-color)")
+                .set("font-size", "1.25rem")
+                .set("font-weight", "600")
+                .set("letter-spacing", "0.02em");
+        
+        Div inner = new Div(heading, featured, strip);
         inner.getStyle()
                 .set("max-width", "720px")
                 .set("margin", "0 auto")
@@ -310,24 +331,22 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         metaSpan.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
         metaLine.add(metaSpan);
-        if (movie.getAge_rating() != null && !movie.getAge_rating().isBlank()
-                && !"Unrated".equals(movie.getAge_rating())) {
-            Span rating = new Span(movie.getAge_rating());
-            rating.getStyle()
-                    .set("border", "1px solid var(--lumo-contrast-30pct)")
-                    .set("border-radius", "var(--lumo-border-radius-s)")
-                    .set("padding", "1px 6px")
-                    .set("font-size", "var(--lumo-font-size-xs)")
-                    .set("color", "var(--lumo-secondary-text-color)");
-            metaLine.add(rating);
-        }
+        
+        // Rating will never be null
+        Span rating = new Span(movie.getAge_rating());
+        rating.getStyle()
+        	.set("border", "1px solid var(--lumo-contrast-30pct)")
+        	.set("border-radius", "var(--lumo-border-radius-s)")
+        	.set("padding", "1px 6px")
+        	.set("font-size", "var(--lumo-font-size-xs)")
+        	.set("color", "var(--lumo-secondary-text-color)");
+        metaLine.add(rating);
+        
 
         HorizontalLayout scores = new HorizontalLayout(buildScoreBadge("👥 Users", userScore, true));
         scores.setSpacing(true);
 
-        long directorCount = movie.getCrew() != null
-                ? movie.getCrew().stream().filter(c -> "Director".equals(c.getJob())).count() : 0;
-        Span director = new Span((directorCount > 1 ? "Directors  " : "Directed by  ") + movie.getDirector());
+        Span director = new Span("Directed by  " + movie.getDirector());
         director.getStyle().set("color", "var(--lumo-secondary-text-color)")
                 .set("font-size", "var(--lumo-font-size-s)");
 
@@ -337,10 +356,11 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
             long userId = userSessionService.getUserId();
             boolean inWatchlist = backendClient.isInWatchlist(userId, movie.getId());
             boolean inFavourites = backendClient.isInFavourites(userId, movie.getId());
+            boolean inWatchHistory = backendClient.isInWatchHistory(userId, movie.getId());
             actionRow.add(
                     buildWatchlistButton(userId, movie.getId(), inWatchlist),
                     buildFavouriteButton(userId, movie.getId(), inFavourites),
-                    buildWatchedButton(userId, movie.getId())
+                    buildWatchedButton(userId, movie.getId(), inWatchHistory)
             );
         }
 
@@ -398,40 +418,81 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
     private Button buildWatchlistButton(long userId, int movieId, boolean inWatchlist) {
         Button btn = inWatchlist
-                ? new Button("✓ In Watchlist", VaadinIcon.BOOKMARK.create())
-                : new Button("+ Watchlist", VaadinIcon.BOOKMARK_O.create());
+                ? new Button("In Watchlist", VaadinIcon.BOOKMARK.create())
+                : new Button("Add to Watchlist", VaadinIcon.BOOKMARK_O.create());
         btn.addThemeVariants(inWatchlist ? ButtonVariant.LUMO_SUCCESS : ButtonVariant.LUMO_PRIMARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            if (inWatchlist) backendClient.removeFromWatchlist(userId, movieId);
-            else backendClient.addToWatchlist(userId, movieId);
-            getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
+            if (inWatchlist) {
+            	backendClient.removeFromWatchlist(userId, movieId);
+            	Notification n = Notification.show("Removed from WatchList!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Add to Watchlist");
+            	btn.setIcon(VaadinIcon.BOOKMARK_O.create());
+            }
+            else { 
+            	backendClient.addToWatchlist(userId, movieId);
+            	Notification n = Notification.show("Added to WatchList!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("In Watchlist");
+            	btn.setIcon(VaadinIcon.BOOKMARK.create());
+            }
         });
         return btn;
     }
 
     private Button buildFavouriteButton(long userId, int movieId, boolean inFavourites) {
         Button btn = inFavourites
-                ? new Button("♥ Favourited", VaadinIcon.HEART.create())
-                : new Button("♡ Favourite", VaadinIcon.HEART_O.create());
+                ? new Button("Favourited", VaadinIcon.HEART.create())
+                : new Button("Favourite", VaadinIcon.HEART_O.create());
         btn.addThemeVariants(inFavourites ? ButtonVariant.LUMO_ERROR : ButtonVariant.LUMO_TERTIARY);
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            if (inFavourites) backendClient.removeFromFavourites(userId, movieId);
-            else backendClient.addToFavourites(userId, movieId);
-            getUI().ifPresent(ui -> ui.navigate("movie/" + movieId));
+            if (inFavourites) {
+            	backendClient.removeFromFavourites(userId, movieId);
+            	Notification n = Notification.show("Removed from Favourites!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Favourite");
+            	btn.setIcon(VaadinIcon.HEART_O.create());
+            }
+            else {
+            	backendClient.addToFavourites(userId, movieId);
+            	Notification n = Notification.show("Added to Favourites!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Favourited");
+            	btn.setIcon(VaadinIcon.HEART.create());
+            	
+            }
         });
         return btn;
     }
 
-    private Button buildWatchedButton(long userId, int movieId) {
-        Button btn = new Button("Mark as Watched", VaadinIcon.CHECK.create());
+    private Button buildWatchedButton(long userId, int movieId, boolean inWatchHistory) {
+        Button btn = inWatchHistory
+        		? new Button("Watched", VaadinIcon.CHECK.create())
+        		: new Button("Mark as Watched");
         btn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         btn.addClickListener(e -> {
-            backendClient.addToWatchHistory(userId, movieId);
-            Notification n = Notification.show("Marked as watched!", 2000,
-                    Notification.Position.BOTTOM_START);
-            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        	if (inWatchHistory) {
+            	backendClient.removeFromWatchHistory(userId, movieId);
+            	Notification n = Notification.show("Unmarked as Watched!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Mark as Watched");
+            	btn.setIcon(null);
+            }
+            else {
+            	backendClient.addToWatchHistory(userId, movieId);
+                Notification n = Notification.show("Marked as Watched!", 2000,
+                        Notification.Position.BOTTOM_START);
+                n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            	btn.setText("Watched");
+            	btn.setIcon(VaadinIcon.CHECK.create());
+            }
         });
         return btn;
     }
@@ -458,7 +519,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     .set("font-size", "var(--lumo-font-size-m)");
             Div castScroll = buildScrollRow();
             cast.forEach(c -> castScroll.add(
-                    buildPersonCard(c.getOriginal_name(), c.getCharacter(), c.getProfile_path())));
+                    buildPersonCard(c.getName(), c.getCharacter(), c.getProfile_path())));
             castCrewSection.add(castHeading, castScroll);
         }
 
@@ -468,17 +529,17 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     .set("font-size", "var(--lumo-font-size-m)");
             Div crewScroll = buildScrollRow();
 
-            // Deduplicate crew by name, combining all jobs into one card
+            // Duplicate crew by name, combining all jobs into one card
             java.util.LinkedHashMap<String, java.util.List<String>> crewByName = new java.util.LinkedHashMap<>();
+            java.util.HashMap<String, String> profilePaths = new java.util.HashMap<>();
             crew.forEach(c -> {
-                String crewName = c.getOriginal_name() != null ? c.getOriginal_name() : "";
-                String job = c.getJob() != null ? c.getJob() : "";
-                crewByName.computeIfAbsent(crewName, k -> new java.util.ArrayList<>()).add(job);
+                crewByName.computeIfAbsent(c.getName(), k -> new java.util.ArrayList<>()).add(c.getJob());
+                profilePaths.putIfAbsent(c.getName(), c.getProfile_path());
             });
 
             crewByName.forEach((crewName, jobs) -> {
                 String combinedRoles = String.join(" / ", jobs);
-                crewScroll.add(buildPersonCard(crewName, combinedRoles, null));
+                crewScroll.add(buildPersonCard(crewName, combinedRoles, profilePaths.get(crewName)));
             });
 
             castCrewSection.add(crewHeading, crewScroll);
@@ -487,7 +548,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         Div detailsGrid = buildDetailsGrid(
                 movie.getBudget(), movie.getRevenue(), movie.getCompanyNames(),
                 movie.getOriginal_title(),
-                movie.getOriginal_language() != null ? movie.getOriginal_language().toUpperCase() : "N/A",
+                movie.getOriginal_language(),
                 movie.getRelease_date(), movie.getRuntimeFormatted());
 
         return wrapContent(
@@ -577,8 +638,6 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
 
         VerticalLayout reviewCards = new VerticalLayout();
         reviewCards.setPadding(false); reviewCards.setSpacing(true);
-        reviewCards.setWidthFull();
-        reviewCards.getStyle().set("overflow", "hidden");
 
         if (reviews.isEmpty()) {
             reviewCards.add(new Span("No reviews yet. Be the first!"));
@@ -586,12 +645,12 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
             reviews.stream()
                     .max(java.util.Comparator.comparingInt(
                             r -> r.getHelpfulCount() != null ? r.getHelpfulCount() : 0))
-                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, loggedIn)));
+                    .ifPresent(top -> reviewCards.add(buildReviewCard(top, true, loggedIn, movieId)));
             reviews.stream()
                     .sorted(java.util.Comparator.comparing(ReviewDTO::getCreatedAt,
                             java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
                     .limit(3)
-                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, loggedIn)));
+                    .forEach(r -> reviewCards.add(buildReviewCard(r, false, loggedIn, movieId)));
         }
 
         VerticalLayout section = new VerticalLayout(header, reviewCards);
@@ -605,7 +664,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         return section;
     }
 
-    private Div buildReviewCard(ReviewDTO review, boolean isTop, boolean loggedIn) {
+    private Div buildReviewCard(ReviewDTO review, boolean isTop, boolean loggedIn, int movieId) {
         Div card = new Div();
         card.getStyle()
                 .set("background", isTop ? "var(--lumo-primary-color-10pct)" : "var(--lumo-contrast-5pct)")
@@ -613,10 +672,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                 .set("border-radius", "var(--lumo-border-radius-l)")
                 .set("padding", "var(--lumo-space-m)")
                 .set("display", "flex").set("flex-direction", "column")
-                .set("gap", "var(--lumo-space-xs)")
-                .set("box-sizing", "border-box")
-                .set("overflow", "hidden")
-                .set("word-break", "break-word");
+                .set("gap", "var(--lumo-space-xs)");
         card.setWidth("100%");
 
         H4 reviewTitle = new H4((isTop ? "⭐ " : "") + review.getTitle());
@@ -634,10 +690,33 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
         meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                 .set("color", "var(--lumo-tertiary-text-color)");
 
-        // Like / dislike row
         HorizontalLayout voteRow = buildVoteRow(review, loggedIn);
 
         card.add(reviewTitle, rating, content, meta, voteRow);
+
+        Long sessionUserId = userSessionService.getUserId();
+        boolean isOwner = sessionUserId != null && review.getUserId() != null
+                && sessionUserId.equals(review.getUserId());
+        boolean isAdmin = "ADMIN".equals(userSessionService.getRole());
+        if (loggedIn && review.getId() != null && sessionUserId != null && (isOwner || isAdmin)) {
+            Button del = new Button("Delete review", VaadinIcon.TRASH.create());
+            del.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+            del.addClickListener(e -> {
+                if (backendClient.deleteReview(review.getId(), sessionUserId, userSessionService.getRole())) {
+                    Notification.show("Review deleted.", 2500, Notification.Position.BOTTOM_START)
+                            .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    removeAll();
+                    backendClient.getMovieById(movieId).ifPresentOrElse(this::buildPageFromDTO,
+                            () -> dummyDataService.getMovieById(movieId).ifPresentOrElse(
+                                    this::buildPageFromDummy, this::showNotFound));
+                } else {
+                    Notification.show("Could not delete this review.", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+            });
+            card.add(del);
+        }
+
         return card;
     }
 
@@ -861,21 +940,21 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver {
                     ? backdropPath
                     : "https://image.tmdb.org/t/p/w780" + backdropPath;
             hero.getStyle()
-                    .set("background-image", "url('" + backdropUrl + "')")
+            		.set("background-image", "url('" + backdropUrl + "')")                  
                     .set("background-size", "auto auto")
                     .set("background-repeat", "no-repeat")
                     .set("background-position", "center center");
 
             Div dimOverlay = new Div();
             dimOverlay.getStyle()
-                    .set("position", "absolute")
-                    .set("top", "-1px").set("left", "-1px")
-                    .set("width", "calc(100% + 2px)").set("height", "calc(100% + 2px)")
-                    .set("background",
-                            "radial-gradient(circle at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.95) 100%), " +
-                            "linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.9) 100%)")
-                    .set("pointer-events", "none")
-                    .set("z-index", "0");
+            		.set("position", "absolute")
+            		.set("top", "-1px").set("left", "-1px")
+            		.set("width", "calc(100% + 2px)").set("height", "calc(100% + 2px)")
+            		.set("background",
+            				"radial-gradient(circle at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.95) 100%), " +
+            				"linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.9) 100%)")
+            		.set("pointer-events", "none")
+            		.set("z-index", "0");
             hero.add(dimOverlay);
         } else {
             hero.getStyle().set("background",
