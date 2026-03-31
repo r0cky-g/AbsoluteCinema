@@ -202,7 +202,7 @@ public class ForumView extends VerticalLayout {
             H3 title = new H3(post.getTitle());
             title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
 
-            Span meta = new Span(post.getCategoryDisplay() + "  ·  User " + post.getUserId());
+            Span meta = new Span(post.getCategoryDisplay() + "  ·  " + getUsernameById(post.getUserId()));
             meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                     .set("color", "var(--lumo-tertiary-text-color)");
 
@@ -221,6 +221,13 @@ public class ForumView extends VerticalLayout {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    private String getUsernameById(Long userId) {
+        if (userId == null) return "Unknown";
+        return backendClient.getUserData(userId)
+                .map(user -> user.getUsername())
+                .orElse("User " + userId);
+    }
 
     private String getCategoryIcon(String categoryKey) {
         return switch (categoryKey) {

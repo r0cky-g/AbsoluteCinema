@@ -201,7 +201,9 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
         H3 title = new H3(post.getTitle());
         title.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
 
-        String authorLabel = post.getUserId() != null ? "User " + post.getUserId() : "Unknown";
+        String authorLabel = post.getUserId() != null 
+                ? getUsernameById(post.getUserId()) 
+                : "Unknown";
         Span authorSpan = new Span("Posted by " + authorLabel);
         authorSpan.getStyle()
                 .set("font-size", "var(--lumo-font-size-xs)")
@@ -283,7 +285,10 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             text.getStyle().set("margin", "0 0 var(--lumo-space-xs) 0");
             String dateStr = comment.getCreatedAt() != null
                     ? comment.getCreatedAt().format(DATE_FMT) : "";
-            Span meta = new Span("User " + comment.getUserId() + " · " + dateStr);
+            String username = comment.getUserId() != null 
+                    ? getUsernameById(comment.getUserId()) 
+                    : "Unknown";
+            Span meta = new Span(username + " · " + dateStr);
             meta.getStyle().set("font-size", "var(--lumo-font-size-xs)")
                     .set("color", "var(--lumo-tertiary-text-color)");
 
@@ -528,5 +533,12 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
 
     private Long currentUserId() {
         return userSessionService.getUserId();
+    }
+
+    private String getUsernameById(Long userId) {
+        if (userId == null) return "Unknown";
+        return backendClient.getUserData(userId)
+                .map(user -> user.getUsername())
+                .orElse("User " + userId);
     }
 }
