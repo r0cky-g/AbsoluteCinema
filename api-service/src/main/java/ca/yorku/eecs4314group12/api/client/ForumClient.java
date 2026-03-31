@@ -42,6 +42,11 @@ public class ForumClient {
         return baseWebClient.get("/forum/posts/{postId}", new ParameterizedTypeReference<ForumPost> () {}, postId);
     }
 
+    public Mono<ResponseEntity<ForumPost>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
+        return baseWebClient.put("/forum/posts/{postId}?userId=" + userId + "&userRole=" + userRole, 
+                                post, new ParameterizedTypeReference<ForumPost> () {}, postId);
+    }
+
     public Mono<ResponseEntity<Comment>> createComment(CreateCommentRequest request) {
         return baseWebClient.post("/forum/comments", request, new ParameterizedTypeReference<Comment> () {});
     }

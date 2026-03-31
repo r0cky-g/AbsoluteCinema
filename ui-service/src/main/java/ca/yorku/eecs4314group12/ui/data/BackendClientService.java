@@ -495,10 +495,13 @@ public class BackendClientService {
         return createPost(title, content, userId, "general");
     }
 
-    public Optional<ForumPostDTO> updatePost(long postId, String title, String content) {
+    public Optional<ForumPostDTO> updatePost(long postId, String title, String content, Long userId, String userRole) {
         try {
             Map<String, String> body = Map.of("title", title, "content", content);
-            ForumPostDTO post = apiClient.put().uri("/api/forum/posts/{id}", postId).bodyValue(body)
+            ForumPostDTO post = apiClient.put()
+                    .uri("/api/forum/posts/{id}?userId={userId}&userRole={userRole}", 
+                         postId, userId, userRole)
+                    .bodyValue(body)
                     .retrieve().bodyToMono(ForumPostDTO.class).block();
             return Optional.ofNullable(post);
         } catch (Exception e) { log.error("Failed to update post: {}", e.getMessage()); return Optional.empty(); }

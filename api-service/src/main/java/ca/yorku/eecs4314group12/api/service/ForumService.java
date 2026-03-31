@@ -36,6 +36,10 @@ public class ForumService {
         return forumClient.getPostById(postId);
     }
 
+    public Mono<ResponseEntity<ForumPost>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
+        return forumClient.updatePost(postId, post, userId, userRole);
+    }
+
     public Mono<ResponseEntity<Comment>> createComment(CreateCommentRequest request) {
         return forumClient.createComment(request);
     }

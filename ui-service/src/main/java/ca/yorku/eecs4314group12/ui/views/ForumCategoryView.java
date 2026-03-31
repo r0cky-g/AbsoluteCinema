@@ -371,9 +371,14 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             if (t.isEmpty() || c.isEmpty()) {
                 errorMsg.setText("Title and content are required."); return;
             }
-            String cat = customCategory.getValue().isBlank()
-                    ? categorySelect.getValue()
-                    : customCategory.getValue().trim();
+            String customCat = customCategory.getValue();
+            String cat;
+            if (customCat != null && !customCat.isBlank()) {
+                cat = customCat.trim();
+            } else {
+                String selected = categorySelect.getValue();
+                cat = (selected != null && !selected.isBlank()) ? selected : categoryKey;
+            }
             boolean ok = backendClient.createPost(t, c, currentUserId(), cat).isPresent();
             if (ok) {
                 dialog.close(); loadPosts();
@@ -423,7 +428,12 @@ public class ForumCategoryView extends VerticalLayout implements BeforeEnterObse
             if (t.isEmpty() || c.isEmpty()) {
                 errorMsg.setText("Title and content are required."); return;
             }
-            boolean ok = backendClient.updatePost(post.getId(), t, c).isPresent();
+            Long userId = currentUserId();
+            String role = userSessionService.getRole();
+            if (userId == null) {
+                errorMsg.setText("You must be logged in to edit posts."); return;
+            }
+            boolean ok = backendClient.updatePost(post.getId(), t, c, userId, role).isPresent();
             if (ok) {
                 dialog.close(); loadPosts();
                 Notification.show("Post updated!", 3000, Notification.Position.BOTTOM_START)
