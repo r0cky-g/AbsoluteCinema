@@ -92,6 +92,14 @@ public class APIController {
         return forumService.getPostById(postId);
     }
 
+    @PutMapping("/forum/posts/{postId}")
+    public Mono<ResponseEntity<ForumPost>> updatePost(@PathVariable Long postId,
+                                                      @RequestBody ForumPost post,
+                                                      @RequestParam Long userId,
+                                                      @RequestParam String userRole) {
+        return forumService.updatePost(postId, post, userId, userRole);
+    }
+
     @PostMapping("/forum/comments")
     public Mono<ResponseEntity<Comment>> createComment(@RequestBody CreateCommentRequest request) {
         return forumService.createComment(request);

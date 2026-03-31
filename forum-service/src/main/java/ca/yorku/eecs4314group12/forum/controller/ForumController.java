@@ -65,4 +65,19 @@ public class ForumController {
     public ForumPost getPostById(@PathVariable Long id) {
         return forumService.getPostById(id);
     }
+
+    // Update post
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePost(@PathVariable Long id,
+                                       @RequestBody ForumPost updatedPost,
+                                       @RequestParam Long userId,
+                                       @RequestParam String userRole) {
+        ForumPost post = forumService.updatePost(id, updatedPost.getTitle(), 
+                                                 updatedPost.getContent(), userId, userRole);
+        if (post == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Post not found or you don't have permission to edit it");
+        }
+        return ResponseEntity.ok(post);
+    }
 }

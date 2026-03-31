@@ -256,23 +256,23 @@ class ForumServiceTest {
         post2.setTitle("Best Action Films");
         post2.setCategory("action");
 
-        when(repository.findByCategory("action")).thenReturn(Arrays.asList(post1, post2));
+        when(repository.findByCategoryIgnoreCase("action")).thenReturn(Arrays.asList(post1, post2));
 
         List<ForumPost> posts = forumService.getPostsByCategory("action");
 
         assertEquals(2, posts.size());
-        verify(repository, times(1)).findByCategory("action");
+        verify(repository, times(1)).findByCategoryIgnoreCase("action");
     }
 
     @Test
     void testGetPostsByCategory_NoResults() {
-        when(repository.findByCategory("nonexistent")).thenReturn(Arrays.asList());
+        when(repository.findByCategoryIgnoreCase("nonexistent")).thenReturn(Arrays.asList());
 
         List<ForumPost> posts = forumService.getPostsByCategory("nonexistent");
 
         assertNotNull(posts);
         assertEquals(0, posts.size());
-        verify(repository, times(1)).findByCategory("nonexistent");
+        verify(repository, times(1)).findByCategoryIgnoreCase("nonexistent");
     }
 
     @Test
@@ -316,5 +316,120 @@ class ForumServiceTest {
 
         assertEquals(1, posts.size());
         assertEquals("Batman Begins", posts.get(0).getTitle());
+    }
+
+    @Test
+    void testUpdatePost_OwnerCanUpdate() {
+        Long postId = 1L;
+        Long userId = 1L;
+        ForumPost existingPost = new ForumPost();
+        existingPost.setId(postId);
+        existingPost.setUserId(userId);
+        existingPost.setTitle("Old Title");
+        existingPost.setContent("Old Content");
+
+        when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
+        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ForumPost updated = forumService.updatePost(postId, "New Title", "New Content", userId, "USER");
+
+        assertNotNull(updated);
+        assertEquals("New Title", updated.getTitle());
+        assertEquals("New Content", updated.getContent());
+        verify(repository, times(1)).save(existingPost);
+    }
+
+    @Test
+    void testUpdatePost_AdminCanUpdate() {
+        Long postId = 1L;
+        Long ownerId = 1L;
+        Long adminId = 2L;
+        ForumPost existingPost = new ForumPost();
+        existingPost.setId(postId);
+        existingPost.setUserId(ownerId);
+        existingPost.setTitle("Old Title");
+        existingPost.setContent("Old Content");
+
+        when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
+        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ForumPost updated = forumService.updatePost(postId, "Admin Edit", "Admin Content", adminId, "ADMIN");
+
+        assertNotNull(updated);
+        assertEquals("Admin Edit", updated.getTitle());
+        assertEquals("Admin Content", updated.getContent());
+        verify(repository, times(1)).save(existingPost);
+    }
+
+    @Test
+    void testUpdatePost_ModeratorCanUpdate() {
+        Long postId = 1L;
+        Long ownerId = 1L;
+        Long modId = 3L;
+        ForumPost existingPost = new ForumPost();
+        existingPost.setId(postId);
+        existingPost.setUserId(ownerId);
+        existingPost.setTitle("Old Title");
+        existingPost.setContent("Old Content");
+
+        when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
+        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ForumPost updated = forumService.updatePost(postId, "Mod Edit", "Mod Content", modId, "MODERATOR");
+
+        assertNotNull(updated);
+        assertEquals("Mod Edit", updated.getTitle());
+        assertEquals("Mod Content", updated.getContent());
+        verify(repository, times(1)).save(existingPost);
+    }
+
+    @Test
+    void testUpdatePost_UserCannotUpdateOthersPost() {
+        Long postId = 1L;
+        Long ownerId = 1L;
+        Long otherId = 2L;
+        ForumPost existingPost = new ForumPost();
+        existingPost.setId(postId);
+        existingPost.setUserId(ownerId);
+        existingPost.setTitle("Old Title");
+        existingPost.setContent("Old Content");
+
+        when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
+
+        ForumPost updated = forumService.updatePost(postId, "Hacked", "Hacked Content", otherId, "USER");
+
+        assertNull(updated);
+        verify(repository, never()).save(any(ForumPost.class));
+    }
+
+    @Test
+    void testUpdatePost_PostNotFound() {
+        Long postId = 999L;
+        Long userId = 1L;
+
+        when(repository.findById(postId)).thenReturn(Optional.empty());
+
+        ForumPost updated = forumService.updatePost(postId, "New Title", "New Content", userId, "USER");
+
+        assertNull(updated);
+        verify(repository, never()).save(any(ForumPost.class));
+    }
+
+    @Test
+    void testUpdatePost_UserCannotUpdatePostWithNullUserId() {
+        Long postId = 1L;
+        Long userId = 1L;
+        ForumPost existingPost = new ForumPost();
+        existingPost.setId(postId);
+        existingPost.setUserId(null);
+        existingPost.setTitle("Old Title");
+        existingPost.setContent("Old Content");
+
+        when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
+
+        ForumPost updated = forumService.updatePost(postId, "New Title", "New Content", userId, "USER");
+
+        assertNull(updated);
+        verify(repository, never()).save(any(ForumPost.class));
     }
 }

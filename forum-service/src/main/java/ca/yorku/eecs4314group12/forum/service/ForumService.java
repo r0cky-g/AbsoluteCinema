@@ -26,7 +26,7 @@ public class ForumService {
 
     // Get all posts filtered by category
     public List<ForumPost> getPostsByCategory(String category) {
-        return repository.findByCategory(category);
+        return repository.findByCategoryIgnoreCase(category);
     }
 
     // Search posts by title keyword
@@ -66,5 +66,24 @@ public class ForumService {
 
     public ForumPost getPostById(Long id) {
         return repository.findById(id).orElse(null);
+    }
+
+    public ForumPost updatePost(Long id, String title, String content, Long userId, String userRole) {
+        ForumPost post = repository.findById(id).orElse(null);
+        if (post == null) {
+            return null;
+        }
+        
+        // Check permissions: only owner, moderator, or admin can update
+        boolean canUpdate = "MODERATOR".equals(userRole) || "ADMIN".equals(userRole) ||
+                           (post.getUserId() != null && post.getUserId().equals(userId));
+        
+        if (!canUpdate) {
+            return null;
+        }
+        
+        post.setTitle(title);
+        post.setContent(content);
+        return repository.save(post);
     }
 }

@@ -8,6 +8,7 @@ public class ForumPost {
     private String title;
     private String content;
     private Long userId;
+    private String category;
     private LocalDateTime createdAt;
 
     public ForumPost() {
@@ -55,6 +56,14 @@ public class ForumPost {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public LocalDateTime getCreatedAt() { 
