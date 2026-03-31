@@ -3,6 +3,8 @@ package ca.yorku.eecs4314group12.api.controller;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,6 +27,7 @@ import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.api.dto.reviewServiceDTO.ReviewDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
@@ -215,6 +218,20 @@ public class APIController {
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
         return userService.deleteUser(id);
+    }
+
+    @PostMapping("/user/{userId}/promote-moderator")
+    public Mono<ResponseEntity<UserResponseDTO>> promoteModerator(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminActorRequest request) {
+        return userService.promoteModerator(userId, request);
+    }
+
+    @PostMapping("/user/{userId}/demote-moderator")
+    public Mono<ResponseEntity<UserResponseDTO>> demoteModerator(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminActorRequest request) {
+        return userService.demoteModerator(userId, request);
     }
 
     @PostMapping("/user/{userId}/watchlist/{movieId}")

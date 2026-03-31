@@ -10,6 +10,7 @@ import ca.yorku.eecs4314group12.api.client.UserClient;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
@@ -53,6 +54,14 @@ public class UserService {
     // delete should return some message
     public Mono<ResponseEntity<Void>> deleteUser(Long id) {
         return userClient.deleteUser(id);
+    }
+
+    public Mono<ResponseEntity<UserResponseDTO>> promoteModerator(Long userId, AdminActorRequest request) {
+        return userClient.promoteModerator(userId, request);
+    }
+
+    public Mono<ResponseEntity<UserResponseDTO>> demoteModerator(Long userId, AdminActorRequest request) {
+        return userClient.demoteModerator(userId, request);
     }
 
     public Mono<ResponseEntity<Watchlist>> addToWatchlist(Long userId, Integer movieId) {

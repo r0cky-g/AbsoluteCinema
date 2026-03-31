@@ -292,12 +292,9 @@ public class BackendClientService {
         }
     }
 
-    public Optional<UserResponseDTO> promoteToModerator(long targetUserId,
-            String adminIdentifier, String adminPassword) {
+    public Optional<UserResponseDTO> promoteToModerator(long targetUserId, String adminIdentifier) {
         try {
-            Map<String, String> body = Map.of(
-                    "adminIdentifier", adminIdentifier,
-                    "adminPassword", adminPassword);
+            Map<String, String> body = Map.of("adminIdentifier", adminIdentifier);
             UserResponseDTO r = apiClient.post()
                     .uri("/api/user/{userId}/promote-moderator", targetUserId)
                     .bodyValue(body)
@@ -311,12 +308,9 @@ public class BackendClientService {
         }
     }
 
-    public Optional<UserResponseDTO> demoteModerator(long targetUserId,
-            String adminIdentifier, String adminPassword) {
+    public Optional<UserResponseDTO> demoteModerator(long targetUserId, String adminIdentifier) {
         try {
-            Map<String, String> body = Map.of(
-                    "adminIdentifier", adminIdentifier,
-                    "adminPassword", adminPassword);
+            Map<String, String> body = Map.of("adminIdentifier", adminIdentifier);
             UserResponseDTO r = apiClient.post()
                     .uri("/api/user/{userId}/demote-moderator", targetUserId)
                     .bodyValue(body)

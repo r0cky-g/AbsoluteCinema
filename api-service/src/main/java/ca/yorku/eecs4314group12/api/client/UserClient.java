@@ -13,6 +13,7 @@ import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.WatchHistory;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.Watchlist;
@@ -53,6 +54,16 @@ public class UserClient {
 
     public Mono<ResponseEntity<Void>> deleteUser(Long id) {
         return baseWebClient.delete("/user/{id}", null, id);
+    }
+
+    public Mono<ResponseEntity<UserResponseDTO>> promoteModerator(Long userId, AdminActorRequest request) {
+        return baseWebClient.post("/user/{userId}/promote-moderator", request,
+                new ParameterizedTypeReference<UserResponseDTO>() {}, userId);
+    }
+
+    public Mono<ResponseEntity<UserResponseDTO>> demoteModerator(Long userId, AdminActorRequest request) {
+        return baseWebClient.post("/user/{userId}/demote-moderator", request,
+                new ParameterizedTypeReference<UserResponseDTO>() {}, userId);
     }
 
     public Mono<ResponseEntity<Watchlist>> addToWatchlist(Long userId, Integer movieId) {

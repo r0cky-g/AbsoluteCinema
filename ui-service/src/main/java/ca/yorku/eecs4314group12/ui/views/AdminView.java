@@ -11,7 +11,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.RolesAllowed;
@@ -19,7 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Lists all users and lets the platform administrator promote or demote moderators.
- * Uses user-service role endpoints; password confirms each action.
+ * Uses user-service role endpoints; the signed-in administrator is identified from the session.
  */
 @Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin | Absolute Cinema")
@@ -34,11 +33,8 @@ public class AdminView extends VerticalLayout {
         H2 heading = new H2("User administration");
         Paragraph hint = new Paragraph(
                 "Grant or remove moderator privileges (forum posts and comments). "
-                        + "Enter your administrator password before each action.");
+                        + "You are already signed in as an administrator.");
         hint.getStyle().set("color", "var(--lumo-secondary-text-color)").set("max-width", "720px");
-
-        PasswordField adminPassword = new PasswordField("Your administrator password");
-        adminPassword.setWidth("360px");
 
         Grid<UserResponseDTO> grid = new Grid<>(UserResponseDTO.class, false);
         grid.addColumn(UserResponseDTO::getId).setHeader("ID").setAutoWidth(true);
@@ -57,11 +53,7 @@ public class AdminView extends VerticalLayout {
                 Button demote = new Button("Remove moderator");
                 demote.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
                 demote.addClickListener(e -> {
-                    if (adminPassword.getValue() == null || adminPassword.getValue().isBlank()) {
-                        Notification.show("Enter your password first.", 3000, Notification.Position.MIDDLE);
-                        return;
-                    }
-                    backendClient.demoteModerator(user.getId(), adminIdentifier, adminPassword.getValue())
+                    backendClient.demoteModerator(user.getId(), adminIdentifier)
                             .ifPresentOrElse(
                                     u -> {
                                         refreshGrid(grid, backendClient);
@@ -70,7 +62,7 @@ public class AdminView extends VerticalLayout {
                                                 .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                                     },
                                     () -> Notification.show(
-                                            "Could not demote. Check password or try again.", 4000,
+                                            "Could not demote. Try again or check server logs.", 4000,
                                             Notification.Position.MIDDLE)
                                             .addThemeVariants(NotificationVariant.LUMO_ERROR));
                 });
@@ -79,11 +71,7 @@ public class AdminView extends VerticalLayout {
                 Button promote = new Button("Make moderator");
                 promote.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
                 promote.addClickListener(e -> {
-                    if (adminPassword.getValue() == null || adminPassword.getValue().isBlank()) {
-                        Notification.show("Enter your password first.", 3000, Notification.Position.MIDDLE);
-                        return;
-                    }
-                    backendClient.promoteToModerator(user.getId(), adminIdentifier, adminPassword.getValue())
+                    backendClient.promoteToModerator(user.getId(), adminIdentifier)
                             .ifPresentOrElse(
                                     u -> {
                                         refreshGrid(grid, backendClient);
@@ -92,7 +80,7 @@ public class AdminView extends VerticalLayout {
                                                 .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                                     },
                                     () -> Notification.show(
-                                            "Could not promote. Check password or try again.", 4000,
+                                            "Could not promote. Try again or check server logs.", 4000,
                                             Notification.Position.MIDDLE)
                                             .addThemeVariants(NotificationVariant.LUMO_ERROR));
                 });
@@ -106,7 +94,7 @@ public class AdminView extends VerticalLayout {
         Button reload = new Button("Reload users", e -> refreshGrid(grid, backendClient));
         reload.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        add(heading, hint, adminPassword, reload, grid);
+        add(heading, hint, reload, grid);
         grid.setWidthFull();
         setFlexGrow(1, grid);
     }

@@ -17,12 +17,16 @@ D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\ap
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\MovieSearchDTO.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\MoviesNowPlayingDTO.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\movieServiceDTO\MoviesTrendingDTO.java
+D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\reviewServiceDTO\ReviewApiResponse.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\reviewServiceDTO\ReviewDTO.java
+D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\AdminActorRequest.java
+D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\FavouriteMovie.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\LoginRequest.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\LoginResponseDTO.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\UserRegisterRequest.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\UserResponseDTO.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\UserUpdateRequest.java
+D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\WatchHistory.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\dto\userServiceDTO\Watchlist.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\exception\ApiException.java
 D:\EECS4314\AbsoluteCinema\api-service\src\main\java\ca\yorku\eecs4314group12\api\exception\GlobalExceptionHandler.java

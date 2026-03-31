@@ -165,8 +165,8 @@ public class UserService {
         repo.delete(existingUser);
     }
 
-    public User promoteToModerator(Long targetUserId, String adminIdentifier, String adminPassword) {
-        requireAdmin(adminIdentifier, adminPassword);
+    public User promoteToModerator(Long targetUserId, String adminIdentifier) {
+        requireAdminActor(adminIdentifier);
         User target = getUserById(targetUserId);
         if (target.getRole() == Role.ADMIN) {
             throw new ResponseStatusException(
@@ -177,8 +177,8 @@ public class UserService {
         return repo.save(target);
     }
 
-    public User demoteModeratorToUser(Long targetUserId, String adminIdentifier, String adminPassword) {
-        requireAdmin(adminIdentifier, adminPassword);
+    public User demoteModeratorToUser(Long targetUserId, String adminIdentifier) {
+        requireAdminActor(adminIdentifier);
         User target = getUserById(targetUserId);
         if (target.getRole() == Role.ADMIN) {
             throw new ResponseStatusException(
@@ -194,8 +194,22 @@ public class UserService {
         return repo.save(target);
     }
 
-    private User requireAdmin(String adminIdentifier, String adminPassword) {
-        User actor = authenticate(adminIdentifier, adminPassword);
+    /**
+     * Resolves the acting user by username or email and ensures they are a verified administrator.
+     * Used when the public UI has already authenticated an admin session; the identifier must match that user.
+     */
+    private User requireAdminActor(String adminIdentifier) {
+        Optional<User> optionalUser = repo.findByUsername(adminIdentifier);
+        if (optionalUser.isEmpty()) {
+            optionalUser = repo.findByEmail(adminIdentifier);
+        }
+        User actor = optionalUser.orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!actor.isEmailVerified()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Email not verified");
+        }
         if (actor.getRole() != Role.ADMIN) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,

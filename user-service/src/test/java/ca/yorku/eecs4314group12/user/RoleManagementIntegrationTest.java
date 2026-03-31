@@ -59,9 +59,7 @@ class RoleManagementIntegrationTest {
         target.setRole(Role.USER);
         target = userRepository.save(target);
 
-        Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN123",
-                "adminPassword", "ADMIN");
+        Map<String, String> body = Map.of("adminIdentifier", "ADMIN123");
 
         mockMvc.perform(post("/user/{userId}/promote-moderator", target.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,9 +79,7 @@ class RoleManagementIntegrationTest {
         target.setRole(Role.MODERATOR);
         target = userRepository.save(target);
 
-        Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN123",
-                "adminPassword", "ADMIN");
+        Map<String, String> body = Map.of("adminIdentifier", "ADMIN123");
 
         mockMvc.perform(post("/user/{userId}/demote-moderator", target.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -96,19 +92,21 @@ class RoleManagementIntegrationTest {
     }
 
     @Test
-    void promoteModerator_rejectsWrongAdminPassword() throws Exception {
+    void promoteModerator_rejectsNonAdminActor() throws Exception {
         createAdmin();
-        User target = new User("rolepromo2", "rolepromo2@test.com", ENC.encode("Password12"));
+        User regular = new User("rolepromo2", "rolepromo2@test.com", ENC.encode("Password12"));
+        regular.setEmailVerified(true);
+        regular.setRole(Role.USER);
+        regular = userRepository.save(regular);
+        User target = new User("rolepromo2b", "rolepromo2b@test.com", ENC.encode("Password12"));
         target.setEmailVerified(true);
         target = userRepository.save(target);
 
-        Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN123",
-                "adminPassword", "wrong-password");
+        Map<String, String> body = Map.of("adminIdentifier", regular.getUsername());
 
         mockMvc.perform(post("/user/{userId}/promote-moderator", target.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 }

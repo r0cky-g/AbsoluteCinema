@@ -39,15 +39,13 @@ class UserServiceRoleManagementTest {
     private User admin;
     private User moderatorUser;
     private User normalUser;
-    private final String adminPlainPassword = "AdminPass1";
-
     @BeforeEach
     void setUp() {
         admin = new User();
         admin.setId(1L);
         admin.setUsername("ADMIN");
         admin.setEmail("admin@test.local");
-        admin.setPassword(BCRYPT.encode(adminPlainPassword));
+        admin.setPassword(BCRYPT.encode("AdminPass1"));
         admin.setRole(Role.ADMIN);
         admin.setEmailVerified(true);
 
@@ -74,7 +72,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findById(3L)).thenReturn(Optional.of(normalUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User out = userService.promoteToModerator(3L, "ADMIN", adminPlainPassword);
+        User out = userService.promoteToModerator(3L, "ADMIN");
 
         assertEquals(Role.MODERATOR, out.getRole());
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -87,7 +85,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findByUsername("moderator_user")).thenReturn(Optional.of(moderatorUser));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> userService.promoteToModerator(3L, "moderator_user", "modpass12"));
+                () -> userService.promoteToModerator(3L, "moderator_user"));
 
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
         verify(userRepository, never()).save(any());
@@ -99,7 +97,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> userService.promoteToModerator(1L, "ADMIN", adminPlainPassword));
+                () -> userService.promoteToModerator(1L, "ADMIN"));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(userRepository, never()).save(any());
@@ -111,7 +109,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findById(2L)).thenReturn(Optional.of(moderatorUser));
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User out = userService.demoteModeratorToUser(2L, "ADMIN", adminPlainPassword);
+        User out = userService.demoteModeratorToUser(2L, "ADMIN");
 
         assertEquals(Role.USER, out.getRole());
     }
@@ -122,7 +120,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findById(3L)).thenReturn(Optional.of(normalUser));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> userService.demoteModeratorToUser(3L, "ADMIN", adminPlainPassword));
+                () -> userService.demoteModeratorToUser(3L, "ADMIN"));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(userRepository, never()).save(any());
@@ -134,7 +132,7 @@ class UserServiceRoleManagementTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                () -> userService.demoteModeratorToUser(1L, "ADMIN", adminPlainPassword));
+                () -> userService.demoteModeratorToUser(1L, "ADMIN"));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(userRepository, never()).save(any());
