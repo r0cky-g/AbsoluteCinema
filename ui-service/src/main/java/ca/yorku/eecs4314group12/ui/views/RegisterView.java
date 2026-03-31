@@ -107,7 +107,7 @@ public class RegisterView extends VerticalLayout {
                 getUI().ifPresent(ui ->
                         ui.navigate("verify?userId=" + userId));
             } else {
-                showError("Registration failed. Username or email may already be taken.");
+                showError("Registration failed. Username may already be taken.");
             }
         });
 

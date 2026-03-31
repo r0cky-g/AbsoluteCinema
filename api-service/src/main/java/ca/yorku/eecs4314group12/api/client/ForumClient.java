@@ -43,7 +43,7 @@ public class ForumClient {
     }
 
     public Mono<ResponseEntity<Comment>> createComment(CreateCommentRequest request) {
-        return baseWebClient.post("/forum/comments/", request, new ParameterizedTypeReference<Comment> () {});
+        return baseWebClient.post("/forum/comments", request, new ParameterizedTypeReference<Comment> () {});
     }
 
     public Mono<ResponseEntity<List<Comment>>> getComments(Long postId) {

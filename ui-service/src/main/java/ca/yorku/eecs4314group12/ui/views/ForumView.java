@@ -96,7 +96,16 @@ public class ForumView extends VerticalLayout {
         List<ForumPostDTO> allPosts = backendClient.getAllPosts();
 
         LinkedHashMap<String, CategoryInfo> categories = new LinkedHashMap<>();
-        categories.put("general", new CategoryInfo("General", 0));
+        categories.put("general",    new CategoryInfo("General", 0));
+        categories.put("trending",   new CategoryInfo("Trending", 0));
+        categories.put("action",     new CategoryInfo("Action", 0));
+        categories.put("comedy",     new CategoryInfo("Comedy", 0));
+        categories.put("drama",      new CategoryInfo("Drama", 0));
+        categories.put("horror",     new CategoryInfo("Horror", 0));
+        categories.put("sci-fi",     new CategoryInfo("Sci-Fi", 0));
+        categories.put("romance",    new CategoryInfo("Romance", 0));
+        categories.put("animation",  new CategoryInfo("Animation", 0));
+        categories.put("documentary",new CategoryInfo("Documentary", 0));
 
         for (ForumPostDTO post : allPosts) {
             String key = post.getCategoryKey();
