@@ -162,19 +162,19 @@ public class APIController {
     }
 
     @GetMapping("/reviews/{id}")
-    public Mono<ResponseEntity<Map<String, Object>>> getReviewByID(@PathVariable long id) {
-        return reviewService.getReviewByID(id);
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewById(@PathVariable long id) {
+        return reviewService.getReviewById(id);
     }
 
     @PutMapping("/reviews/{id}")
     public Mono<ResponseEntity<Map<String, Object>>> updateReview(@PathVariable Long id, 
-                                                        @RequestBody ReviewDTO reviewDTO) {
+                                                                @RequestBody ReviewDTO reviewDTO) {
         return reviewService.updateReview(id, reviewDTO);
     }
 
     @DeleteMapping("/reviews/{id}")
     public Mono<ResponseEntity<Map<String, Object>>> deleteReview(@PathVariable Long id, 
-                                                @RequestParam Long userId) {
+                                                                @RequestParam Long userId) {
         return reviewService.deleteReview(id, userId);
     }
 

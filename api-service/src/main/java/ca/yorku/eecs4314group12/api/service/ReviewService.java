@@ -30,8 +30,8 @@ public class ReviewService {
         return reviewClient.getReviewsByUser(userId);
     }
 
-    public Mono<ResponseEntity<Map<String, Object>>> getReviewByID(long id) {
-        return reviewClient.getReviewByID(id);
+    public Mono<ResponseEntity<Map<String, Object>>> getReviewById(long id) {
+        return reviewClient.getReviewById(id);
     }
 
     public Mono<ResponseEntity<Map<String, Object>>> updateReview(Long id, ReviewDTO reviewDTO) {
