@@ -30,7 +30,7 @@ public class User {
     //email setup
     @NotBlank(message = "Email cannot be blank")
     @Email(message = "Invalid email format")
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     //password setup

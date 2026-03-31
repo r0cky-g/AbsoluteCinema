@@ -38,15 +38,29 @@ class RoleManagementIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    private User createAdmin() {
+        User admin = userRepository.findByUsername("ADMIN123").orElseGet(() -> {
+            User a = new User("ADMIN123", "admin@absolutecinema.internal", ENC.encode("ADMIN"));
+            a.setEmailVerified(true);
+            a.setRole(Role.ADMIN);
+            return a;
+        });
+        // Always ensure password is "ADMIN" for tests
+        admin.setPassword(ENC.encode("ADMIN"));
+        admin.setRole(Role.ADMIN);
+        admin.setEmailVerified(true);
+        return userRepository.save(admin);
+    }
     @Test
     void promoteModerator_returnsUpdatedUser() throws Exception {
+        createAdmin();
         User target = new User("rolepromo1", "rolepromo1@test.com", ENC.encode("Password12"));
         target.setEmailVerified(true);
         target.setRole(Role.USER);
         target = userRepository.save(target);
 
         Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN",
+                "adminIdentifier", "ADMIN123",
                 "adminPassword", "ADMIN");
 
         mockMvc.perform(post("/user/{userId}/promote-moderator", target.getId())
@@ -61,13 +75,14 @@ class RoleManagementIntegrationTest {
 
     @Test
     void demoteModerator_returnsUserRole() throws Exception {
+        createAdmin();
         User target = new User("roledemote1", "roledemote1@test.com", ENC.encode("Password12"));
         target.setEmailVerified(true);
         target.setRole(Role.MODERATOR);
         target = userRepository.save(target);
 
         Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN",
+                "adminIdentifier", "ADMIN123",
                 "adminPassword", "ADMIN");
 
         mockMvc.perform(post("/user/{userId}/demote-moderator", target.getId())
@@ -82,12 +97,13 @@ class RoleManagementIntegrationTest {
 
     @Test
     void promoteModerator_rejectsWrongAdminPassword() throws Exception {
+        createAdmin();
         User target = new User("rolepromo2", "rolepromo2@test.com", ENC.encode("Password12"));
         target.setEmailVerified(true);
         target = userRepository.save(target);
 
         Map<String, String> body = Map.of(
-                "adminIdentifier", "ADMIN",
+                "adminIdentifier", "ADMIN123",
                 "adminPassword", "wrong-password");
 
         mockMvc.perform(post("/user/{userId}/promote-moderator", target.getId())

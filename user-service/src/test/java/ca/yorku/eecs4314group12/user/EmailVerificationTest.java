@@ -42,7 +42,6 @@ public class EmailVerificationTest {
     // Registration should send a verification email and set emailVerified=false
     @Test
     void createUser_shouldSendVerificationEmail() {
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 

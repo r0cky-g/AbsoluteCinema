@@ -27,12 +27,6 @@ public class UserService {
     // CREATE USER
     public User createUser(User user) {
 
-        if (repo.existsByEmail(user.getEmail())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Email already registered");
-        }
-
         if (repo.existsByUsername(user.getUsername())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -47,17 +41,11 @@ public class UserService {
             user.setRole(ca.yorku.eecs4314group12.user.model.Role.USER);
         }
 
-        // Email verification disabled for now
-        // Generate 4-digit verification code
+        // Generate 4-digit verification code and send email
         String code = String.format("%04d", (int) (Math.random() * 10000));
         user.setVerificationCode(code);
         user.setEmailVerified(false);
-        // Send verification email
         emailService.sendVerificationEmail(user.getEmail(), code);
-        
-        // Set email as verified by default (no verification required)
-        // user.setEmailVerified(true);
-        // user.setVerificationCode(null);
 
         return repo.save(user);
     }
@@ -135,14 +123,6 @@ public class UserService {
     public User updateUser(Long id, ca.yorku.eecs4314group12.user.dto.UserUpdateRequest request) {
 
         User existingUser = getUserById(id);
-
-        if (!existingUser.getEmail().equals(request.getEmail()) &&
-                repo.existsByEmail(request.getEmail())) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Email already registered");
-        }
 
         if (!existingUser.getUsername().equals(request.getUsername()) &&
                 repo.existsByUsername(request.getUsername())) {
