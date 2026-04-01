@@ -340,7 +340,7 @@ class ForumServiceTest {
     }
 
     @Test
-    void testUpdatePost_AdminCanUpdate() {
+    void testUpdatePost_AdminCannotUpdateOthersPost() {
         Long postId = 1L;
         Long ownerId = 1L;
         Long adminId = 2L;
@@ -351,18 +351,15 @@ class ForumServiceTest {
         existingPost.setContent("Old Content");
 
         when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
-        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ForumPost updated = forumService.updatePost(postId, "Admin Edit", "Admin Content", adminId, "ADMIN");
 
-        assertNotNull(updated);
-        assertEquals("Admin Edit", updated.getTitle());
-        assertEquals("Admin Content", updated.getContent());
-        verify(repository, times(1)).save(existingPost);
+        assertNull(updated);
+        verify(repository, never()).save(any(ForumPost.class));
     }
 
     @Test
-    void testUpdatePost_ModeratorCanUpdate() {
+    void testUpdatePost_ModeratorCannotUpdateOthersPost() {
         Long postId = 1L;
         Long ownerId = 1L;
         Long modId = 3L;
@@ -373,14 +370,11 @@ class ForumServiceTest {
         existingPost.setContent("Old Content");
 
         when(repository.findById(postId)).thenReturn(Optional.of(existingPost));
-        when(repository.save(any(ForumPost.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ForumPost updated = forumService.updatePost(postId, "Mod Edit", "Mod Content", modId, "MODERATOR");
 
-        assertNotNull(updated);
-        assertEquals("Mod Edit", updated.getTitle());
-        assertEquals("Mod Content", updated.getContent());
-        verify(repository, times(1)).save(existingPost);
+        assertNull(updated);
+        verify(repository, never()).save(any(ForumPost.class));
     }
 
     @Test

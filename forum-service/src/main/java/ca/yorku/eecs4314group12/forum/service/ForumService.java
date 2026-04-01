@@ -74,11 +74,8 @@ public class ForumService {
             return null;
         }
         
-        // Check permissions: only owner, moderator, or admin can update
-        boolean canUpdate = "MODERATOR".equals(userRole) || "ADMIN".equals(userRole) ||
-                           (post.getUserId() != null && post.getUserId().equals(userId));
-        
-        if (!canUpdate) {
+        // Only owner can update
+        if (post.getUserId() == null || !post.getUserId().equals(userId)) {
             return null;
         }
         
