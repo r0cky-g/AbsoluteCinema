@@ -32,8 +32,8 @@ public class MovieGatewayTest {
 
     @Test
     void testMovieGetById() {
-        int id1 = (int)( Math.random()*1000);
-        int id2 = (int)( Math.random()*1000);
+        int id1 = 100;
+        int id2 = 200;
 
         MovieDTO movie1 = gateway.get()
             .uri("/movie/{id1}", id1)
