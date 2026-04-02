@@ -9,7 +9,7 @@ public class ForumPost {
     private String content;
     private Long userId;
     private String category;
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     public ForumPost() {
     }

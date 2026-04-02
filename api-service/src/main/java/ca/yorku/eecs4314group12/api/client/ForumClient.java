@@ -1,7 +1,6 @@
 package ca.yorku.eecs4314group12.api.client;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,29 +22,29 @@ public class ForumClient {
         this.baseWebClient = new BaseWebClient(webClient);
     }
 
-    public Mono<ResponseEntity<List<Map<String,Object>>>> getPost(String category, String search) {
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category, String search) {
         if (category == null && search == null)
-            return baseWebClient.get("/forum/posts", new ParameterizedTypeReference<List<Map<String,Object>>> () {});
+            return baseWebClient.get("/forum/posts", new ParameterizedTypeReference<List<ForumPost>> () {});
         if (category == null)
-            return baseWebClient.get("/forum/posts?search={search}", new ParameterizedTypeReference<List<Map<String,Object>>> () {}, search);  
-        return baseWebClient.get("/forum/posts?category={category}", new ParameterizedTypeReference<List<Map<String,Object>>> () {}, category);
+            return baseWebClient.get("/forum/posts?search={search}", new ParameterizedTypeReference<List<ForumPost>> () {}, search);  
+        return baseWebClient.get("/forum/posts?category={category}", new ParameterizedTypeReference<List<ForumPost>> () {}, category);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> createPost(ForumPost post) {
-        return baseWebClient.post("/forum/posts", post, new ParameterizedTypeReference<Map<String,Object>> () {});
+    public Mono<ResponseEntity<ForumPost>> createPost(ForumPost post) {
+        return baseWebClient.post("/forum/posts", post, new ParameterizedTypeReference<ForumPost> () {});
     }
 
     public Mono<ResponseEntity<String>> deletePost(Long postId, Long userId, String userRole) {
         return baseWebClient.delete("/forum/posts/{postId}?userId=" + userId + "&userRole=" + userRole, new ParameterizedTypeReference<String> () {}, postId);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> getPostById(Long postId) {
-        return baseWebClient.get("/forum/posts/{postId}", new ParameterizedTypeReference<Map<String,Object>> () {}, postId);
+    public Mono<ResponseEntity<ForumPost>> getPostById(Long postId) {
+        return baseWebClient.get("/forum/posts/{postId}", new ParameterizedTypeReference<ForumPost> () {}, postId);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
+    public Mono<ResponseEntity<ForumPost>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
         return baseWebClient.put("/forum/posts/{postId}?userId=" + userId + "&userRole=" + userRole, 
-                                post, new ParameterizedTypeReference<Map<String,Object>> () {}, postId);
+                                post, new ParameterizedTypeReference<ForumPost> () {}, postId);
     }
 
     public Mono<ResponseEntity<Comment>> createComment(CreateCommentRequest request) {

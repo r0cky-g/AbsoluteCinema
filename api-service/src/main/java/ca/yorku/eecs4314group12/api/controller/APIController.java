@@ -3,6 +3,8 @@ package ca.yorku.eecs4314group12.api.controller;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,9 +25,9 @@ import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieSearchDTO;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesNowPlayingDTO;
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MoviesTrendingDTO;
 import ca.yorku.eecs4314group12.api.dto.reviewServiceDTO.ReviewDTO;
-import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
@@ -35,8 +37,9 @@ import ca.yorku.eecs4314group12.api.service.ForumService;
 import ca.yorku.eecs4314group12.api.service.MovieService;
 import ca.yorku.eecs4314group12.api.service.ReviewService;
 import ca.yorku.eecs4314group12.api.service.UserService;
-import jakarta.validation.Valid;
 import reactor.core.publisher.Mono;
+
+@RestController
 @RequestMapping("/api")
 public class APIController {
 
@@ -67,13 +70,13 @@ public class APIController {
 
 
     @GetMapping("/forum/posts")
-    public Mono<ResponseEntity<List<Map<String,Object>>>> getPost(@RequestParam(required = false) String category, 
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(@RequestParam(required = false) String category, 
                                                         @RequestParam(required = false) String search) {
         return forumService.getPost(category, search);
     }
 
     @PostMapping("/forum/posts")
-    public Mono<ResponseEntity<Map<String,Object>>> createPost(@RequestBody ForumPost post) {
+    public Mono<ResponseEntity<ForumPost>> createPost(@RequestBody ForumPost post) {
         return forumService.createPost(post);
     }
 
@@ -85,12 +88,12 @@ public class APIController {
     }
 
     @GetMapping("/forum/posts/{postId}")
-    public Mono<ResponseEntity<Map<String,Object>>> getPostById(@PathVariable Long postId) {
+    public Mono<ResponseEntity<ForumPost>> getPostById(@PathVariable Long postId) {
         return forumService.getPostById(postId);
     }
 
     @PutMapping("/forum/posts/{postId}")
-    public Mono<ResponseEntity<Map<String,Object>>> updatePost(@PathVariable Long postId,
+    public Mono<ResponseEntity<ForumPost>> updatePost(@PathVariable Long postId,
                                                       @RequestBody ForumPost post,
                                                       @RequestParam Long userId,
                                                       @RequestParam String userRole) {

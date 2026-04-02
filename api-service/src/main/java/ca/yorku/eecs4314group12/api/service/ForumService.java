@@ -1,7 +1,6 @@
 package ca.yorku.eecs4314group12.api.service;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,11 +20,11 @@ public class ForumService {
         this.forumClient = forumClient;
     }
 
-    public Mono<ResponseEntity<List<Map<String,Object>>>> getPost(String category, String search) {
+    public Mono<ResponseEntity<List<ForumPost>>> getPost(String category, String search) {
         return forumClient.getPost(category, search);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> createPost(ForumPost post) {
+    public Mono<ResponseEntity<ForumPost>> createPost(ForumPost post) {
         return forumClient.createPost(post);
     }
 
@@ -33,11 +32,11 @@ public class ForumService {
         return forumClient.deletePost(postId, userId, userRole);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> getPostById(Long postId) {
+    public Mono<ResponseEntity<ForumPost>> getPostById(Long postId) {
         return forumClient.getPostById(postId);
     }
 
-    public Mono<ResponseEntity<Map<String,Object>>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
+    public Mono<ResponseEntity<ForumPost>> updatePost(Long postId, ForumPost post, Long userId, String userRole) {
         return forumClient.updatePost(postId, post, userId, userRole);
     }
 
