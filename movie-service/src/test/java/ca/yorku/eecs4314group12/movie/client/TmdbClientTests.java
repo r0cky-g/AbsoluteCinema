@@ -37,9 +37,14 @@ class TmdbClientTests {
 	void test_1_getMovieDetails_US() throws InterruptedException {
 		String fakeJson = """
 			{
+				"adult": false,
 				"id": 550,
+				"original_language": "en",
 				"original_title": "Fight Club",
 				"title": "Fight Club",
+				"poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+				"backdrop_path": "/xRyINp9KfMLVjRiO5nCsoRDdvvF.jpg",
+				"overview": "Sample as original overview is too long.",
 				"genres": [
 				  {
 				   	"id": 18,
@@ -53,7 +58,87 @@ class TmdbClientTests {
 				   	"id": 35,
 				   	"name": "Comedy"
 				  }
-				]
+				],
+				"release_dates": {
+				 "results": [
+				    {
+				     "iso_3166_1": "US",
+				     "release_dates": [
+				       {
+				         "certification": "R",
+					     "descriptors": [],
+				         "iso_639_1": "",
+				         "note": "",
+				         "release_date": "1999-10-15T00:00:00.000Z",
+				         "type": 3
+				       }
+				     ]
+				    }
+				 ] 
+				},
+				"credits": {
+				 "cast": [
+				   {
+				     "adult": false,
+				     "gender": 2,
+				     "id": 819,
+				     "known_for_department": "Acting",
+				     "name": "Edward Norton",
+				     "original_name": "Edward Norton",
+				     "popularity": 5.8964,
+				     "profile_path": "/8nytsqL59SFJTVYVrN72k6qkGgJ.jpg",
+				     "cast_id": 4,
+				     "character": "Narrator",
+				     "credit_id": "52fe4250c3a36847f80149f3",
+				     "order": 0
+				   }
+				 ],
+				 "crew": [
+				   {
+				     "adult": false,
+				     "gender": 2,
+				     "id": 7764,
+				     "known_for_department": "Sound",
+				     "name": "Richard Hymns",
+				     "original_name": "Richard Hymns",
+				     "popularity": 0.6266,
+				     "profile_path": "/970GjgH2nfqsnEsimqLvLYoYTQn.jpg",
+				     "credit_id": "52fe4250c3a36847f8014a41",
+				     "department": "Sound",
+				     "job": "Sound Editor"
+				   }
+				 ]
+				},
+				"images": {
+				 "backdrops": [
+				   {
+				     "aspect_ratio": 1.778,
+					 "height": 1080,
+				     "iso_3166_1": null,
+				     "iso_639_1": null,
+				     "file_path": "/xRyINp9KfMLVjRiO5nCsoRDdvvF.jpg",
+				     "vote_average": 5.5,
+				     "vote_count": 19,
+				     "width": 1920
+				   }
+				 ]
+				},
+				"videos": {
+				 "results": [
+				   {
+				     "iso_639_1": "en",
+				     "iso_3166_1": "US",
+				     "name": "20th Anniversary Trailer",
+				     "key": "dfeUzm6KF4g",
+				     "site": "YouTube",
+				     "size": 1080,
+				     "type": "Trailer",
+				     "official": true,
+				     "published_at": "2019-10-15T18:59:47.000Z",
+				     "id": "64fb16fbdb4ed610343d72c3"
+				   }
+				 ]
+				}
 			}
             """;
 		 
@@ -64,10 +149,21 @@ class TmdbClientTests {
 		TmdbMovieDTO result = tmdbClient.getMovieDetails(550);
 		
 		assertNotNull(result);
+		assertFalse(result.isAdult());
         assertEquals(550, result.getId());
+        assertEquals("en", result.getOriginal_language());
         assertEquals("Fight Club", result.getOriginal_title());
         assertEquals("Fight Club", result.getTitle());
-        assertNotNull(result.getGenres());
+        assertEquals("/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", result.getPoster_path());
+        assertEquals("/xRyINp9KfMLVjRiO5nCsoRDdvvF.jpg", result.getBackdrop_path());
+        assertEquals("Sample as original overview is too long.", result.getOverview());
+        assertFalse(result.getGenres().isEmpty());
+        assertFalse(result.getImages().getBackdrops().isEmpty());
+        assertFalse(result.getCredits().getCast().isEmpty());
+        assertFalse(result.getCredits().getCrew().isEmpty());
+        assertFalse(result.getVideos().getResults().isEmpty());
+        assertFalse(result.getRelease_dates().getResults().isEmpty());
+        
         
         RecordedRequest request = mockServer.takeRequest();
         assertTrue(request.getPath().contains("/movie/550"));	
@@ -77,7 +173,9 @@ class TmdbClientTests {
 	void test_2_getMovieDetails_Foreign() throws InterruptedException {
 		String fakeJson = """
 			{
+				"adult": false,
 				"id": 496243,
+				"original_language": "ko",
 				"original_title": "기생충",
                 "title": "Parasite",
                 "genres": [
@@ -105,9 +203,10 @@ class TmdbClientTests {
 		
 		assertNotNull(result);
         assertEquals(496243, result.getId());
+        assertEquals("ko", result.getOriginal_language());
         assertEquals("기생충", result.getOriginal_title());
         assertEquals("Parasite", result.getTitle());
-        assertNotNull(result.getGenres());
+        assertFalse(result.getGenres().isEmpty());
         
         RecordedRequest request = mockServer.takeRequest();
         assertTrue(request.getPath().contains("/movie/496243"));	
