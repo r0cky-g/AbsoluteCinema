@@ -36,7 +36,7 @@ class MovieServiceTests {
     private MovieService movieService;
 
     @Test
-    void test_1_getDetails_MovieFound() {
+    void test_1_getDetails_MovieFoundInRepo() {
         Movie movie = new Movie();
         movie.setId(550);
         movie.setTitle("Fight Club");
@@ -63,7 +63,7 @@ class MovieServiceTests {
     }
 
     @Test
-    void test_2_getDetails_MovieNotFound() {
+    void test_2_getDetails_MovieNotFoundInRepo() {
         TmdbMovieDTO tmdbMovie = new TmdbMovieDTO();
         tmdbMovie.setId(550);
         tmdbMovie.setTitle("Fight Club");
@@ -100,7 +100,7 @@ class MovieServiceTests {
     }
 
     @Test
-    void test_3_getDetails_MovieFound_NoOverview() {
+    void test_3_getDetails_MovieFoundInRepo_NoOverview() {
         Movie movieNoOverview = new Movie();
         movieNoOverview.setId(550);
         movieNoOverview.setTitle("Fight Club");
