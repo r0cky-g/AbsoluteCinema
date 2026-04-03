@@ -1,6 +1,8 @@
 package ca.yorku.eecs4314group12.movie.service;
 
 import java.util.List;
+
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import ca.yorku.eecs4314group12.movie.client.*;
@@ -41,10 +43,12 @@ public class MovieService {
 		return movMap.toMovieSearchDTO(results);
 	}
 	
+	@Cacheable(value = "trending", sync = true)
 	public MoviesTrendingDTO getTrending() {
 		return callTmdbForTrending();
 	}
 	
+	@Cacheable(value = "nowPlaying", sync = true)
 	public MoviesNowPlayingDTO getNowPlaying() {
 		return callTmdbForNowPlaying();
 	}

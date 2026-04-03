@@ -56,6 +56,17 @@
 			<scope>test</scope>
 		</dependency>
 		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
 		<!-- Source: https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver -->
 		<dependency>
     		<groupId>com.squareup.okhttp3</groupId>
@@ -69,6 +80,13 @@
         	<artifactId>mapstruct</artifactId>
         	<version>${org.mapstruct.version}</version>
     	</dependency>
+    	
+    	<!-- Source: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine -->
+		<dependency>
+    		<groupId>com.github.ben-manes.caffeine</groupId>
+    		<artifactId>caffeine</artifactId>
+    		<scope>compile</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
