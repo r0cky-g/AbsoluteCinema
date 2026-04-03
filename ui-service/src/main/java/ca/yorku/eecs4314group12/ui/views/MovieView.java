@@ -332,7 +332,7 @@ public class MovieView extends VerticalLayout implements BeforeEnterObserver, Af
                 .set("font-size", "var(--lumo-font-size-s)");
         metaLine.add(metaSpan);
         
-        // Rating will never be null
+        // Age Rating will never be null
         Span rating = new Span(movie.getAge_rating());
         rating.getStyle()
         	.set("border", "1px solid var(--lumo-contrast-30pct)")
