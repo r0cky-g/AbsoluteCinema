@@ -3,12 +3,12 @@ package ca.yorku.eecs4314group12.review;
 import ca.yorku.eecs4314group12.review.controller.ReviewController;
 import ca.yorku.eecs4314group12.review.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.review.service.ReviewService;
-import com.fasterxml.jackson.databind.ObjectMapper;  // FIXED: Changed from tools.jackson
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;  // FIXED: Added this import
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -18,9 +18,11 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doThrow;
+
+// Not tested yet, just adding some cases for now
 
 @WebMvcTest(ReviewController.class)
 class ReviewControllerTests {
@@ -31,7 +33,7 @@ class ReviewControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean  // FIXED: Changed from @Mock to @MockBean
+    @Mock
     private ReviewService reviewService;
 
     private ReviewDTO testReviewDTO;
@@ -75,7 +77,8 @@ class ReviewControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("User has already reviewed this movie"));
     }
 
     @Test
@@ -140,7 +143,8 @@ class ReviewControllerTests {
         // When & Then
         mockMvc.perform(get("/api/reviews/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("Review not found with ID: 999"));
     }
 
     @Test
@@ -170,25 +174,31 @@ class ReviewControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error").value("User can only update their own reviews"));
     }
 
     @Test
     void deleteReview_Success() throws Exception {
         // When & Then
         mockMvc.perform(delete("/api/reviews/1")
-                .param("userId", "1")
-                .param("userRole", "USER"))
+                .param("userId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
     void deleteReview_WrongUser_ReturnsForbidden() throws Exception {
-        // Given - Use doThrow for void methods
-        doThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"))
-            .when(reviewService).deleteReview(1L, 999L, "USER");
+        // Given
+    	
+    	// when can't accept void methods, will need to use another statement.
+//        when(reviewService.deleteReview(1L, 999L, "USER"))
+//                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
 
+        // Can do this instead: (Commented so it doesn't break anything)
+        // doThrow(new IllegalStateException("..."))
+        //.when(reviewService).deleteReview(1L, 999L, "USER");
+        
         // When & Then
         mockMvc.perform(delete("/api/reviews/1")
                 .param("userId", "999")
