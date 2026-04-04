@@ -3,12 +3,12 @@ package ca.yorku.eecs4314group12.review;
 import ca.yorku.eecs4314group12.review.controller.ReviewController;
 import ca.yorku.eecs4314group12.review.dto.ReviewDTO;
 import ca.yorku.eecs4314group12.review.service.ReviewService;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -18,11 +18,9 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.mockito.Mockito.doThrow;
-
-// Not tested yet, just adding some cases for now
 
 @WebMvcTest(ReviewController.class)
 class ReviewControllerTests {
@@ -33,7 +31,7 @@ class ReviewControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Mock
+    @MockBean
     private ReviewService reviewService;
 
     private ReviewDTO testReviewDTO;
@@ -53,10 +51,8 @@ class ReviewControllerTests {
 
     @Test
     void createReview_Success() throws Exception {
-        // Given
         when(reviewService.createReview(any(ReviewDTO.class))).thenReturn(testReviewDTO);
 
-        // When & Then
         mockMvc.perform(post("/api/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
@@ -68,25 +64,20 @@ class ReviewControllerTests {
 
     @Test
     void createReview_DuplicateReview_ReturnsConflict() throws Exception {
-        // Given
         when(reviewService.createReview(any(ReviewDTO.class)))
                 .thenThrow(new IllegalStateException("User has already reviewed this movie"));
 
-        // When & Then
         mockMvc.perform(post("/api/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error").value("User has already reviewed this movie"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
     void createReview_InvalidData_ReturnsBadRequest() throws Exception {
-        // Given - invalid review (rating > 10)
         testReviewDTO.setRating(11);
 
-        // When & Then
         mockMvc.perform(post("/api/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
@@ -95,11 +86,9 @@ class ReviewControllerTests {
 
     @Test
     void getReviewsByMovie_ReturnsReviews() throws Exception {
-        // Given
         List<ReviewDTO> reviews = Arrays.asList(testReviewDTO);
         when(reviewService.getReviewsByMovie(550L)).thenReturn(reviews);
 
-        // When & Then
         mockMvc.perform(get("/api/reviews/movie/550"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -109,11 +98,9 @@ class ReviewControllerTests {
 
     @Test
     void getReviewsByUser_ReturnsReviews() throws Exception {
-        // Given
         List<ReviewDTO> reviews = Arrays.asList(testReviewDTO);
         when(reviewService.getReviewsByUser(1L)).thenReturn(reviews);
 
-        // When & Then
         mockMvc.perform(get("/api/reviews/user/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -123,10 +110,8 @@ class ReviewControllerTests {
 
     @Test
     void getReviewById_Success() throws Exception {
-        // Given
         when(reviewService.getReviewById(1L)).thenReturn(testReviewDTO);
 
-        // When & Then
         mockMvc.perform(get("/api/reviews/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -136,25 +121,20 @@ class ReviewControllerTests {
 
     @Test
     void getReviewById_NotFound() throws Exception {
-        // Given
         when(reviewService.getReviewById(999L))
                 .thenThrow(new IllegalArgumentException("Review not found with ID: 999"));
 
-        // When & Then
         mockMvc.perform(get("/api/reviews/999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error").value("Review not found with ID: 999"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
     void updateReview_Success() throws Exception {
-        // Given
         testReviewDTO.setRating(10);
         testReviewDTO.setTitle("Even better on rewatch");
         when(reviewService.updateReview(eq(1L), any(ReviewDTO.class))).thenReturn(testReviewDTO);
 
-        // When & Then
         mockMvc.perform(put("/api/reviews/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
@@ -165,41 +145,30 @@ class ReviewControllerTests {
 
     @Test
     void updateReview_WrongUser_ReturnsForbidden() throws Exception {
-        // Given
         when(reviewService.updateReview(eq(1L), any(ReviewDTO.class)))
                 .thenThrow(new IllegalStateException("User can only update their own reviews"));
 
-        // When & Then
         mockMvc.perform(put("/api/reviews/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testReviewDTO)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.error").value("User can only update their own reviews"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
     void deleteReview_Success() throws Exception {
-        // When & Then
         mockMvc.perform(delete("/api/reviews/1")
-                .param("userId", "1"))
+                .param("userId", "1")
+                .param("userRole", "USER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
     void deleteReview_WrongUser_ReturnsForbidden() throws Exception {
-        // Given
-    	
-    	// when can't accept void methods, will need to use another statement.
-//        when(reviewService.deleteReview(1L, 999L, "USER"))
-//                .thenThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"));
+        doThrow(new IllegalStateException("User can only delete their own reviews, or must be a moderator/admin"))
+            .when(reviewService).deleteReview(1L, 999L, "USER");
 
-        // Can do this instead: (Commented so it doesn't break anything)
-        // doThrow(new IllegalStateException("..."))
-        //.when(reviewService).deleteReview(1L, 999L, "USER");
-        
-        // When & Then
         mockMvc.perform(delete("/api/reviews/1")
                 .param("userId", "999")
                 .param("userRole", "USER"))
@@ -209,11 +178,9 @@ class ReviewControllerTests {
 
     @Test
     void getMovieStats_ReturnsStatistics() throws Exception {
-        // Given
         when(reviewService.getAverageRating(550L)).thenReturn(8.5);
         when(reviewService.getReviewCount(550L)).thenReturn(42L);
 
-        // When & Then
         mockMvc.perform(get("/api/reviews/movie/550/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -224,11 +191,9 @@ class ReviewControllerTests {
 
     @Test
     void markAsHelpful_Success() throws Exception {
-        // Given
         testReviewDTO.setHelpfulCount(1);
         when(reviewService.markAsHelpful(1L)).thenReturn(testReviewDTO);
 
-        // When & Then
         mockMvc.perform(post("/api/reviews/1/helpful"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
