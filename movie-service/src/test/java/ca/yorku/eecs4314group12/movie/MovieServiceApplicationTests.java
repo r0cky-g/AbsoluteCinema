@@ -16,8 +16,7 @@ class MovieServiceApplicationTests {
 	@Container
 	static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo")
 			.withEnv("MONGO_INITDB_ROOT_USERNAME", "root")
-	        .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example")
-	        .withReuse(true);
+	        .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example");
 	
 	@DynamicPropertySource
 	static void setProperties(DynamicPropertyRegistry registry) {
