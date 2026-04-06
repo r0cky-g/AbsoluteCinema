@@ -132,8 +132,8 @@ public class APIController {
     }
 
     @GetMapping("/movie/trending")
-    public Mono<ResponseEntity<MoviesTrendingDTO>> getMovieTrending() {
-        return movieService.getTrending();
+    public ResponseEntity<MoviesTrendingDTO> getMovieTrending() {
+        return movieService.getTrending().block();
     }
 
     @GetMapping("/movie/nowplaying")
