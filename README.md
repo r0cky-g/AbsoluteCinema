@@ -14,7 +14,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 | ui-service | 8080 | Vaadin frontend |
 | api-service | 8081 | Gateway — proxies requests to backend services |
 | user-service | 8082 | User accounts and authentication (PostgreSQL) |
-| movie-service | 8083 | Fetches movie data from TMDB API |
+| movie-service | 8083 | Fetches movie data from TMDB API and caches (MongoDB andcaffeine |
 | review-service | 8084 | Stores and serves movie reviews (PostgreSQL) |
 | forum-service | 8085 | Forum/discussion with role-based permissions (PostgreSQL) |
 
@@ -23,11 +23,11 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 ## Functionality
 
 ### UI (ui-service)
-- **Home page** — browse a catalogue of films with a live search bar and collapsible filter panel
-  - Search by title, director, cast, genre, overview, year, production company
-  - Filter by genre, year range, min user score, min TMDB score, original language
-  - Sort by title, year, user score, TMDB score, or runtime
-  - Each card shows both the TMDB score (🎬) and our users' average score (👥)
+- **Home page** — browse a catalogue of films in addition to a working search bar 
+  - Search by title.
+  - Filter search results by genre.
+  - View now playing and trending movies.
+  - Recommended Movies (Signed-in)
 - **Movie detail page** — click any film card to open a full detail page showing:
   - Poster image (from TMDB), title, tagline, genres, runtime, release year
   - Dual score display — TMDB score alongside our users' average review score
