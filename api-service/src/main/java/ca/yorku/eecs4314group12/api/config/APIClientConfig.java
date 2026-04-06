@@ -26,28 +26,28 @@ public class APIClientConfig {
     }
 
     @Bean("APIUserClient")
-    public WebClient userClient() {
+    WebClient userClient() {
         return WebClient.builder()
                 .baseUrl(userIp)
                 .build();
     }
 
     @Bean("APIMovieClient")
-    public WebClient movieClient() {
+    WebClient movieClient() {
         return WebClient.builder()
                 .baseUrl(movieIp)
                 .build();
     }
 
     @Bean("APIReviewClient")
-    public WebClient reviewClient() {
+    WebClient reviewClient() {
         return WebClient.builder()
                 .baseUrl(reviewIp)
                 .build();
     }
 
     @Bean("APIForumClient")
-    public WebClient forumClient() {
+    WebClient forumClient() {
         return WebClient.builder()
                 .baseUrl(forumIp)
                 .build();
