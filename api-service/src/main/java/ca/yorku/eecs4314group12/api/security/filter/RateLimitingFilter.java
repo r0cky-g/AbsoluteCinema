@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class RateLimitingFilter implements Filter {
 
     private static final int MAX_TOKENS = 20;
-    private static final double REFILL_RATE = 60.0 / 60.0; // number per minute
+    private static final double REFILL_RATE = 600.0 / 60.0; // number per minute
 
     private final Cache<String, TokenBucket> buckets = Caffeine.newBuilder()
             .expireAfterAccess(10, TimeUnit.MINUTES)
