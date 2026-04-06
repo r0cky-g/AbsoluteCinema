@@ -14,7 +14,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 | ui-service | 8080 | Vaadin frontend |
 | api-service | 8081 | Gateway — proxies requests to backend services |
 | user-service | 8082 | User accounts and authentication (PostgreSQL) |
-| movie-service | 8083 | Fetches movie data from TMDB API and caches (MongoDB andcaffeine |
+| movie-service | 8083 | Fetches movie data from TMDB API and caches (MongoDB and Caffeine) |
 | review-service | 8084 | Stores and serves movie reviews (PostgreSQL) |
 | forum-service | 8085 | Forum/discussion with role-based permissions (PostgreSQL) |
 
