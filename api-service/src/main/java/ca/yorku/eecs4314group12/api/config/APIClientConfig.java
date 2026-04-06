@@ -8,17 +8,22 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class APIClientConfig {
 
-    @Value("${app.user-service.url:http://localhost:8082}")
     private String userIp;
-
-    @Value("${app.movie-service.url:http://localhost:8083}")
     private String movieIp;
-
-    @Value("${app.review-service.url:http://localhost:8084}")
     private String reviewIp;
-
-    @Value("${app.forum-service.url:http://localhost:8085}")
     private String forumIp;
+    
+    public APIClientConfig(
+            @Value("${app.user-service.url:http://localhost:8082}") String userIp,
+            @Value("${app.movie-service.url:http://localhost:8083}") String movieIp,
+            @Value("${app.review-service.url:http://localhost:8084}") String reviewIp,
+            @Value("${app.forum-service.url:http://localhost:8085}") String forumIp
+    ) {
+        this.userIp = userIp;
+        this.movieIp = movieIp;
+        this.reviewIp = reviewIp;
+        this.forumIp = forumIp;
+    }
 
     @Bean("APIUserClient")
     public WebClient userClient() {
