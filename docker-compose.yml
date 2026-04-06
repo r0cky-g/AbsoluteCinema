@@ -21,6 +21,26 @@ services:
       retries: 5
 
   # -------------------------------------------------------------------------
+  # MongoDB — Database for Movie-Service
+  # -------------------------------------------------------------------------
+  mongo:
+    image: mongo
+    restart: always
+    container_name: absolute-cinema-mongo-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+      MONGO_INITDB_DATABASE: cache
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  # -------------------------------------------------------------------------
   # movie-service  (port 8083)
   # -------------------------------------------------------------------------
   movie-service:
@@ -31,9 +51,11 @@ services:
     environment:
       SERVER_PORT: 8083
       TMDB_TOKEN: ${TMDB_TOKEN}
-      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_URI: mongodb://root:${MONGO_DB_PASSWORD}@mongo:27017/
     ports:
       - "8083:8083"
+    depends_on:
+      - mongo
 
   # -------------------------------------------------------------------------
   # user-service  (port 8082)
@@ -143,3 +165,4 @@ services:
 
 volumes:
   postgres_data:
+  mongo_data:
