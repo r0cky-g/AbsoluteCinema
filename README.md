@@ -34,7 +34,7 @@ Docker is the easiest way to run the full stack — no local Java, PostgreSQL or
 
 ### Setup
 
-1.Copy the example env file and save it as .env in the repo directory; you can open a terminal:
+1.Copy the example env file and save it as .env in the repo directory; you can do this in a terminal that's open in the repo's directory:
 
 ```
 cp .env.example .env
