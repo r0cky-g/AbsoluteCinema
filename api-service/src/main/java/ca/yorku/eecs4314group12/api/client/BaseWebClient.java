@@ -66,11 +66,17 @@ public class BaseWebClient {
 
                 if (status.is2xxSuccessful()) {
                     // 2xx → parse as T
-                    return response.bodyToMono(typeRef)
-                        .map(body -> ResponseEntity.status(status).headers(headers).body(body))
-                        .onErrorResume(DecodingException.class, e ->
-                            Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
-                        .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
+                    if (typeRef == null) {
+                        // No typeRef -> bodiless response
+                        return Mono.just(ResponseEntity.status(status).headers(headers).build());
+                    } else {
+                        // typeRef provided -> parse response body
+                        return response.bodyToMono(typeRef)
+                            .map(body -> ResponseEntity.status(status).headers(headers).body(body))
+                            .onErrorResume(DecodingException.class, e ->
+                                Mono.<ResponseEntity<T>>error(new ApiException(500, "Gateway Error", headers)))
+                            .defaultIfEmpty(ResponseEntity.status(status).headers(headers).body(null));
+                    }
                 } else {
                     // non-2xx → parse body as String for exception
                     return response.bodyToMono(String.class)

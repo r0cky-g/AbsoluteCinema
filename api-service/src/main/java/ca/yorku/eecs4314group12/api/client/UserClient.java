@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.yorku.eecs4314group12.api.dto.movieServiceDTO.MovieDTO;
+import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.FavouriteMovie;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.LoginRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserRegisterRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserResponseDTO;
-import ca.yorku.eecs4314group12.api.dto.userServiceDTO.AdminActorRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.UserUpdateRequest;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.WatchHistory;
 import ca.yorku.eecs4314group12.api.dto.userServiceDTO.Watchlist;
@@ -67,7 +67,7 @@ public class UserClient {
     }
 
     public Mono<ResponseEntity<Watchlist>> addToWatchlist(Long userId, Integer movieId) {
-        return baseWebClient.post("/user/{userId}/watchlist/{movieId}", null, null, userId, movieId);
+        return baseWebClient.post("/user/{userId}/watchlist/{movieId}", null, new ParameterizedTypeReference<Watchlist>() {}, userId, movieId);
     }
 
     public Mono<ResponseEntity<Void>> removeFromWatchlist(Long userId, Integer movieId) {

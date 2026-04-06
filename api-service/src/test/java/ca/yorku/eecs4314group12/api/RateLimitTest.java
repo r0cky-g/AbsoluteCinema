@@ -1,5 +1,6 @@
 package ca.yorku.eecs4314group12.api;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -14,6 +15,7 @@ public class RateLimitTest {
     private WebTestClient webTestClient;
 
     @Test
+    // @Disabled("rate-limiting disabled for endpoint testing")
     void testRateLimitExceeded() {
         // Build client against the running test server
         webTestClient = WebTestClient.bindToServer()
