@@ -29,7 +29,7 @@ Docker is the easiest way to run the full stack — no local Java, PostgreSQL or
 ### Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- A TMDB Read Access Token — get one free at https://www.themoviedb.org/settings/api
+- A TMDB Read Access Bearer Token — get one free at https://www.themoviedb.org/settings/api
 - Gmail with an App Password (Provided Gmail will be used to send verification codes)
 
 ### Setup
@@ -48,12 +48,13 @@ DB_PASSWORD=your_chosen_db_password
 MAIL_USERNAME=your_gmail_address@gmail.com
 MAIL_PASSWORD=your_gmail_app_password
 ```
-
-> **Note**: Both MONGO_DB_PASSWORD and DB_PASSWORD can be any password, it's up to you. In the docker compose, the database user for both Postgres and Mongo is set up to have admin privileges.
+---
+> **Note**: Both MONGO_DB_PASSWORD and DB_PASSWORD can be any password, it's up to you.
 
 > **Important:**
 > `MAIL_USERNAME` and `MAIL_PASSWORD` are required for email verification to work. Use a Gmail address and a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password). Each developer needs to set these to their own values locally.
 > `.env` is gitignored and must be created manually on each machine you use.
+---
 
 2. With docker desktop running, open a terminal in the repo's directory, then build and start all services:
 
