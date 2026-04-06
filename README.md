@@ -34,7 +34,7 @@ Docker is the easiest way to run the full stack — no local Java, PostgreSQL or
 
 ### Setup
 
-1. Copy the example env file and fill in your values:
+1.Copy the example env file and save it as .env in the repo directory; you can open a terminal:
 
 ```
 cp .env.example .env
@@ -55,7 +55,7 @@ MAIL_PASSWORD=your_gmail_app_password
 > `MAIL_USERNAME` and `MAIL_PASSWORD` are required for email verification to work. Use a Gmail address and a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password). Each developer needs to set these to their own values locally.
 > `.env` is gitignored and must be created manually on each machine you use.
 
-2. Build and start all services:
+2. With docker desktop running, open a terminal in the repo's directory, then build and start all services:
 
 ```
 docker compose up --build
