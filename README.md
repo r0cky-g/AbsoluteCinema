@@ -20,7 +20,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 
 ---
 
-## Current Functionality
+## Functionality
 
 ### UI (ui-service)
 - **Home page** — browse a catalogue of films with a live search bar and collapsible filter panel
