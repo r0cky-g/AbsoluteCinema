@@ -47,24 +47,9 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
   - **Regular users** can only delete their own posts
   - Legacy posts without owner information can only be deleted by admins
 - **Permission validation** — DELETE requests require userId and userRole parameters
-
-### Live vs Dummy Data
-
-| Data | Source |
-|---|---|
-| Movie detail pages | **Live** — api-service → movie-service → TMDB |
-| Movie poster & cast images | **Live** — loaded directly from TMDB image CDN |
-| Reviews on movie pages | **Live** — review-service |
-| User score on movie pages | **Live** — calculated from review-service average |
-| Home page grid | **Live** — uses now_playing, trending, and search endpoint |
-| Account page reviews | **Dummy** — labelled `[DUMMY]` — pending user-service integration |
-| User accounts | **In-memory** — pending user-service integration |
-
-All dummy data is clearly prefixed with `[DUMMY]` in the UI so it cannot be mistaken for real API data.
-
 ---
 
-## Running with Docker (Recommended)
+## Running with Docker
 
 Docker is the easiest way to run the full stack — no local Java or PostgreSQL installation required.
 
@@ -72,9 +57,6 @@ Docker is the easiest way to run the full stack — no local Java or PostgreSQL 
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - A TMDB Read Access Token — get one free at https://www.themoviedb.org/settings/api
-- MongoDB URI
-
-> **Important Note:** The MongoDB URI will only be given to the development team.
 
 ### Setup
 
@@ -87,14 +69,15 @@ cp .env.example .env
 Edit `.env`:
 ```
 TMDB_TOKEN=your_tmdb_read_access_token_here
-MONGODB_URI=your_given_mongodb_uri
+MONGO_DB_PASSWORD=your_chosen_db_password
 DB_PASSWORD=your_chosen_db_password
 MAIL_USERNAME=your_gmail_address@gmail.com
 MAIL_PASSWORD=your_gmail_app_password
 ```
 
-> **Important:** `DB_PASSWORD` is required for PostgreSQL authentication. The password can be up to you. Just note that after the initial `docker compose up`, you must use the current password that you have written. In order to change the password, do `docker compose down -v`.
-> You can then change your `DB_PASSSWORD` in the .env, then procced to use `docker compose up`.
+> **Note**: Both MONGO_DB_PASSWORD and DB_PASSWORD can be any password, it's up to you. In the docker compose, the database user is set up to have admin privileges. 
+
+> **Important:**
 > `MAIL_USERNAME` and `MAIL_PASSWORD` are required for email verification to work. Use a Gmail address and a [Gmail App Password](https://myaccount.google.com/apppasswords) (not your regular Gmail password). Each developer needs to set these to their own values locally.
 > `.env` is gitignored and must be created manually on each machine you use.
 
@@ -144,135 +127,9 @@ or to also remove containers:
 docker compose down
 ```
 
-The PostgreSQL data volume persists between restarts. To wipe the database and start fresh:
+The PostgreSQL and MongoDB data volume persists between restarts. To wipe the database and start fresh:
 ```
 docker compose down -v
 ```
 
 ---
-
-## Running Manually (Without Docker)
-
-### Prerequisites
-
-- Java 21
-- PostgreSQL (for review-service and user-service)
-- A TMDB API token
-- MongoDB URI
-
-> **Important Note:** The MongoDB URI will only be given to the development team.
-
-### Setup
-
-Create three PostgreSQL databases:
-- `review_service`
-- `user_service`
-- `forum_service`
-
-### Starting Each Service
-
-Open a separate terminal for each service.
-
-**movie-service:** 
-```bash
-# Windows
-setx TDMB_TOKEN "your_token_here"
-setx MONGODB_URI "your_given_uri_here"
-cd movie-service && .\mvnw.cmd spring-boot:run
-
-# Mac/Linux
-export TDMB_TOKEN=your_token_here
-export MONGODB_URI=your_given_uri_here
-cd movie-service && ./mvnw spring-boot:run
-```
-
-**api-service:**
-```bash
-cd api-service
-.\mvnw.cmd spring-boot:run   # Windows
-./mvnw spring-boot:run       # Mac/Linux
-```
-
-**review-service:**
-```bash
-cd review-service
-.\mvnw.cmd spring-boot:run   # Windows
-./mvnw spring-boot:run       # Mac/Linux
-```
-
-**user-service:**
-```bash
-cd user-service
-.\mvnw.cmd spring-boot:run   # Windows
-./mvnw spring-boot:run       # Mac/Linux
-```
-
-**forum-service:**
-```bash
-cd forum-service
-.\mvnw.cmd spring-boot:run   # Windows
-./mvnw spring-boot:run       # Mac/Linux
-```
-
-**ui-service:**
-```bash
-cd ui-service
-.\mvnw.cmd spring-boot:run   # Windows
-./mvnw spring-boot:run       # Mac/Linux
-```
-
-Then open http://localhost:8080.
-
-> **Note:** The first run after a clean checkout takes 2–5 minutes while Vaadin downloads Node.js and compiles the frontend bundle. Use `spring-boot:run` (not `mvn clean spring-boot:run`) to preserve the dev bundle cache between runs.
-
----
-
-## Logging In
-
-The UI currently uses in-memory accounts pre-seeded on startup:
-
-| Username | Password |
-|---|---|
-| alice | password |
-| bob | password |
-
-You can also register a new account — it persists for the duration of the session.
-
----
-
-## Forum API Usage
-
-The forum-service provides REST endpoints for managing forum posts:
-
-### Basic Operations
-```bash
-# Get all posts
-curl http://localhost:8085/forum/posts
-
-# Create a post
-curl -X POST http://localhost:8085/forum/posts \
-  -H "Content-Type: application/json" \
-  -d '{"title":"My Post","content":"Post content","userId":1}'
-
-# Get specific post
-curl http://localhost:8085/forum/posts/1
-```
-
-### Role-based Deletion
-```bash
-# User deletes own post (succeeds)
-curl -X DELETE "http://localhost:8085/forum/posts/1?userId=1&userRole=USER"
-
-# User tries to delete others' post (fails with 403)
-curl -X DELETE "http://localhost:8085/forum/posts/2?userId=1&userRole=USER"
-
-# Admin deletes any post (succeeds)
-curl -X DELETE "http://localhost:8085/forum/posts/1?userId=2&userRole=ADMIN"
-```
-
----
-
-## What's Still Pending
-- **Persistent user accounts** — replace in-memory auth with real user-service calls; also enables correct user ID on submitted reviews
-- **Username on reviews** — review-service needs to enrich `ReviewDTO` with usernames fetched from user-service
-- **Account page reviews** — requires real auth (above) to look up the current user's review history
