@@ -19,36 +19,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 | forum-service | 8085 | Forum/discussion with role-based permissions (PostgreSQL) |
 
 ---
-
-## Functionality
-
-### UI (ui-service)
-- **Home page** — browse a catalogue of films in addition to a working search bar 
-  - Search by title.
-  - Filter search results by genre.
-  - View now playing and trending movies.
-  - Recommended Movies (Signed-in)
-- **Movie detail page** — click any film card to open a full detail page showing:
-  - Poster image (from TMDB), title, tagline, genres, runtime, release year
-  - Dual score display — TMDB score alongside our users' average review score
-  - Director and top-billed cast with profile photos
-  - Film details — budget, box office, production companies, language, runtime
-  - Reviews section — top recommended review + 3 most recent
-  - **Write a Review** button (requires login) — opens a modal dialog with rating, title, body, spoiler toggle; submits directly to review-service
-- **Login / Register** — session-based auth (currently in-memory; user-service integration pending)
-- **Account page** — view profile info and review history
-- **Edit profile** — update username, email, password, date of birth, genres
-
-### Forum (forum-service)
-- **Create posts** — users can create forum posts with title and content
-- **View posts** — browse all forum posts with GET /forum/posts
-- **Role-based deletion** — 
-  - **ADMIN users** can delete any post
-  - **Regular users** can only delete their own posts
-  - Legacy posts without owner information can only be deleted by admins
-- **Permission validation** — DELETE requests require userId and userRole parameters
-
-> **Note**: The Admin account can be accessed by using the username and password ADMIN123.
+> **Note**: The Admin account can be accessed by using the username and password ADMIN123. This can be used to demostrate the role based permissions in forum.
 ---
 
 ## Running with Docker (Local Deployment)
