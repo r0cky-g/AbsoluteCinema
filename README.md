@@ -47,6 +47,8 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
   - **Regular users** can only delete their own posts
   - Legacy posts without owner information can only be deleted by admins
 - **Permission validation** — DELETE requests require userId and userRole parameters
+
+> **Note**: The Admin account can be accessed by using the username and password ADMIN123.
 ---
 
 ## Running with Docker
