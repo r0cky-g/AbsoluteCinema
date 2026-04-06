@@ -1,16 +1,9 @@
 package ca.yorku.eecs4314group12.api.config;
 
-import java.time.Duration;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import io.netty.channel.ChannelOption;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
 
 @Configuration
 public class APIClientConfig {
@@ -41,20 +34,9 @@ public class APIClientConfig {
 
     @Bean("APIMovieClient")
     WebClient movieClient() {
-        ConnectionProvider provider = ConnectionProvider.builder("movie-client")
-            .maxConnections(50)
-            .maxIdleTime(Duration.ofSeconds(30))  
-            .maxLifeTime(Duration.ofSeconds(60))
-            .evictInBackground(Duration.ofSeconds(30))
-            .build();
-
-        HttpClient httpClient = HttpClient.create(provider)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
-
         return WebClient.builder()
-            .baseUrl(movieIp)
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
-            .build();
+                .baseUrl(movieIp)
+                .build();
     }
 
     @Bean("APIReviewClient")
