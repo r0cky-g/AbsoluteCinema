@@ -14,10 +14,10 @@ public class APIClientConfig {
     private String forumIp;
     
     public APIClientConfig(
-            @Value("${app.user-service.url:http://localhost:8082}") String userIp,
-            @Value("${app.movie-service.url:http://localhost:8083}") String movieIp,
-            @Value("${app.review-service.url:http://localhost:8084}") String reviewIp,
-            @Value("${app.forum-service.url:http://localhost:8085}") String forumIp
+            @Value("${app.user-service.url}") String userIp,
+            @Value("${app.movie-service.url}") String movieIp,
+            @Value("${app.review-service.url}") String reviewIp,
+            @Value("${app.forum-service.url}") String forumIp
     ) {
         this.userIp = userIp;
         this.movieIp = movieIp;
