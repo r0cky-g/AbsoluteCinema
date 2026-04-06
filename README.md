@@ -53,7 +53,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 
 ## Running with Docker (Local Deployment)
 
-Docker is the easiest way to run the full stack — no local Java or PostgreSQL installation required.
+Docker is the easiest way to run the full stack — no local Java, PostgreSQL or MongoDB installation required.
 
 ### Prerequisites
 
