@@ -51,7 +51,7 @@ An EECS 4314 project — a movie review platform built as a Spring Boot microser
 > **Note**: The Admin account can be accessed by using the username and password ADMIN123.
 ---
 
-## Running with Docker
+## Running with Docker (Local Deployment)
 
 Docker is the easiest way to run the full stack — no local Java or PostgreSQL installation required.
 
